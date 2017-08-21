@@ -51,7 +51,7 @@ class CsvImport extends WP_CLI_Command
                 list($source, $redirect) = $this->cleanUrls($data);
 
                 if(empty($data['language'])) {
-                    collect(['da', 'sv', 'nb', 'fi'])->each(function ($locale) use ($data, $source, $redirect) {
+                    collect(pll_languages_list())->each(function ($locale) use ($data, $source, $redirect) {
                         try {
                             BonnierRedirect::addRedirect($source, $redirect, $locale, 'drupal', null, 301, true);
                         } catch (Exception $e) {
@@ -105,7 +105,7 @@ class CsvImport extends WP_CLI_Command
 
             if(isset($data['src']) && isset($data['dst'])) {
                 if(empty($data['language'])) {
-                    collect(['da', 'sv', 'nb', 'fi'])->each(function ($locale) use ($data) {
+                    collect(pll_languages_list())->each(function ($locale) use ($data) {
                         try {
                             BonnierRedirect::addRedirect($data['src'], $data['dst'], $locale, 'drupal', null, 301, true);
                         } catch (Exception $e) {
@@ -147,9 +147,15 @@ class CsvImport extends WP_CLI_Command
     }
 
     private function cleanUrls($data) {
+        $source = BonnierRedirect::trimAddSlash($data['source'], true);
+        $redirect = BonnierRedirect::trimAddSlash($data['redirect'], true);
+
+        $source = str_replace("/<front>", '/', $source);
+        $redirect = str_replace("/<front>", '/', $redirect);
+
         return [
-            BonnierRedirect::trimAddSlash($data['source'], true),
-            BonnierRedirect::trimAddSlash($data['redirect'], true)
+            $source,
+            $redirect,
         ];
     }
 
