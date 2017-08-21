@@ -7,8 +7,8 @@ class BonnierRedirect
 {
     public static function register() {
         add_action('template_redirect', function(){
-            // Ask for final redirect
-            $redirect = self::recursiveRedirectFinder('/' . trim(parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH), '/'));
+            // Ask for final redirects
+            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($_SERVER["REQUEST_URI"], false));
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
@@ -88,16 +88,24 @@ class BonnierRedirect
      * @param $type
      * @param $id
      * @param int $code
+     * @param bool $suppressErrors
      * @return bool|null
      */
-    public static function addRedirect($from, $to, $locale, $type, $id, $code = 301) {
+    public static function addRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressErrors = false) {
         global $wpdb;
+        if ($suppressErrors) {
+            $wpdb->suppress_errors(true);
+        }
         try {
             $wpdb->get_row(
                 $wpdb->prepare(
-                    "INSERT INTO `wp_bonnier_redirects` (`from`, `to`, `locale`, `type`, `wp_id`, `code`) VALUES (%s, %s, %s, %s, %s, %d)",
-                    $from,
-                    $to,
+                    "INSERT INTO `wp_bonnier_redirects` 
+                    (`from`, `from_hash`, `to`, `to_hash`, `locale`, `type`, `wp_id`, `code`) 
+                    VALUES (%s, MD5(%s), %s, MD5(%s), %s, %s, %s, %d)",
+                    $fromUrl = self::trimAddSlash($from),
+                    $fromUrl,
+                    $toUrl = self::trimAddSlash($to),
+                    $toUrl,
                     $locale,
                     $type,
                     $id,
@@ -138,7 +146,7 @@ class BonnierRedirect
      * Finds a redirect in the database for a given uri
      *
      * @param $uri
-     * @return array|null|object|void
+     * @return array|null|object|void['a' => $newTo, 'b' => $from]
      */
     private static function findRedirectFor($uri) {
         global $wpdb;
@@ -199,5 +207,12 @@ class BonnierRedirect
             return false;
         }
         return true;
+    }
+
+    public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
+        return ($start ? '/' : '')
+            . trim(parse_url($url, PHP_URL_PATH), '/')
+            . ($withQueryParams ? parse_url($url, PHP_URL_QUERY) : '')
+            . ($end ? '/' : '');
     }
 }
