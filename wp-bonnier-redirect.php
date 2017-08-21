@@ -95,6 +95,9 @@ class Plugin
         }
 
         BonnierRedirect::register();
+
+        Post::register();
+        Tag::register();
     }
 
     /**
@@ -129,9 +132,5 @@ function instance()
 register_activation_hook( __FILE__, function(){
     Bootstrap::create_redirects_table();
 });
-
-// Register redirection handling for posts
-Post::register();
-Tag::register();
 
 add_action('plugins_loaded', __NAMESPACE__ . '\instance', 0);
