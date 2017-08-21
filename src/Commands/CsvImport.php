@@ -8,18 +8,14 @@ use League\Csv\Reader;
 use WP_CLI;
 use WP_CLI_Command;
 
-/**
- * Class Migrate
- *
- * @package \Bonnier\WP\ContentHub\Commands
- */
+
 class CsvImport extends WP_CLI_Command
 {
     const CMD_NAMESPACE = 'bonnier redirect import';
 
 
     /**
-     * Migrates Content Hub ACF fields to latest version
+     * Imports redirects from a csv generated drupal file
      *
      * ## OPTIONS
      *
@@ -75,7 +71,7 @@ class CsvImport extends WP_CLI_Command
     }
 
     /**
-     * Migrates Content Hub ACF fields to latest version
+     * Imports aliases from a csv generated rupal file
      *
      * ## OPTIONS
      *
