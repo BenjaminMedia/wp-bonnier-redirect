@@ -215,4 +215,49 @@ class BonnierRedirect
             . ($withQueryParams ? parse_url($url, PHP_URL_QUERY) : '')
             . ($end ? '/' : '');
     }
+
+    public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20) {
+        global $wpdb;
+        try {
+            $count = $wpdb->get_results(
+                $wpdb->prepare(
+                    "
+                        SELECT count(*) 
+                        FROM `wp_bonnier_redirects` 
+                        WHERE `to` LIKE '%%%s%%' AND 
+                        `from` LIKE '%%%s%%' AND 
+                        `locale` LIKE '%%%s%%'
+                    ",
+                    $filterTo,
+                    $filterFrom,
+                    $locale,
+                    $perPage,
+                    $perPage * (1 * $page - 1)
+                )
+            );
+            $results = $wpdb->get_results(
+                $wpdb->prepare(
+                    "
+                        SELECT * 
+                        FROM `wp_bonnier_redirects` 
+                        WHERE `to` LIKE '%%%s%%' AND 
+                        `from` LIKE '%%%s%%' AND 
+                        `locale` LIKE '%%%s%%'
+                        ORDER BY id
+                        LIMIT %d
+                        OFFSET %d
+                    ",
+                    $filterTo,
+                    $filterFrom,
+                    $locale,
+                    $perPage,
+                    $perPage * (1 * $page - 1)
+                )
+            );
+            return [$results, (int) (isset($count['0']) ? $count['0']->{'count(*)'} : 0) ?? 0];
+        } catch (\Exception $e) {
+            return false;
+        }
+        return null;
+    }
 }
