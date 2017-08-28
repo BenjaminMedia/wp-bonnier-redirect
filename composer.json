@@ -1,0 +1,15 @@
+{
+  "config": {
+    "secure-http": false
+  },
+  "name": "bonnier/wp-bonnier-redirect",
+  "description": "Redirect for Bonnier integration with Custom Permalink and Polylang",
+  "type": "wordpress-plugin",
+  "authors": [
+    {
+      "name": "Bonnier Publications",
+      "email": "interactive@bonnier.dk",
+      "homepage": "http://bonnierpublications.com"
+    }
+  ]
+}
