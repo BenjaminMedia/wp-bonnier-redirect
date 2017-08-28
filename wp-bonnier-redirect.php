@@ -16,6 +16,7 @@ use Bonnier\WP\Redirect\Db\Bootstrap;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 use Bonnier\WP\Redirect\Model\Post;
 use Bonnier\WP\Redirect\Model\Tag;
+use Bonnier\WP\Redirect\Page\RedirectPage;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -95,6 +96,8 @@ class Plugin
         }
 
         BonnierRedirect::register();
+
+        RedirectPage::register();
 
         Post::register();
         Tag::register();
