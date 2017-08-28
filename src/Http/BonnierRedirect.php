@@ -232,7 +232,7 @@ class BonnierRedirect
                     $filterFrom,
                     $locale,
                     $perPage,
-                    $perPage * (1 * $page - 1)
+                    $perPage * ($page - 1)
                 )
             );
             $results = $wpdb->get_results(
@@ -251,7 +251,7 @@ class BonnierRedirect
                     $filterFrom,
                     $locale,
                     $perPage,
-                    $perPage * (1 * $page - 1)
+                    $perPage * ($page - 1)
                 )
             );
             return [$results, (int) (isset($count['0']) ? $count['0']->{'count(*)'} : 0) ?? 0];
