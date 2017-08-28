@@ -11,5 +11,10 @@
       "email": "interactive@bonnier.dk",
       "homepage": "http://bonnierpublications.com"
     }
-  ]
+  ],
+  "autoload": {
+    "psr-4": {
+      "Bonnier\\WP\\Redirect\\": "src"
+    }
+  }
 }
