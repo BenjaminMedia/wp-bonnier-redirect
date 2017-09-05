@@ -29,4 +29,11 @@ Abstract class AbstractRedirectionModel
         return '/' . trim($url, '/');
     }
 
+    public static function invalidSlug($slug) {
+        if(filter_var($slug, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+        return false;
+    }
+
 }

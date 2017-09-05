@@ -23,11 +23,12 @@ class BonnierRedirect
     }
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301) {
-        if(self::redirectExists($from, $to, $locale) || self::urlIsPartOfRedirect($to, $locale)) {
+        $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
+        if(self::redirectExists($from, $urlEncodedTo, $locale) || self::urlIsPartOfRedirect($urlEncodedTo, $locale)) {
             return false;
         }
 
-        return self::addRedirect($from, $to, $locale, $type, $id, $code);
+        return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code);
     }
 
     /**

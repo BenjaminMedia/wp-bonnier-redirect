@@ -27,7 +27,8 @@ class Tag extends AbstractRedirectionModel
 
     public static function save($id) {
         if ( !isset($_REQUEST['custom_permalinks_edit']) || isset($_REQUEST['post_ID']) ) return;
-        $newPermalink = self::trimAddSlash($_REQUEST['custom_permalink']);
+        $slug = $_REQUEST['custom_permalink'] ?? '';
+        $newPermalink = self::trimAddSlash($slug);
         $original_link = self::trimAddSlash(wp_make_link_relative(get_term_link($id)));
 
         if ( $newPermalink == $original_link) {
@@ -36,9 +37,14 @@ class Tag extends AbstractRedirectionModel
 
         // If new URL
         if (!empty($newPermalink)) {
-            $result = BonnierRedirect::handleRedirect($original_link, $newPermalink, pll_get_term_language($id), self::type(), $id);
-            if(!$result) {
-                set_transient(BonnierRedirect::getErrorString(self::type(), $id), 'The URL ' . $newPermalink . ' has already been used.', 45);
+            if($error = self::invalidSlug($slug)) {
+                $parsedUrl = parse_url($slug);
+                $toBeRemoved = $parsedUrl['scheme'].'://'.$parsedUrl['host'];
+                self::setError('The slug \'' . $slug . '\' seems to be an invalid slug', $id);
+            } else if ($error = !BonnierRedirect::handleRedirect($original_link, $newPermalink, pll_get_term_language($id), self::type(), $id)) {
+                self::setError('The URL ' . $newPermalink . ' has already been used.', $id);
+            }
+            if($error) {
                 $_REQUEST['custom_permalink'] = $original_link;
             }
         }
@@ -51,5 +57,9 @@ class Tag extends AbstractRedirectionModel
     public static function type()
     {
         return 'tag';
+    }
+
+    public static function setError($errorMessage, $id) {
+        set_transient(BonnierRedirect::getErrorString(self::type(), $id), $errorMessage, 45);
     }
 }
