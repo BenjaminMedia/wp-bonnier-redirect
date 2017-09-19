@@ -12,7 +12,7 @@ class BonnierRedirect
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
-                wp_redirect($redirect->to . '?' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY), $redirect->code ?? 302);
+                wp_redirect($redirect->to . (parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY) ? '?' : '') . parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY), $redirect->code ?? 302);
             }
             // Else do nothing and let WordPress take over redirection.
         });
