@@ -42,15 +42,15 @@ class BonnierRedirect
         global $wpdb;
         try {
             return $wpdb->get_row(
-                $wpdb->prepare(
-                    "SELECT count(1) as `count` 
+                    $wpdb->prepare(
+                        "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
                     WHERE `from` = %s AND `to` = %s AND `locale` = %s",
-                    $from,
-                    $to,
-                    $locale
-                )
-            )->count > 0;
+                        $from,
+                        $to,
+                        $locale
+                    )
+                )->count > 0;
         } catch (\Exception $e) {
             return null;
         }
@@ -213,7 +213,7 @@ class BonnierRedirect
     public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
         return ($start ? '/' : '')
             . trim(parse_url($url, PHP_URL_PATH), '/')
-            . ($withQueryParams ? parse_url($url, PHP_URL_QUERY) : '')
+            . ($withQueryParams ? (parse_url($url, PHP_URL_QUERY) ? '?' : '') . parse_url($url, PHP_URL_QUERY) : '')
             . ($end ? '/' : '');
     }
 
