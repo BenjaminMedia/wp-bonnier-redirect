@@ -43,7 +43,7 @@ class CsvImport extends WP_CLI_Command
             if(isset($data['source']) && isset($data['redirect'])) {
                 $source = $this->cleanUrl($data['source']);
                 $redirect = $this->cleanUrl($this->findBottomAlias($aliases, $data['redirect']));
-                $languages = isset($data['language']) ? [$this->languageConverter($data['language'])] : pll_languages_list();
+                $languages = (isset($data['language']) && !empty(trim($data['language']))) ? [$this->languageConverter($data['language'])] : pll_languages_list();
                 collect($languages)->each(function ($locale) use ($data, $source, $redirect) {
                     try {
                         BonnierRedirect::addRedirect(
