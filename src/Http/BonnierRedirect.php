@@ -7,12 +7,21 @@ class BonnierRedirect
 {
     public static function register() {
         add_action('template_redirect', function(){
+            $requestURI = $_SERVER['REQUEST_URI'];
             // Ask for final redirects
-            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($_SERVER["REQUEST_URI"], false));
+            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($requestURI, false));
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
-                wp_redirect($redirect->to . (parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY) ? '?' : '') . parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY), $redirect->code ?? 302);
+                wp_redirect($redirect->to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
+            }
+            // Check case redirect
+            if(is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
+                $urlPath = parse_url($requestURI, PHP_URL_PATH);
+                if(preg_match('/[A-Z]/', $urlPath))
+                {
+                    wp_redirect(strtolower($urlPath).(parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
+                }
             }
             // Else do nothing and let WordPress take over redirection.
         });
