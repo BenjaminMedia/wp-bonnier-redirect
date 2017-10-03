@@ -13,6 +13,7 @@ class BonnierRedirect
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
+                header('X-Bonnier-Redirect: direct');
                 wp_redirect($redirect->to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
             }
             // Check case redirect
@@ -20,6 +21,7 @@ class BonnierRedirect
                 $urlPath = parse_url($requestURI, PHP_URL_PATH);
                 if(preg_match('/[A-Z]/', $urlPath))
                 {
+                    header('X-Bonnier-Redirect: case');
                     wp_redirect(strtolower($urlPath).(parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
                 }
             }
