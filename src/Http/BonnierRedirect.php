@@ -119,6 +119,19 @@ class BonnierRedirect
         return true;
     }
 
+    public static function deleteRedirect($id, $suppressErrors = false) {
+        global $wpdb;
+        if ($suppressErrors) {
+            $wpdb->suppress_errors(true);
+        }
+        try {
+            $wpdb->delete('wp_bonnier_redirects', ['id' => $id]);
+        } catch (\Exception $e) {
+            return null;
+        }
+        return true;
+    }
+
     /**
      * Finds the final redirect of a given uri
      *

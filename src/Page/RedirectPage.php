@@ -12,6 +12,7 @@ class RedirectPage
         add_action('admin_menu', [__CLASS__, 'wp_bonnier_redirect_setup_admin_menu']);
         add_action('wp_ajax_bonnier_redirects',[__CLASS__, 'bonnier_redirects_admin_rows']);
         add_action('wp_ajax_bonnier_redirect_add',[__CLASS__, 'bonnier_redirects_admin_add_row']);
+        add_action('wp_ajax_bonnier_redirect_delete',[__CLASS__, 'bonnier_redirects_admin_delete_row']);
     }
 
     static function bonnier_redirects_admin_add_row() {
@@ -23,6 +24,18 @@ class RedirectPage
                 $_REQUEST['type'] ?? '',
                 $_REQUEST['id'] ?? '',
                 $_REQUEST['code'] ?? ''
+            );
+            if($response) {
+                wp_send_json(true);
+            }
+        }
+        wp_send_json_error(false);
+    }
+
+    static function bonnier_redirects_admin_delete_row() {
+        if(isset($_REQUEST['id'])) {
+            $response = BonnierRedirect::deleteRedirect(
+                $_REQUEST['id'] ?? ''
             );
             if($response) {
                 wp_send_json(true);
@@ -157,6 +170,19 @@ class RedirectPage
                                 });
                             }.bind(this), 1000)
                         }, 500),
+                        deleteResource: function (id) {
+                            var result = confirm("Sure you want to delete?" + id);
+                            if (result) {
+                                this.$http.post(ajaxurl,
+                                    'action=bonnier_redirect_delete&id=' + id,
+                                    {
+                                        'headers': { 'Content-Type': 'application/x-www-form-urlencoded' }
+                                    }
+                                ).then(function (data, status, request) {
+                                    this.updateResource();
+                                });
+                            }
+                        }
                     }
                 });
             }
@@ -194,6 +220,7 @@ class RedirectPage
                         <td>{{redirect.type}}</td>
                         <td>{{redirect.id}}</td>
                         <td>{{redirect.code}}</td>
+                        <td><button @click="deleteResource(redirect.id)">Delete</button></td>
                     </tr>
                     </tbody>
                 </table>
