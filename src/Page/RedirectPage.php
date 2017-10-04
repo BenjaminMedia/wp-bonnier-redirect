@@ -192,8 +192,8 @@ class RedirectPage
             <div class="wrap">
                 <h2><?php _e('Bonnier Redirects', 'bonnier-redirects') ?></h2>
                 <div v-on:keyup="updateResource(); updatePage(1)">
-                    <span>To: </span> <input type="text" placeholder="Filter To" v-model="to">
                     <span>From: </span> <input type="text" placeholder="Filter From" v-model="from">
+                    <span>To: </span> <input type="text" placeholder="Filter To" v-model="to">
                     <span>Locale: </span> <input type="text" placeholder="Filter Locale" v-model="locale">
                     <span>Id: </span> <input type="text" placeholder="Filter Id" v-model="id">
                 </div>
@@ -204,8 +204,8 @@ class RedirectPage
                 <table class="widefat">
                     <thead>
                     <tr>
-                        <th scope="col"><?php _e('To', 'bonnier-redirects') ?></th>
                         <th scope="col"><?php _e('From', 'bonnier-redirects') ?></th>
+                        <th scope="col"><?php _e('To', 'bonnier-redirects') ?></th>
                         <th scope="col"><?php _e('Locale', 'bonnier-redirects') ?></th>
                         <th scope="col"><?php _e('Type', 'bonnier-redirects') ?></th>
                         <th scope="col"><?php _e('Id', 'bonnier-redirects') ?></th>
@@ -214,8 +214,8 @@ class RedirectPage
                     </thead>
                     <tbody>
                     <tr valign="top" v-for="redirect in redirects">
-                        <td>{{redirect.to}}</td>
                         <td>{{redirect.from}}</td>
+                        <td>{{redirect.to}}</td>
                         <td>{{redirect.locale}}</td>
                         <td>{{redirect.type}}</td>
                         <td>{{redirect.id}}</td>
@@ -274,8 +274,8 @@ class RedirectPage
                 -->
                 <h3 slot="header">Add Redirects</h3>
                 <div slot="body">
-                    <span>To: </span> <input type="text" placeholder="Filter To" v-model="newRedirect.to"></br>
                     <span>From: </span> <input type="text" placeholder="Filter From" v-model="newRedirect.from"></br>
+                    <span>To: </span> <input type="text" placeholder="Filter To" v-model="newRedirect.to"></br>
                     <span>Locale: </span> <input type="text" placeholder="Filter To" v-model="newRedirect.locale"></br>
                     <span>Type: </span> <input disabled type="text" placeholder="Filter To" v-model="newRedirect.type"></br>
                     <span>Id: </span> <input disabled type="text" placeholder="Filter To" v-model="newRedirect.id"></br>
