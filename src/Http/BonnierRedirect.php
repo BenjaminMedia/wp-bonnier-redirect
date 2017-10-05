@@ -16,6 +16,7 @@ class BonnierRedirect
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
                 header('X-Bonnier-Redirect: direct');
+                self::setNoCacheHeaders();
                 wp_redirect($redirect->to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
             }
             // Check case redirect
@@ -24,11 +25,18 @@ class BonnierRedirect
                 if(preg_match('/[A-Z]/', $urlPath))
                 {
                     header('X-Bonnier-Redirect: case');
+                    self::setNoCacheHeaders();
                     wp_redirect(strtolower($urlPath).(parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
                 }
             }
             // Else do nothing and let WordPress take over redirection.
         });
+    }
+
+    private static function setNoCacheHeaders() {
+        header('cache-control: no-cache');
+        header('expires: 0');
+        header('pragma: no-cache');
     }
 
     public static function getErrorString($type, $id) {
