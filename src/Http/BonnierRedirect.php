@@ -3,6 +3,8 @@
 namespace Bonnier\WP\Redirect\Http;
 
 
+use Bonnier\WP\Cache\Services\CacheApi;
+
 class BonnierRedirect
 {
     public static function register() {
@@ -14,6 +16,7 @@ class BonnierRedirect
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
                 header('X-Bonnier-Redirect: direct');
+                self::setNoCacheHeaders();
                 wp_redirect($redirect->to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
             }
             // Check case redirect
@@ -22,11 +25,18 @@ class BonnierRedirect
                 if(preg_match('/[A-Z]/', $urlPath))
                 {
                     header('X-Bonnier-Redirect: case');
+                    self::setNoCacheHeaders();
                     wp_redirect(strtolower($urlPath).(parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
                 }
             }
             // Else do nothing and let WordPress take over redirection.
         });
+    }
+
+    private static function setNoCacheHeaders() {
+        header('cache-control: no-cache');
+        header('expires: 0');
+        header('pragma: no-cache');
     }
 
     public static function getErrorString($type, $id) {
@@ -127,6 +137,7 @@ class BonnierRedirect
         } catch (\Exception $e) {
             return null;
         }
+        self::cleanBonnierCache($from);
         return true;
     }
 
@@ -135,12 +146,33 @@ class BonnierRedirect
         if ($suppressErrors) {
             $wpdb->suppress_errors(true);
         }
+        $from = self::getFromInRedirect($id);
         try {
             $wpdb->delete('wp_bonnier_redirects', ['id' => $id]);
         } catch (\Exception $e) {
             return null;
         }
+        self::cleanBonnierCache($from);
         return true;
+    }
+
+    private static function cleanBonnierCache($url) {
+        // This doesn't actually work since the class has to exist
+        // to even import the class in the class, but it shows
+        // a pretty logical dependency for calling this.
+        if(class_exists(CacheApi::class)) {
+            CacheApi::post(CacheApi::CACHE_UPDATE, rtrim('/', pll_home_url()) . $url);
+        }
+    }
+
+    private static function getFromInRedirect($id) {
+        try {
+            global $wpdb;
+            $from = $wpdb->get_var("SELECT `from` FROM wp_bonnier_redirects WHERE id = $id");
+        } catch (\Exception $e) {
+            $from = '';
+        }
+        return $from;
     }
 
     /**
