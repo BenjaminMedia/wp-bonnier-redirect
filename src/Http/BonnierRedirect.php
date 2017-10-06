@@ -11,32 +11,27 @@ class BonnierRedirect
         add_action('template_redirect', function(){
             $requestURI = $_SERVER['REQUEST_URI'];
             // Ask for final redirects
-            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($requestURI, false));
+            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($requestURI));
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
-                header('X-Bonnier-Redirect: direct');
-                self::setNoCacheHeaders();
-                wp_redirect($redirect->to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
+                self::redirectTo($redirect->to, 'direct', $requestURI);
             }
             // Check case redirect
             if(is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
                 $urlPath = parse_url($requestURI, PHP_URL_PATH);
                 if(preg_match('/[A-Z]/', $urlPath))
                 {
-                    header('X-Bonnier-Redirect: case');
-                    self::setNoCacheHeaders();
-                    wp_redirect(strtolower($urlPath).(parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
+                    self::redirectTo(strtolower($urlPath), 'case', $requestURI);
                 }
             }
             // Else do nothing and let WordPress take over redirection.
         });
     }
 
-    private static function setNoCacheHeaders() {
-        header('cache-control: no-cache');
-        header('expires: 0');
-        header('pragma: no-cache');
+    private static function redirectTo($to, $case, $requestURI) {
+        header('X-Bonnier-Redirect: '.$case);
+        wp_redirect($to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
     }
 
     public static function getErrorString($type, $id) {
@@ -45,7 +40,7 @@ class BonnierRedirect
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301) {
         $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
-        if(self::redirectExists($from, $urlEncodedTo, $locale) || self::urlIsPartOfRedirect($urlEncodedTo, $locale)) {
+        if(self::redirectExists($from, $urlEncodedTo, $locale)) {
             return false;
         }
 
@@ -91,7 +86,7 @@ class BonnierRedirect
                     $wpdb->prepare(
                         "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
-                    WHERE (`from` = %s OR `to` = %s) AND `locale` = %s",
+                    WHERE `from` = %s AND `locale` = %s",
                         $url,
                         $url,
                         $locale
@@ -269,8 +264,16 @@ class BonnierRedirect
     public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
         return ($start ? '/' : '')
             . trim(parse_url($url, PHP_URL_PATH), '/')
-            . ($withQueryParams ? (parse_url($url, PHP_URL_QUERY) ? '?' : '') . parse_url($url, PHP_URL_QUERY) : '')
+            . ($withQueryParams ? self::sortQueryParams($url) : '')
             . ($end ? '/' : '');
+    }
+
+    private static function sortQueryParams($url) {
+        $params = preg_split('/\&/', parse_url($url, PHP_URL_QUERY), -1, PREG_SPLIT_NO_EMPTY);
+        if(empty($params) || !sort($params)) {
+            return '';
+        }
+        return '?' . implode('&', $params);
     }
 
     public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20) {
