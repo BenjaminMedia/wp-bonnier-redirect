@@ -9,8 +9,8 @@ class Post extends AbstractRedirectionModel
 {
 
     public static function register() {
-        add_action('save_page', [__CLASS__, 'save'], 5);
-        add_action('save_post', [__CLASS__, 'save'], 5);
+        add_action('save_page', [__CLASS__, 'save'], 5, 2);
+        add_action('save_post', [__CLASS__, 'save'], 5, 2);
         add_action('post_updated_messages', function () {
             global $post;
             if(isset($post->ID)) {
@@ -26,17 +26,20 @@ class Post extends AbstractRedirectionModel
         add_action('delete_post', [__CLASS__, 'delete'], 8);
     }
 
-    public static function save($id) {
+    public static function save($id, $post) {
         if (wp_is_post_revision($id) || wp_is_post_autosave($id)) {
+            return;
+        }
+
+        if($post && isset($post->post_status) && $post->post_status !== 'publish') {
             return;
         }
 
         $original_link = self::trimAddSlash(wp_make_link_relative(get_permalink($id)));
         $slug = $_REQUEST['custom_permalink'] ?? '';
         $new_link = self::trimAddSlash($slug);
-
         // If new URL
-        if (!empty($new_link) && $new_link != $original_link ) {
+        if ($new_link != '/' && !empty($new_link) && $new_link != $original_link ) {
             if($error = self::invalidSlug($slug)) {
                 $parsedUrl = parse_url($slug);
                 $toBeRemoved = $parsedUrl['scheme'].'://'.$parsedUrl['host'];
@@ -61,7 +64,9 @@ class Post extends AbstractRedirectionModel
 
     public static function setError($errorMessage) {
         global $post;
-        set_transient(BonnierRedirect::getErrorString($post->post_type, $post->ID), $errorMessage, 45);
+        if($post) {
+            set_transient(BonnierRedirect::getErrorString($post->post_type, $post->ID), $errorMessage, 45);
+        }
     }
 
 }
