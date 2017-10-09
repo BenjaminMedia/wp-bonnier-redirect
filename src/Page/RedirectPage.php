@@ -121,8 +121,8 @@ class RedirectPage
                             setTimeout(function () {
                                 this.$http.post(ajaxurl,
                                     'action=bonnier_redirect_add'
-                                    + '&to=' + this.newRedirect.to
-                                    + '&from=' + this.newRedirect.from
+                                    + '&to=' + encodeURIComponent(this.newRedirect.to)
+                                    + '&from=' + encodeURIComponent(this.newRedirect.from)
                                     + '&locale=' + this.newRedirect.locale
                                     + '&type=' + this.newRedirect.type
                                     + '&id=' + this.newRedirect.id
@@ -131,7 +131,7 @@ class RedirectPage
                                         'headers': { 'Content-Type': 'application/x-www-form-urlencoded' }
                                     }
                                 ).then(function (data, status, request) {
-                                    if(data.body == 0 || !data.data) {
+                                    if(data.body == 0 || !data.body.data) {
                                         this.status = 'failed';
                                     } else {
                                         this.newRedirect = {
@@ -274,12 +274,12 @@ class RedirectPage
                 -->
                 <h3 slot="header">Add Redirects</h3>
                 <div slot="body">
-                    <span>From: </span> <input type="text" placeholder="Filter From" v-model="newRedirect.from"></br>
-                    <span>To: </span> <input type="text" placeholder="Filter To" v-model="newRedirect.to"></br>
-                    <span>Locale: </span> <input type="text" placeholder="Filter To" v-model="newRedirect.locale"></br>
-                    <span>Type: </span> <input disabled type="text" placeholder="Filter To" v-model="newRedirect.type"></br>
-                    <span>Id: </span> <input disabled type="text" placeholder="Filter To" v-model="newRedirect.id"></br>
-                    <span>Code: </span> <input disabled type="text" placeholder="Filter To" v-model="newRedirect.code"></br>
+                    <span>From: </span> <br/><input type="text" placeholder="Filter From" v-model="newRedirect.from"></br><br/>
+                    <span>To: </span> <br/><input type="text" placeholder="Filter To" v-model="newRedirect.to"></br><br/>
+                    <span>Locale: </span> <br/><input type="text" placeholder="Locale" v-model="newRedirect.locale"></br><br/>
+                    <span>Type: </span> <br/><input disabled type="text" placeholder="Type" v-model="newRedirect.type"></br><br/>
+                    <span>Id: </span> <br/><input disabled type="text" placeholder="Id" v-model="newRedirect.id"></br><br/>
+                    <span>Code: </span> <br/><input disabled type="text" placeholder="Code" v-model="newRedirect.code"></br><br/>
                     <div v-if="status" class="alert fade in" v-bind:class="statusClass">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close" @click="status = ''">×</a>
                         <strong>{{status}}!</strong>

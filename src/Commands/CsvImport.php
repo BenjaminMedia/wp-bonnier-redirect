@@ -68,6 +68,42 @@ class CsvImport extends WP_CLI_Command
         WP_CLI::success("The script ran successfully, all redirects imported.");
     }
 
+    /**
+     * Imports redirects from a csv generated drupal file
+     *
+     * ## OPTIONS
+     *
+     * ## EXAMPLES
+     *
+     * wp bonner redirect import nodes
+     */
+    public function nodes($args, $assoc_args ) {
+
+        $aliases = $this->getAliasesCollection();
+
+        $aliases->each(function ($item) {
+            try {
+                $languages = (isset($item['language']) && !empty(trim($item['language']))) ? [$this->languageConverter($item['language'])] : pll_languages_list();
+                collect($languages)->each(function ($locale) use ($item) {
+                    try {
+                        BonnierRedirect::addRedirect(
+                            $item['src'],
+                            BonnierRedirect::trimAddSlash($item['dst'], true),
+                            $locale, 'drupal-nodes', null, 301, true
+                        );
+                    } catch (Exception $e) {
+                        WP_CLI::error("Scripted found double redirect");
+                    }
+                });
+                return true;
+            } catch (Exception $e) {
+                WP_CLI::error("Scripted found double redirect");
+            }
+        });
+
+        WP_CLI::success("The script ran successfully, all redirects imported.");
+    }
+
     private function getAliasesCollection() {
         try {
             list($csv, $headers) = $this->getCsv(['GDS-url_alias.csv']);
