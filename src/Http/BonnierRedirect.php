@@ -98,7 +98,7 @@ class BonnierRedirect
             return null;
         }
         if($removed > 0) {
-            self::cleanBonnierCache($from);
+            self::cleanBonnierCache($to);
             return true;
         }
         return false;
