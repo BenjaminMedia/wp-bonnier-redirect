@@ -31,7 +31,7 @@ class BonnierRedirect
 
     private static function redirectTo($to, $case, $requestURI) {
         header('X-Bonnier-Redirect: '.$case);
-        wp_redirect($to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 302);
+        wp_redirect($to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 301);
     }
 
     public static function getErrorString($type, $id) {
@@ -44,6 +44,12 @@ class BonnierRedirect
             return false;
         }
 
+        // If a redirect exists from /a to /b and we are trying to make
+        // a redirect from /b to /a. Then we need to make sure that
+        // /a to /b is removed so we don't make an infinite loop
+        self::removeReverse($from, $urlEncodedTo, $locale);
+
+        // After making sure we don't create a redirect loop, we add the new redirect.
         return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code);
     }
 
@@ -69,6 +75,31 @@ class BonnierRedirect
                 )->count > 0;
         } catch (\Exception $e) {
             return null;
+        }
+        return false;
+    }
+
+    /**
+     * @param $from
+     * @param $to
+     * @param $locale
+     * @param bool $suppressErrors
+     * @return bool|null
+     */
+    private static function removeReverse($from, $to, $locale, $suppressErrors = false) {
+        global $wpdb;
+        if ($suppressErrors) {
+            $wpdb->suppress_errors(true);
+        }
+        $removed = 0;
+        try {
+            $removed = $wpdb->delete('wp_bonnier_redirects', ['from' => $to, 'to' => $from, 'locale' => $locale]);
+        } catch (\Exception $e) {
+            return null;
+        }
+        if($removed > 0) {
+            self::cleanBonnierCache($from);
+            return true;
         }
         return false;
     }
