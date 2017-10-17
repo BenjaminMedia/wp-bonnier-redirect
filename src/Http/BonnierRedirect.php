@@ -40,7 +40,7 @@ class BonnierRedirect
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301) {
         $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
-        if(self::redirectExists($from, $urlEncodedTo, $locale)) {
+        if(self::redirectExists($urlEncodedTo, $locale)) {
             return false;
         }
 
@@ -54,22 +54,22 @@ class BonnierRedirect
     }
 
     /**
-     * @param $from
-     * @param $to
+     * Check that new url isn't already redirecting
+     *
+     * @param $new
      * @param $locale
      * @param int $code
      * @return bool|null
      */
-    public static function redirectExists($from, $to, $locale, $code = 301) {
+    public static function redirectExists($new, $locale, $code = 301) {
         global $wpdb;
         try {
             return $wpdb->get_row(
                     $wpdb->prepare(
                         "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
-                    WHERE `from` = %s AND `to` = %s AND `locale` = %s",
-                        $from,
-                        $to,
+                    WHERE `from` = %s AND `locale` = %s",
+                        $new,
                         $locale
                     )
                 )->count > 0;
