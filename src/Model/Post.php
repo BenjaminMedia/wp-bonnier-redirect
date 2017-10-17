@@ -7,6 +7,7 @@ use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 class Post extends AbstractRedirectionModel
 {
+    private static $post;
 
     public static function register() {
         add_action('save_page', [__CLASS__, 'save'], 5, 2);
@@ -34,6 +35,8 @@ class Post extends AbstractRedirectionModel
         if($post && isset($post->post_status) && $post->post_status !== 'publish') {
             return;
         }
+
+        self::$post = $post;
 
         $original_link = self::trimAddSlash(wp_make_link_relative(get_permalink($id)));
         $slug = $_REQUEST['custom_permalink'] ?? '';
@@ -63,9 +66,8 @@ class Post extends AbstractRedirectionModel
     }
 
     public static function setError($errorMessage) {
-        global $post;
-        if($post) {
-            set_transient(BonnierRedirect::getErrorString($post->post_type, $post->ID), $errorMessage, 45);
+        if(self::$post) {
+            set_transient(BonnierRedirect::getErrorString(self::type(), self::$post->ID), $errorMessage, 45);
         }
     }
 
