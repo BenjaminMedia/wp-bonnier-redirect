@@ -38,7 +38,7 @@ class BonnierRedirect
         return "bonner_redirect_save_{$type}_error_{$id}";
     }
 
-    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301) {
+    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
         $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
         if(self::redirectExists($urlEncodedTo, $locale)) {
             return false;
@@ -47,10 +47,10 @@ class BonnierRedirect
         // If a redirect exists from /a to /b and we are trying to make
         // a redirect from /b to /a. Then we need to make sure that
         // /a to /b is removed so we don't make an infinite loop
-        self::removeReverse($from, $urlEncodedTo, $locale);
+        self::removeReverse($from, $urlEncodedTo, $locale, $suppressWarnings);
 
         // After making sure we don't create a redirect loop, we add the new redirect.
-        return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code);
+        return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, $suppressWarnings);
     }
 
     /**
