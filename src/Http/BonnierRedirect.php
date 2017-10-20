@@ -15,7 +15,7 @@ class BonnierRedirect
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
-                self::redirectTo($redirect->to, 'direct', $requestURI);
+                self::redirectTo($redirect->to, $redirect->type, $requestURI);
             }
             // Check case redirect
             if(is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
