@@ -44,21 +44,26 @@ class Post extends AbstractRedirectionModel
 
         self::$newPost = $newPost;
 
-        $oldCategory = null;
-        $newCategory = null;
+        if($post->post_type !== 'page') {
+            $oldCategory = null;
+            $newCategory = null;
 
-        $oldCategoryTerms = get_the_category($post->ID);
-        if($oldCategoryTerms && !empty($oldCategoryTerms)) {
-            $oldCategory = $oldCategoryTerms[0];
+            $oldCategoryTerms = get_the_category($post->ID);
+            if($oldCategoryTerms && !empty($oldCategoryTerms)) {
+                $oldCategory = $oldCategoryTerms[0];
+            }
+
+            $newCategoryId = $_REQUEST['acf'][static::ACF_CATEGORY_ID] ?? null;
+            if($newCategoryId) {
+                $newCategory = get_term($newCategoryId);
+            }
+
+            $oldLink = self::getCategories($oldCategory).'/'.$post->post_name;
+            $newLink = self::getCategories($newCategory).'/'.$newPost->post_name;
+        } else {
+            $oldLink = '/' . $post->post_name;
+            $newLink = '/' . $newPost->post_name;
         }
-
-        $newCategoryId = $_REQUEST['acf'][static::ACF_CATEGORY_ID] ?? null;
-        if($newCategoryId) {
-            $newCategory = get_term($newCategoryId);
-        }
-
-        $oldLink = self::getCategories($oldCategory).'/'.$post->post_name;
-        $newLink = self::getCategories($newCategory).'/'.$newPost->post_name;
 
         if($oldLink != $newLink) {
             if(self::invalidSlug($newLink)) {
