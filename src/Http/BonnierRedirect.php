@@ -293,6 +293,9 @@ class BonnierRedirect
     }
 
     public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
+        if(empty($url)) {
+            return null;
+        }
         return ($start ? '/' : '')
             . trim(parse_url($url, PHP_URL_PATH), '/')
             . ($withQueryParams ? self::sortQueryParams($url) : '')
