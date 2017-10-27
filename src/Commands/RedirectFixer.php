@@ -105,7 +105,7 @@ class RedirectFixer
                 }
             }
 
-            BonnierRedirect::removeFrom($redirectTo);
+            BonnierRedirect::removeFrom($redirectTo, $postLocale);
 
             WP_CLI::line(sprintf("Made %s redirects on %s: %s (%s)", $redirectsMade, $post->ID, $post->post_title, $postLocale));
         });
