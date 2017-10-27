@@ -53,6 +53,20 @@ class BonnierRedirect
         return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, $suppressWarnings);
     }
 
+    public static function removeFrom($url, $locale) {
+        if(self::redirectExists($url, $locale)) {
+            global $wpdb;
+            try {
+                $wpdb->delete('wp_bonnier_redirects', ['from' => $url]);
+                return true;
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Check that new url isn't already redirecting
      *

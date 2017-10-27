@@ -37,6 +37,7 @@ class RedirectFixer
             $postName           = BonnierRedirect::trimAddSlash($post->post_name);
             $customPermalink    = BonnierRedirect::trimAddSlash(get_post_meta($post->ID, 'custom_permalink', true));
             $redirectTo         = BonnierRedirect::trimAddSlash(parse_url(get_permalink($post->ID), PHP_URL_PATH));
+            $redirectsMade      = 0;
 
             $categories = $this->getCategories($post->ID);
 
@@ -44,49 +45,69 @@ class RedirectFixer
             $cat2 = BonnierRedirect::trimAddSlash($categories[1] ?? null);
             $cat3 = BonnierRedirect::trimAddSlash($categories[2] ?? null);
 
-            if ($cat1) {
-                $category1a = BonnierRedirect::trimAddSlash($cat1.$wpTitleSlug);
-                $category1b = BonnierRedirect::trimAddSlash($cat1.$postName);
-                if ($category1a != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category1a, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
-                if ($category1b != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category1b, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
-            }
-            if ($cat1 && $cat2) {
-                $category2a = BonnierRedirect::trimAddSlash($cat1.$cat2.$wpTitleSlug);
-                $category2b = BonnierRedirect::trimAddSlash($cat1.$cat2.$postName);
-                if ($category2a != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category2a, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
-                if ($category2b != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category2b, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
+            /**
+             * CASE Z: $cat1
+             * CASE X: $cat/$cat2
+             * CASE Y: $cat1/$cat2/$cat3
+             * CASE O: $cat2
+             * CASE P: $cat2/$cat3
+             * CASE Q: $cat3
+             */
+            if ($cat1) { // CASE Z
+                $categoryZA = BonnierRedirect::trimAddSlash($cat1.$wpTitleSlug);
+                $categoryZB = BonnierRedirect::trimAddSlash($cat1.$postName);
+                $this->makeCategoryRedirects($categoryZA, $categoryZB, $redirectTo, $postLocale, $post, $redirectsMade);
             }
 
-            if ($cat1 && $cat2 && $cat3) {
-                $category3a = BonnierRedirect::trimAddSlash($cat1.$cat2.$cat3.$wpTitleSlug);
-                $category3b = BonnierRedirect::trimAddSlash($cat1.$cat2.$cat3.$postName);
-                if ($category3a != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category3a, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
-                if ($category3b != $redirectTo) {
-                    BonnierRedirect::handleRedirect($category3b, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
-                }
+            if ($cat1 && $cat2) { // CASE X
+                $categoryXA = BonnierRedirect::trimAddSlash($cat1.$cat2.$wpTitleSlug);
+                $categoryXB = BonnierRedirect::trimAddSlash($cat1.$cat2.$postName);
+                $this->makeCategoryRedirects($categoryXA, $categoryXB, $redirectTo, $postLocale, $post, $redirectsMade);
+            }
+
+            if ($cat1 && $cat2 && $cat3) { // CASE Y
+                $categoryYA = BonnierRedirect::trimAddSlash($cat1.$cat2.$cat3.$wpTitleSlug);
+                $categoryYB = BonnierRedirect::trimAddSlash($cat1.$cat2.$cat3.$postName);
+                $this->makeCategoryRedirects($categoryYA, $categoryYB, $redirectTo, $postLocale, $post, $redirectsMade);
+            }
+
+            if ($cat2) { // CASE O
+                $categoryOA = BonnierRedirect::trimAddSlash($cat2.$wpTitleSlug);
+                $categoryOB = BonnierRedirect::trimAddSlash($cat2.$postName);
+                $this->makeCategoryRedirects($categoryOA, $categoryOB, $redirectTo, $postLocale, $post, $redirectsMade);
+            }
+
+            if ($cat2 && $cat3) { // CASE P
+                $categoryPA = BonnierRedirect::trimAddSlash($cat2.$cat3.$wpTitleSlug);
+                $categoryPB = BonnierRedirect::trimAddSlash($cat2.$cat3.$postName);
+                $this->makeCategoryRedirects($categoryPA, $categoryPB, $redirectTo, $postLocale, $post, $redirectsMade);
+            }
+
+            if ($cat3) { // CASE Q
+                $categoryQA = BonnierRedirect::trimAddSlash($cat3.$wpTitleSlug);
+                $categoryQB = BonnierRedirect::trimAddSlash($cat3.$postName);
+                $this->makeCategoryRedirects($categoryQA, $categoryQB, $redirectTo, $postLocale, $post, $redirectsMade);
             }
 
             if ($wpTitleSlug && $wpTitleSlug != $redirectTo) {
-                BonnierRedirect::handleRedirect($wpTitleSlug, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
+                if(BonnierRedirect::handleRedirect($wpTitleSlug, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                    $redirectsMade++;
+                }
             }
             if ($postName && $postName != $redirectTo) {
-                BonnierRedirect::handleRedirect($postName, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
+                if(BonnierRedirect::handleRedirect($postName, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                    $redirectsMade++;
+                }
             }
             if ($customPermalink && $customPermalink != $redirectTo) {
-                BonnierRedirect::handleRedirect($customPermalink, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true);
+                if(BonnierRedirect::handleRedirect($customPermalink, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                    $redirectsMade++;
+                }
             }
 
-            WP_CLI::line(sprintf("Fixed %s: %s (%s)", $post->ID, $post->post_title, $postLocale));
+            BonnierRedirect::removeFrom($redirectTo);
+
+            WP_CLI::line(sprintf("Made %s redirects on %s: %s (%s)", $redirectsMade, $post->ID, $post->post_title, $postLocale));
         });
 
         WP_CLI::success("DONE!");
@@ -123,5 +144,19 @@ class RedirectFixer
         }
 
         return $slugs->reverse()->values();
+    }
+
+    private function makeCategoryRedirects($catA, $catB, $redirectTo, $postLocale, $post, &$redirectsMade)
+    {
+        if ($catA != $redirectTo) {
+            if(BonnierRedirect::handleRedirect($catA, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                $redirectsMade++;
+            }
+        }
+        if ($catB != $redirectTo) {
+            if(BonnierRedirect::handleRedirect($catB, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                $redirectsMade++;
+            }
+        }
     }
 }
