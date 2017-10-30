@@ -15,7 +15,7 @@ class BonnierRedirect
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
-                self::redirectTo($redirect->to, 'direct', $requestURI);
+                self::redirectTo($redirect->to, $redirect->type, $requestURI);
             }
             // Check case redirect
             if(is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
@@ -38,38 +38,52 @@ class BonnierRedirect
         return "bonner_redirect_save_{$type}_error_{$id}";
     }
 
-    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301) {
+    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
         $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
-        if(self::redirectExists($from, $urlEncodedTo, $locale)) {
+        if(self::redirectExists($urlEncodedTo, $locale)) {
             return false;
         }
 
         // If a redirect exists from /a to /b and we are trying to make
         // a redirect from /b to /a. Then we need to make sure that
         // /a to /b is removed so we don't make an infinite loop
-        self::removeReverse($from, $urlEncodedTo, $locale);
+        self::removeReverse($from, $urlEncodedTo, $locale, $suppressWarnings);
 
         // After making sure we don't create a redirect loop, we add the new redirect.
-        return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code);
+        return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, $suppressWarnings);
+    }
+
+    public static function removeFrom($url, $locale) {
+        if(self::redirectExists($url, $locale)) {
+            global $wpdb;
+            try {
+                $wpdb->delete('wp_bonnier_redirects', ['from' => $url]);
+                return true;
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     /**
-     * @param $from
-     * @param $to
+     * Check that new url isn't already redirecting
+     *
+     * @param $new
      * @param $locale
      * @param int $code
      * @return bool|null
      */
-    public static function redirectExists($from, $to, $locale, $code = 301) {
+    public static function redirectExists($new, $locale, $code = 301) {
         global $wpdb;
         try {
             return $wpdb->get_row(
                     $wpdb->prepare(
                         "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
-                    WHERE `from` = %s AND `to` = %s AND `locale` = %s",
-                        $from,
-                        $to,
+                    WHERE `from` = %s AND `locale` = %s",
+                        $new,
                         $locale
                     )
                 )->count > 0;
@@ -293,6 +307,9 @@ class BonnierRedirect
     }
 
     public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
+        if(empty($url)) {
+            return null;
+        }
         return ($start ? '/' : '')
             . trim(parse_url($url, PHP_URL_PATH), '/')
             . ($withQueryParams ? self::sortQueryParams($url) : '')
