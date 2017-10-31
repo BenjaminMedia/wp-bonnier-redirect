@@ -80,6 +80,9 @@ class Post extends AbstractRedirectionModel
 
     private static function getCategories($category)
     {
+        if(!$category) {
+            return '/';
+        }
         $slugs = collect([]);
         $hasParent = true;
         while ($hasParent) {
