@@ -39,7 +39,7 @@ class BonnierRedirect
     }
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
-        $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
+        $urlEncodedTo = static::fixEncoding($to);
         if(self::redirectExists($urlEncodedTo, $locale)) {
             return false;
         }
@@ -367,5 +367,21 @@ class BonnierRedirect
             return false;
         }
         return null;
+    }
+
+    private static function urlDecode($url)
+    {
+        $url = urldecode($url);
+        if (str_contains($url, '%')) {
+            return static::urlDecode($url);
+        }
+        return $url;
+    }
+
+    private static function fixEncoding($url)
+    {
+        return collect(explode('/', static::urlDecode($url)))->map(function ($string) {
+            return urlencode($string); // encode the parts of the url between slashes
+        })->implode('/');
     }
 }
