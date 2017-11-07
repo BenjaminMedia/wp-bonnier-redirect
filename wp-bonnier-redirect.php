@@ -12,6 +12,7 @@ namespace Bonnier\WP\Redirect;
 
 // Do not access this file directly
 use Bonnier\WP\Redirect\Commands\CsvImport;
+use Bonnier\WP\Redirect\Commands\ParamLessHasher;
 use Bonnier\WP\Redirect\Commands\RedirectFixer;
 use Bonnier\WP\Redirect\Db\Bootstrap;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
@@ -95,6 +96,7 @@ class Plugin
         if ( defined('WP_CLI') && WP_CLI ) {
             CsvImport::register();
             RedirectFixer::register();
+            ParamLessHasher::register();
         }
 
         BonnierRedirect::register();

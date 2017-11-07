@@ -28,7 +28,7 @@ class ParamLessHasher
                 $wpdb->prepare(
                     "UPDATE wp_bonnier_redirects SET `paramless_from_hash` = MD5(%s), `from` = %s, `from_hash` = MD5(%s) WHERE `id` = %d",
                     [
-                        str_before($redirect->from, '?'),
+                        BonnierRedirect::trimAddSlash($redirect->from, false), // paramless
                         $trimmedFrom = BonnierRedirect::trimAddSlash($redirect->from),
                         $trimmedFrom,
                         $redirect->id
@@ -38,7 +38,7 @@ class ParamLessHasher
 
             if ($updatedRedirect) {
                 WP_CLI::success(sprintf("Fixed redirect %d from: %s",
-                        $redirect->id, $this->fix_encoding($redirect->from))
+                        $redirect->id, $redirect->from)
                 );
             }
         });
