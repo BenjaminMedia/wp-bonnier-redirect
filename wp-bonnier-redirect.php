@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WP Bonnier Redirect
- * Version: 1.2.7
+ * Version: 1.3.0
  * Plugin URI: https://github.com/BenjaminMedia/wp-bonnier-redirect
  * Description: This plugin creates redirects with support for Polylang
  * Author: Bonnier - Nicklas Kevin Frank
@@ -12,6 +12,7 @@ namespace Bonnier\WP\Redirect;
 
 // Do not access this file directly
 use Bonnier\WP\Redirect\Commands\CsvImport;
+use Bonnier\WP\Redirect\Commands\ParamLessHasher;
 use Bonnier\WP\Redirect\Commands\RedirectFixer;
 use Bonnier\WP\Redirect\Db\Bootstrap;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
@@ -95,6 +96,7 @@ class Plugin
         if ( defined('WP_CLI') && WP_CLI ) {
             CsvImport::register();
             RedirectFixer::register();
+            ParamLessHasher::register();
         }
 
         BonnierRedirect::register();
