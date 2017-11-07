@@ -131,7 +131,7 @@ class RedirectPage
                                         'headers': { 'Content-Type': 'application/x-www-form-urlencoded' }
                                     }
                                 ).then(function (data, status, request) {
-                                    if(data.body == 0 || !data.body.data) {
+                                    if(data.body == 0 || !data.body) {
                                         this.status = 'failed';
                                     } else {
                                         this.newRedirect = {
