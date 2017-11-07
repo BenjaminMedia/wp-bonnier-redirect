@@ -162,16 +162,19 @@ class BonnierRedirect
             $wpdb->get_row(
                 $wpdb->prepare(
                     "INSERT INTO `wp_bonnier_redirects` 
-                    (`from`, `from_hash`, `to`, `to_hash`, `locale`, `type`, `wp_id`, `code`) 
-                    VALUES (%s, MD5(%s), %s, MD5(%s), %s, %s, %s, %d)",
-                    $fromUrl = self::trimAddSlash($from),
-                    $fromUrl,
-                    $toUrl = self::trimAddSlash($to),
-                    $toUrl,
-                    $locale,
-                    $type,
-                    $id,
-                    $code
+                    (`from`, `from_hash`, `paramless_from_hash`, `to`, `to_hash`, `locale`, `type`, `wp_id`, `code`) 
+                    VALUES (%s, MD5(%s), MD5(%s), %s, MD5(%s), %s, %s, %s, %d)",
+                    [
+                        $fromUrl = self::trimAddSlash($from),
+                        $fromUrl,
+                        self::trimAddSlash($fromUrl, false),
+                        $toUrl = self::trimAddSlash($to),
+                        $toUrl,
+                        $locale,
+                        $type,
+                        $id,
+                        $code
+                    ]
                 )
             );
         } catch (\Exception $e) {
