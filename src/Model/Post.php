@@ -42,6 +42,10 @@ class Post extends AbstractRedirectionModel
             return;
         }
 
+        if(empty($post->post_name)) {
+            return;
+        }
+
         self::$newPost = $newPost;
 
         if($post->post_type !== 'page') {
@@ -65,7 +69,7 @@ class Post extends AbstractRedirectionModel
             $newLink = '/' . $newPost->post_name;
         }
 
-        if($oldLink != $newLink) {
+        if($oldLink != $newLink && $oldLink !== '/') {
             if(self::invalidSlug($newLink)) {
                 self::setError('The slug \'' . $newLink . '\' seems to be an invalid slug');
             } else if (!BonnierRedirect::handleRedirect($oldLink, $newLink, pll_get_post_language($id), self::type(), $id)) {
@@ -80,6 +84,9 @@ class Post extends AbstractRedirectionModel
 
     private static function getCategories($category)
     {
+        if(!$category) {
+            return '/';
+        }
         $slugs = collect([]);
         $hasParent = true;
         while ($hasParent) {

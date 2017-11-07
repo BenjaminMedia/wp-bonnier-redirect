@@ -10,10 +10,11 @@ class Bootstrap
         $charset_collate = $wpdb->get_charset_collate();
 
         $sql = "SET sql_notes = 1;
-            CREATE TABLE IF NOT EXISTS `$table_name` (
+            CREATE TABLE `$table_name` (
               `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
               `from` text CHARACTER SET utf8 NOT NULL,
               `from_hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+              `paramless_from_hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
               `to` text CHARACTER SET utf8 NOT NULL,
               `to_hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
               `locale` varchar(2) CHARACTER SET utf8 NOT NULL,
@@ -23,7 +24,8 @@ class Bootstrap
               PRIMARY KEY (`id`),
               UNIQUE KEY `from_hash` (`from_hash`,`to_hash`,`locale`),
               KEY `from_hash_2` (`from_hash`,`to_hash`,`locale`),
-              KEY `from_hash_3` (`from_hash`)
+              KEY `from_hash_3` (`from_hash`),
+              KEY `paramless_from_hash` (`paramless_from_hash`)
             ) $charset_collate;
             SET sql_notes = 1;
             ";

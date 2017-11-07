@@ -11,7 +11,8 @@ class BonnierRedirect
         add_action('template_redirect', function(){
             $requestURI = $_SERVER['REQUEST_URI'];
             // Ask for final redirects
-            $redirect = self::recursiveRedirectFinder(self::trimAddSlash($requestURI));
+            $redirect = self::recursiveRedirectFinder($requestURI);
+
             // If an redirect is found
             if($redirect && isset($redirect->to)) {
                 // Redirect to it
@@ -31,7 +32,12 @@ class BonnierRedirect
 
     private static function redirectTo($to, $case, $requestURI) {
         header('X-Bonnier-Redirect: '.$case);
-        wp_redirect($to . (parse_url($requestURI, PHP_URL_QUERY) ? '?' : '') . parse_url($requestURI, PHP_URL_QUERY), $redirect->code ?? 301);
+        $query = parse_url($requestURI, PHP_URL_QUERY);
+        wp_redirect(
+            static::fixEncoding($to) . ($query ? '?' : '') . $query, // Build redirect with request query params
+            $redirect->code ?? 301
+        );
+        die(); // Prevent further execution to avoid hitting wp rocket cache
     }
 
     public static function getErrorString($type, $id) {
@@ -39,7 +45,7 @@ class BonnierRedirect
     }
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
-        $urlEncodedTo = str_replace('%2F', '/', urlencode($to));
+        $urlEncodedTo = static::fixEncoding($to);
         if(self::redirectExists($urlEncodedTo, $locale)) {
             return false;
         }
@@ -82,7 +88,7 @@ class BonnierRedirect
                     $wpdb->prepare(
                         "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
-                    WHERE `from` = %s AND `locale` = %s",
+                    WHERE `from_hash` = MD5(%s) AND `locale` = %s",
                         $new,
                         $locale
                     )
@@ -131,7 +137,7 @@ class BonnierRedirect
                     $wpdb->prepare(
                         "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
-                    WHERE `from` = %s AND `locale` = %s",
+                    WHERE `from_hash` = MD5(%s) AND `locale` = %s",
                         $url,
                         $url,
                         $locale
@@ -225,6 +231,7 @@ class BonnierRedirect
      * @return mixed
      */
     private static function recursiveRedirectFinder($from) {
+        $from = self::trimAddSlash($from); // always look for the url without query params
         $redirect = self::findRedirectFor($from);
         // If it is an actual redirect
         if($redirect && isset($redirect->to)) {
@@ -249,19 +256,31 @@ class BonnierRedirect
      * @return array|null|object|void['a' => $newTo, 'b' => $from]
      */
     private static function findRedirectFor($uri) {
+        $paramlessUri = str_before($uri, '?');
         global $wpdb;
         try {
-            $redirect = $wpdb->get_row(
+            $redirects = collect($wpdb->get_results( // All redirects that match the path without params
                 $wpdb->prepare(
-                    "SELECT * FROM `wp_bonnier_redirects` WHERE `from` = %s AND `locale` = %s",
-                    $uri,
+                    "SELECT * FROM `wp_bonnier_redirects` WHERE `paramless_from_hash` = MD5(%s) AND `locale` = %s",
+                    $paramlessUri,
                     function_exists('pll_current_language') ? pll_current_language() : ''
                 )
-            );
+            ));
+            if($redirects->isEmpty()) {
+                return null;
+            }
+            $preciseMatch = $redirects->first(function($redirect) use($uri){
+                return $redirect->from === $uri;
+            });
+            if($preciseMatch) { // Matches full url with query params
+                return $preciseMatch;
+            }
+            return $redirects->first(function($redirect) use($uri){ // Matches just url path without query params
+                return !str_contains($redirect->from, '?');
+            });
         } catch (\Exception $e) {
-            $redirect = null;
+            return null;
         }
-        return $redirect;
     }
 
     /**
@@ -277,9 +296,10 @@ class BonnierRedirect
             $wpdb->get_row(
                 $wpdb->prepare(
                     "UPDATE wp_bonnier_redirects
-                     SET `to` = %s
+                     SET `to` = %s, `to_hash` = MD5(%s)
                      WHERE `from` = %s;
                     ",
+                    $newTo,
                     $newTo,
                     $from
                 )
@@ -370,5 +390,21 @@ class BonnierRedirect
             return false;
         }
         return null;
+    }
+
+    private static function urlDecode($url)
+    {
+        $url = urldecode($url);
+        if (str_contains($url, '%')) {
+            return static::urlDecode($url);
+        }
+        return $url;
+    }
+
+    private static function fixEncoding($url)
+    {
+        return collect(explode('/', static::urlDecode($url)))->map(function ($string) {
+            return urlencode($string); // encode the parts of the url between slashes
+        })->implode('/');
     }
 }
