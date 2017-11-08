@@ -32,9 +32,8 @@ class BonnierRedirect
 
     private static function redirectTo($to, $case, $requestURI) {
         header('X-Bonnier-Redirect: '.$case);
-        $query = parse_url($requestURI, PHP_URL_QUERY);
         wp_redirect(
-            static::fixEncoding($to) . ($query ? '?' : '') . $query, // Build redirect with request query params
+            static::mergeQueryParams(static::fixEncoding($to), $requestURI), // Build redirect with request query params
             $redirect->code ?? 301
         );
         die(); // Prevent further execution to avoid hitting wp rocket cache
@@ -165,7 +164,7 @@ class BonnierRedirect
             $wpdb->suppress_errors(true);
         }
         try {
-            $wpdb->get_row(
+            $success = $wpdb->query(
                 $wpdb->prepare(
                     "INSERT INTO `wp_bonnier_redirects` 
                     (`from`, `from_hash`, `paramless_from_hash`, `to`, `to_hash`, `locale`, `type`, `wp_id`, `code`) 
@@ -183,11 +182,14 @@ class BonnierRedirect
                     ]
                 )
             );
+            if($success) {
+                self::cleanBonnierCache($from);
+                return true;
+            }
         } catch (\Exception $e) {
             return null;
         }
-        self::cleanBonnierCache($from);
-        return true;
+        return null;
     }
 
     public static function deleteRedirect($id, $suppressErrors = false) {
@@ -392,6 +394,13 @@ class BonnierRedirect
         return null;
     }
 
+    /**
+     * Fully decodes an url, even if it was urlencoded multiple times
+     *
+     * @param $url
+     *
+     * @return string
+     */
     private static function urlDecode($url)
     {
         $url = urldecode($url);
@@ -401,10 +410,54 @@ class BonnierRedirect
         return $url;
     }
 
+    /**
+     * Fixes encoding on a url, both for the path and query params
+     *
+     * @param $url
+     *
+     * @return string
+     */
     private static function fixEncoding($url)
     {
-        return collect(explode('/', static::urlDecode($url)))->map(function ($string) {
+        $query = parse_url($url, PHP_URL_QUERY);
+        $path = parse_url($url, PHP_URL_PATH);
+
+        return collect(explode('/', static::urlDecode($path)))->map(function ($string) {
             return urlencode($string); // encode the parts of the url between slashes
-        })->implode('/');
+        })->implode('/') . static::encodeUrlQuery($query);
+    }
+
+    /**
+     * Encodes query params
+     *
+     * @param $query
+     *
+     * @return string
+     */
+    private static function encodeUrlQuery($query)
+    {
+        $query = static::urlDecode($query); // Make sure query is fully decoded
+        parse_str($query, $queryParams); // parses the string to associative array
+        return '?' . http_build_query($queryParams); // Builds a correct url encoded query
+    }
+
+    /**
+     * Merges query params
+     *
+     * @param $url
+     * @param $mergeQuery
+     *
+     * @return string
+     */
+    private static function mergeQueryParams($url, $mergeQuery)
+    {
+        $query = parse_url(static::urlDecode($url), PHP_URL_QUERY); // Get url query params
+        $mergeQuery = parse_url($mergeQuery, PHP_URL_QUERY); // Get the merge Params
+
+        parse_str($query, $queryParams); // get the query params
+        parse_str($mergeQuery, $mergeParams); // // get the merge params
+
+        // Build a correct url encoded query with merged params
+        return parse_url($url, PHP_URL_PATH) . '?' . http_build_query(array_merge($mergeParams, $queryParams));
     }
 }
