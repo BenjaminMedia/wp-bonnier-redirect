@@ -62,7 +62,7 @@ class Post extends AbstractRedirectionModel
                 $newCategory = get_term($newCategoryId);
             }
 
-            $oldLink = self::getCategories($oldCategory).'/'.$post->post_name;
+            $oldLink = parse_url(get_permalink($post->ID), PHP_URL_PATH);
             $newLink = self::getCategories($newCategory).'/'.$newPost->post_name;
         } else {
             $oldLink = '/' . $post->post_name;
