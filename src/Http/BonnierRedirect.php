@@ -76,7 +76,7 @@ class BonnierRedirect
     /**
      * Check that new url isn't already redirecting
      *
-     * @param $frpm
+     * @param $from
      * @param $locale
      * @param int $code
      * @return bool|null
