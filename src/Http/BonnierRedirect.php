@@ -343,7 +343,9 @@ class BonnierRedirect
         if(empty($url)) {
             return null;
         }
-        return static::fixEncoding(($start ? '/' : '')
+        return static::fixEncoding(
+            (($host = parse_url($url, PHP_URL_HOST)) ? (($scheme = parse_url($url, PHP_URL_SCHEME)) ? $scheme . '://' : 'https://') . $host : '')
+            . ($start ? '/' : '')
             . trim(parse_url($url, PHP_URL_PATH), '/')
             . ($withQueryParams ? self::sortQueryParams($url) : '')
             . ($end ? '/' : ''));
@@ -431,8 +433,10 @@ class BonnierRedirect
     {
         $query = parse_url($url, PHP_URL_QUERY);
         $path = parse_url($url, PHP_URL_PATH);
+        $host = parse_url($url, PHP_URL_HOST);
+        $scheme = parse_url($url, PHP_URL_SCHEME);
 
-        return collect(explode('/', static::urlDecode($path)))->map(function ($string) {
+        return ($host ? ($scheme ? $scheme . '://' : 'https://') . $host : '') . collect(explode('/', static::urlDecode($path)))->map(function ($string) {
             return urlencode($string); // encode the parts of the url between slashes
         })->implode('/') . static::encodeUrlQuery($query);
     }
@@ -470,7 +474,10 @@ class BonnierRedirect
 
         $params =  http_build_query(array_merge($mergeParams, $queryParams)); // merge params and build encoded query
 
+        $host = parse_url($url, PHP_URL_HOST);
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
         // Build a correct url encoded query with merged params
-        return parse_url($url, PHP_URL_PATH) . (!empty($params) ? '?' : '') . $params;
+        return ($host ? ($scheme ? $scheme . '://' : 'https://') . $host : '') . parse_url($url, PHP_URL_PATH) . (!empty($params) ? '?' : '') . $params;
     }
 }
