@@ -368,10 +368,13 @@ class BonnierRedirect
         if(empty($url)) {
             return null;
         }
-        return static::fixEncoding(($start ? '/' : '')
-            . trim(parse_url($url, PHP_URL_PATH), '/')
-            . ($withQueryParams ? self::sortQueryParams($url) : '')
-            . ($end ? '/' : ''));
+        return static::fixEncoding(
+            static::getHostIfExists($url) .
+            ($start ? '/' : '') .
+            trim(parse_url($url, PHP_URL_PATH), '/') .
+            ($withQueryParams ? self::sortQueryParams($url) : '') .
+            ($end ? '/' : '')
+        );
     }
 
     private static function sortQueryParams($url) {
@@ -380,6 +383,13 @@ class BonnierRedirect
             return '';
         }
         return '?' . implode('&', $params);
+    }
+
+    private static function getHostIfExists($url) {
+        $host = parse_url($url, PHP_URL_HOST);
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        // If there is a host, we add it to the scheme if it is there, else we add https to it.
+        return $host ? (($scheme ? $scheme . '://' : 'https://') . $host) : '';
     }
 
     public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20) {
@@ -458,9 +468,9 @@ class BonnierRedirect
         $query = parse_url($url, PHP_URL_QUERY);
         $path = parse_url($url, PHP_URL_PATH);
 
-        return collect(explode('/', static::urlDecode($path)))->map(function ($string) {
-            return urlencode($string); // encode the parts of the url between slashes
-        })->implode('/') . static::encodeUrlQuery($query);
+        return static::getHostIfExists($url) . collect(explode('/', static::urlDecode($path)))->map(function ($string) {
+                return urlencode($string); // encode the parts of the url between slashes
+            })->implode('/') . static::encodeUrlQuery($query);
     }
 
     /**
@@ -497,6 +507,6 @@ class BonnierRedirect
         $params =  http_build_query(array_merge($mergeParams, $queryParams)); // merge params and build encoded query
 
         // Build a correct url encoded query with merged params
-        return parse_url($url, PHP_URL_PATH) . (!empty($params) ? '?' : '') . $params;
+        return static::getHostIfExists($url) . parse_url($url, PHP_URL_PATH) . (!empty($params) ? '?' : '') . $params;
     }
 }
