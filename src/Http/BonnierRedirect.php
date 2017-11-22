@@ -73,6 +73,12 @@ class BonnierRedirect
         return false;
     }
 
+    public static function remove($id) {
+        global $wpdb;
+        return $wpdb->delete('wp_bonnier_redirects', ['id' => $id]);
+        return false;
+    }
+
     /**
      * Check that new url isn't already redirecting
      *
@@ -234,17 +240,24 @@ class BonnierRedirect
     /**
      * Finds the final redirect of a given uri
      *
-     * @param $from
+     * @param     $from
+     * @param int $count
+     *
      * @return mixed
+     * @throws \Exception
      */
-    private static function recursiveRedirectFinder($from) {
+    public static function recursiveRedirectFinder($from, $count = 0) {
+        if($count > 50) {
+            throw new \Exception('Redirect loop detected: '. $from);
+        }
+
         $from = self::trimAddSlash($from); // always look for the url without query params
         $redirect = self::findRedirectFor($from);
 
         // If it is an actual redirect
         if($redirect && isset($redirect->to)) {
             // Find next redirect
-            $next = self::recursiveRedirectFinder($redirect->to);
+            $next = self::recursiveRedirectFinder($redirect->to, $count+1);
             // If it the next is also an redirect
             if($next && isset($next->to)) {
                 // Update self with new final destination
@@ -301,23 +314,35 @@ class BonnierRedirect
     private static function updateRedirect($from, $newTo) {
         $newTo = self::trimAddSlash($newTo);
         global $wpdb;
-        try {
-            $wpdb->get_row(
-                $wpdb->prepare(
-                    "UPDATE wp_bonnier_redirects
-                     SET `to` = %s, `to_hash` = MD5(%s), `paramless_from_hash` = MD5(%s)
-                     WHERE `from` = %s;
-                    ",
-                    $newTo,
-                    $newTo,
-                    static::trimAddSlash($from, false),
-                    static::trimAddSlash($from)
-                )
-            );
-        } catch (\Exception $e) {
+        $wpdb->suppress_errors(true);
+        $result = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE wp_bonnier_redirects
+                 SET `to` = %s, `to_hash` = MD5(%s), `paramless_from_hash` = MD5(%s)
+                 WHERE `from` = %s
+                 AND `locale` = %s;
+                ",
+                $newTo,
+                $newTo,
+                static::trimAddSlash($from, false),
+                static::trimAddSlash($from),
+                pll_current_language()
+            )
+        );
+        if(false === $result && str_contains($wpdb->last_error, 'Duplicate entry')) {
+            if($wpdb->delete('wp_bonnier_redirects', [
+                'from' => $from,
+                'to' => $newTo,
+                'locale' => pll_current_language()
+            ])) {
+                if(defined('WP_CLI')) {
+                    \WP_CLI::line(sprintf('Removing duplicate from: %s, to: %s, locale: %s', $from, $newTo, pll_current_language()));
+                }
+                return static::updateRedirect($from, $newTo);
+            }
             return false;
         }
-        return true;
+        return $result;
     }
 
     public static function deleteRedirectFor($type, $id) {
@@ -368,18 +393,19 @@ class BonnierRedirect
     }
 
     public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20) {
-        $filterFrom = static::trimAddSlash($filterFrom);
-        $filterTo = static::trimAddSlash($filterTo);
         global $wpdb;
+        $filterFrom = '%' . $wpdb->esc_like(static::trimAddSlash($filterFrom)) . '%';
+        $filterTo = '%' . $wpdb->esc_like(static::trimAddSlash($filterTo)) . '%';
+        $locale = '%' . $wpdb->esc_like($locale) . '%';
         try {
             $count = $wpdb->get_results(
                 $wpdb->prepare(
                     "
                         SELECT count(*) 
                         FROM `wp_bonnier_redirects` 
-                        WHERE `to` LIKE '%%%s%%' AND 
-                        `from` LIKE '%%%s%%' AND 
-                        `locale` LIKE '%%%s%%'
+                        WHERE `to` LIKE %s AND 
+                        `from` LIKE %s AND 
+                        `locale` LIKE %s
                     ",
                     $filterTo,
                     $filterFrom,
@@ -393,9 +419,9 @@ class BonnierRedirect
                     "
                         SELECT * 
                         FROM `wp_bonnier_redirects` 
-                        WHERE `to` LIKE '%%%s%%' AND 
-                        `from` LIKE '%%%s%%' AND 
-                        `locale` LIKE '%%%s%%'
+                        WHERE `to` LIKE %s AND 
+                        `from` LIKE %s AND 
+                        `locale` LIKE %s
                         ORDER BY id
                         LIMIT %d
                         OFFSET %d
