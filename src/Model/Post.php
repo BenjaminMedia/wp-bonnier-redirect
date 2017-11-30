@@ -34,35 +34,24 @@ class Post extends AbstractRedirectionModel
 
     public static function save($id, $newPost) {
         global $post;
-        if (wp_is_post_revision($id) || wp_is_post_autosave($id)) {
-            return;
-        }
-
-        if($newPost && isset($newPost->post_status) && $newPost->post_status !== 'publish') {
-            return;
-        }
-
-        if(empty($post->post_name)) {
+        if (wp_is_post_revision($id) ||
+            wp_is_post_autosave($id) ||
+            ! isset($newPost->post_status) ||
+            $newPost->post_status !== 'publish' ||
+            empty($post->post_name)
+        ) {
             return;
         }
 
         self::$newPost = $newPost;
 
         if($post->post_type !== 'page') {
-            $oldCategory = null;
-            $newCategory = null;
+            $oldCategory = get_the_category($post->ID)[0] ?? null;
+            $newCategory = get_term($_REQUEST['acf'][static::ACF_CATEGORY_ID] ?? null) ?? null;
 
-            $oldCategoryTerms = get_the_category($post->ID);
-            if($oldCategoryTerms && !empty($oldCategoryTerms)) {
-                $oldCategory = $oldCategoryTerms[0];
-            }
-
-            $newCategoryId = $_REQUEST['acf'][static::ACF_CATEGORY_ID] ?? null;
-            if($newCategoryId) {
-                $newCategory = get_term($newCategoryId);
-            }
-
-            $oldLink = parse_url(get_permalink($post->ID), PHP_URL_PATH);
+            $oldLink = $oldCategory ?
+                self::getCategories($oldCategory).'/'.$post->post_name :
+                self::getOldPermalink($post);
             $newLink = self::getCategories($newCategory).'/'.$newPost->post_name;
         } else {
             $oldLink = '/' . $post->post_name;
@@ -110,6 +99,15 @@ class Post extends AbstractRedirectionModel
         if(self::$newPost) {
             set_transient(BonnierRedirect::getErrorString(self::type(), self::$newPost->ID), $errorMessage, 45);
         }
+    }
+
+    private static function getOldPermalink($post)
+    {
+        $permalink = parse_url(get_permalink($post->ID), PHP_URL_PATH);
+        if(($postName = basename($permalink)) !== $post->post_name) {
+            return str_replace($postName, $post->post_name, $permalink);
+        }
+        return $permalink;
     }
 
 }
