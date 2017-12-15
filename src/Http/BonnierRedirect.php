@@ -9,6 +9,11 @@ class BonnierRedirect
 {
     public static function register() {
         add_action('template_redirect', function(){
+            global $wp_query;
+            if (isset($wp_query->queried_object->ID)) {
+                // If WordPress has found a post matching the url then we skip checking for redirects
+                return;
+            }
             $requestURI = $_SERVER['REQUEST_URI'];
             // Ask for final redirects
             $redirect = self::recursiveRedirectFinder($requestURI);
