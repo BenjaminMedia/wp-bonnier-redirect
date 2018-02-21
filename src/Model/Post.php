@@ -34,6 +34,9 @@ class Post extends AbstractRedirectionModel
 
     public static function save($id, $newPost) {
         global $post;
+        if(is_null($post) || 'acf-field-group' === $post->post_type) {
+            return;
+        }
         if (wp_is_post_revision($id) ||
             wp_is_post_autosave($id) ||
             ! isset($newPost->post_status) ||
