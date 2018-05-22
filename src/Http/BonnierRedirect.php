@@ -50,7 +50,7 @@ class BonnierRedirect
 
     public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
         $urlEncodedTo = static::fixEncoding($to);
-        if(self::redirectExists($urlEncodedTo, $locale)) {
+        if(self::redirectExists($urlEncodedTo, $locale) || self::redirectExists($from, $locale)) {
             return false;
         }
 
@@ -281,7 +281,7 @@ class BonnierRedirect
      * @param $uri
      * @return array|null|object|void['a' => $newTo, 'b' => $from]
      */
-    private static function findRedirectFor($uri) {
+    public static function findRedirectFor($uri) {
         $paramlessUri = static::trimAddSlash($uri, false);
         global $wpdb;
         try {

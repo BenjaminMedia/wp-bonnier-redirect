@@ -26,10 +26,12 @@ class RedirectPage
                 $_REQUEST['code'] ?? ''
             );
             if($response) {
-                wp_send_json(true);
+                wp_send_json_success(['message' => 'Redirect was added!']);
+            } else {
+                wp_send_json_error(['message' => 'Could not create redirect - possibly already existing.']);
             }
         }
-        wp_send_json_error(false);
+        wp_send_json_error(['message' => 'Could not create redirect - make sure all settings has a value.']);
     }
 
     static function bonnier_redirects_admin_delete_row() {
@@ -88,6 +90,7 @@ class RedirectPage
                         isCalculating: false,
                         showModal: false,
                         status: '',
+                        alert: '',
                         newRedirect: {
                             to: '',
                             from: '',
@@ -113,7 +116,7 @@ class RedirectPage
                             return Math.ceil(this.count / 20);
                         },
                         statusClass: function () {
-                            return 'alert-' + this.status;
+                            return 'alert-' + this.alert;
                         }
                     },
                     methods: {
@@ -131,8 +134,8 @@ class RedirectPage
                                         'headers': { 'Content-Type': 'application/x-www-form-urlencoded' }
                                     }
                                 ).then(function (data, status, request) {
-                                    if(data.body == 0 || !data.body) {
-                                        this.status = 'failed';
+                                    if(data.body.success === false) {
+                                      this.alert = 'failed';
                                     } else {
                                         this.newRedirect = {
                                             to: '',
@@ -142,8 +145,9 @@ class RedirectPage
                                             id: 0,
                                             code: 301
                                         }
-                                        this.status = 'success';
+                                      this.alert = 'success';
                                     }
+                                  this.status = data.body.data.message;
                                 }, function (data, status, request) {
                                     this.status = 'failed';
                                 });
@@ -282,7 +286,7 @@ class RedirectPage
                     <span>Code: </span> <br/><input disabled type="text" placeholder="Code" v-model="newRedirect.code"></br><br/>
                     <div v-if="status" class="alert fade in" v-bind:class="statusClass">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close" @click="status = ''">×</a>
-                        <strong>{{status}}!</strong>
+                        <strong>{{status}}</strong>
                     </div>
                 </div>
                 <div slot="footer">
@@ -344,9 +348,9 @@ class RedirectPage
                 border-color: #d6e9c6;
             }
             .alert-failed {
-                color: #a93036;
-                background-color: #dff0d8;
-                border-color: #d6e9c6;
+                color: #a94442;
+                background-color: #f2dede;
+                border-color: #ebccd1;
             }
             .alert {
                 padding: 15px;
