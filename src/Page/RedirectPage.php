@@ -17,7 +17,7 @@ class RedirectPage
 
     static function bonnier_redirects_admin_add_row() {
         if(isset($_REQUEST['from'], $_REQUEST['to'], $_REQUEST['locale'], $_REQUEST['type'], $_REQUEST['id'], $_REQUEST['code'])) {
-            $response = BonnierRedirect::handleRedirect(
+            $response = BonnierRedirect::createRedirect(
                 $_REQUEST['from'] ?? '',
                 $_REQUEST['to'] ?? '',
                 $_REQUEST['locale'] ?? '',
@@ -25,10 +25,10 @@ class RedirectPage
                 $_REQUEST['id'] ?? '',
                 $_REQUEST['code'] ?? ''
             );
-            if($response) {
-                wp_send_json_success(['message' => 'Redirect was added!']);
+            if($response['success']) {
+                wp_send_json_success(['message' => $response['message']]);
             } else {
-                wp_send_json_error(['message' => 'Could not create redirect - possibly already existing.']);
+                wp_send_json_error(['message' => $response['message']]);
             }
         }
         wp_send_json_error(['message' => 'Could not create redirect - make sure all settings has a value.']);

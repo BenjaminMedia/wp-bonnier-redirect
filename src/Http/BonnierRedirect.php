@@ -63,6 +63,41 @@ class BonnierRedirect
         return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, $suppressWarnings);
     }
 
+    public static function createRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
+        $urlEncodedTo = static::fixEncoding($to);
+        if(self::redirectExists($urlEncodedTo, $locale)) {
+            return [
+                'success' => false,
+                'message' => 'The URL you are trying to redirect TO, already redirects somewhere else.',
+            ];
+        }
+
+        if(self::redirectExists($from, $locale)) {
+            return [
+                'success' => false,
+                'message' => 'The URL you are trying to redirect FROM, already redirects somewhere else.',
+            ];
+        }
+
+        // If a redirect exists from /a to /b and we are trying to make
+        // a redirect from /b to /a. Then we need to make sure that
+        // /a to /b is removed so we don't make an infinite loop
+        self::removeReverse($from, $urlEncodedTo, $locale, $suppressWarnings);
+
+        // After making sure we don't create a redirect loop, we add the new redirect.
+        if (self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, true)) {
+            return [
+                'success' => true,
+                'message' => 'The redirect was added!',
+                ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'An error occured during the creation of the redirect.',
+        ];
+    }
+
     public static function removeFrom($url, $locale) {
         $url = static::trimAddSlash($url);
         if(self::redirectExists($url, $locale)) {
