@@ -11,7 +11,7 @@ use WP_CLI_Command;
 
 class CsvImport extends WP_CLI_Command
 {
-    const CMD_NAMESPACE = 'bonnier redirect import';
+    const CMD_NAMESPACE = 'bonnier redirect-import';
 
     public static function register() {
         WP_CLI::add_command(static::CMD_NAMESPACE, __CLASS__);
@@ -30,7 +30,7 @@ class CsvImport extends WP_CLI_Command
      *
      * ## EXAMPLES
      *
-     * wp bonner redirect import csv <file> <locale>
+     * wp bonnier redirect-import csv <file> <locale>
      *
      * @param $args
      * @param $assoc_args
