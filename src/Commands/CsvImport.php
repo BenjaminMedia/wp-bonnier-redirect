@@ -8,12 +8,12 @@ use League\Csv\Reader;
 use WP_CLI;
 use WP_CLI_Command;
 
-
 class CsvImport extends WP_CLI_Command
 {
     const CMD_NAMESPACE = 'bonnier redirect-import';
 
-    public static function register() {
+    public static function register()
+    {
         WP_CLI::add_command(static::CMD_NAMESPACE, __CLASS__);
     }
 
@@ -38,7 +38,8 @@ class CsvImport extends WP_CLI_Command
      * @return null
      * @throws \WP_CLI\ExitException
      */
-    public function csv( $args, $assoc_args ) {
+    public function csv( $args, $assoc_args )
+    {
 
         list($file, $locale) = $args;
         list($csv, $headers) = $this->getCsv($file);
@@ -50,13 +51,23 @@ class CsvImport extends WP_CLI_Command
 
             $data = array_combine($headers, $row);
 
-            if(isset($data['path']) && isset($data['redirect_url'])) {
-                $response = BonnierRedirect::createRedirect($data['path'], $data['redirect_url'], $locale, 'imported', null);
-                if($response['success']) {
+            if (isset($data['path']) && isset($data['redirect_url'])) {
+                $response = BonnierRedirect::createRedirect(
+                    $data['path'],
+                    $data['redirect_url'],
+                    $locale,
+                    'imported',
+                    null
+                );
+                if ($response['success']) {
                     WP_CLI::success(sprintf('Created redirect from: %s to: %s', $data['path'], $data['redirect_url']));
                     $count++;
                 } else {
-                    WP_CLI::warning(sprintf('Failed creating redirect from: %s to: %s', $data['path'], $data['redirect_url']));
+                    WP_CLI::warning(sprintf(
+                        'Failed creating redirect from: %s to: %s',
+                        $data['path'],
+                        $data['redirect_url']
+                    ));
                 }
             }
         });
@@ -65,8 +76,8 @@ class CsvImport extends WP_CLI_Command
     }
 
 
-    private function getCsv($file) {
-
+    private function getCsv($file)
+    {
         WP_CLI::line(sprintf('Trying to get file from: %s', $file));
 
         try {

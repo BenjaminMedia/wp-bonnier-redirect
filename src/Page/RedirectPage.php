@@ -3,20 +3,28 @@
 namespace Bonnier\WP\Redirect\Page;
 
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
-use Bonnier\WP\Redirect\Plugin;
+use Bonnier\WP\Redirect\WpBonnierRedirect;
 
 class RedirectPage
 {
-
-    static function register() {
-        add_action('admin_menu', [__CLASS__, 'wp_bonnier_redirect_setup_admin_menu']);
-        add_action('wp_ajax_bonnier_redirects',[__CLASS__, 'bonnier_redirects_admin_rows']);
-        add_action('wp_ajax_bonnier_redirect_add',[__CLASS__, 'bonnier_redirects_admin_add_row']);
-        add_action('wp_ajax_bonnier_redirect_delete',[__CLASS__, 'bonnier_redirects_admin_delete_row']);
+    public static function register()
+    {
+        add_action('admin_menu', [__CLASS__, 'wpBonnierRedirectSetupAdminMenu']);
+        add_action('wp_ajax_bonnier_redirects', [__CLASS__, 'bonnierRedirectsAdminRows']);
+        add_action('wp_ajax_bonnier_redirect_add', [__CLASS__, 'bonnierRedirectsAdminAddRow']);
+        add_action('wp_ajax_bonnier_redirect_delete', [__CLASS__, 'bonnierRedirectsAdminDeleteRow']);
     }
 
-    static function bonnier_redirects_admin_add_row() {
-        if(isset($_REQUEST['from'], $_REQUEST['to'], $_REQUEST['locale'], $_REQUEST['type'], $_REQUEST['id'], $_REQUEST['code'])) {
+    public static function bonnierRedirectsAdminAddRow()
+    {
+        if (isset(
+            $_REQUEST['from'],
+            $_REQUEST['to'],
+            $_REQUEST['locale'],
+            $_REQUEST['type'],
+            $_REQUEST['id'],
+            $_REQUEST['code']
+        )) {
             $response = BonnierRedirect::createRedirect(
                 $_REQUEST['from'] ?? '',
                 $_REQUEST['to'] ?? '',
@@ -25,7 +33,7 @@ class RedirectPage
                 $_REQUEST['id'] ?? '',
                 $_REQUEST['code'] ?? ''
             );
-            if($response['success']) {
+            if ($response['success']) {
                 wp_send_json_success(['message' => $response['message']]);
             } else {
                 wp_send_json_error(['message' => $response['message']]);
@@ -34,12 +42,13 @@ class RedirectPage
         wp_send_json_error(['message' => 'Could not create redirect - make sure all settings has a value.']);
     }
 
-    static function bonnier_redirects_admin_delete_row() {
-        if(isset($_REQUEST['id'])) {
+    public static function bonnierRedirectsAdminDeleteRow()
+    {
+        if (isset($_REQUEST['id'])) {
             $response = BonnierRedirect::deleteRedirect(
                 $_REQUEST['id'] ?? ''
             );
-            if($response) {
+            if ($response) {
                 wp_send_json(true);
             }
         }
@@ -49,7 +58,8 @@ class RedirectPage
     /**
      * Function to fetch rows of redirects
      */
-    static function bonnier_redirects_admin_rows() {
+    public static function bonnierRedirectsAdminRows()
+    {
         list($posts, $count) = BonnierRedirect::paginateFetchRedirect(
             $_REQUEST['page_number'] ?? 1,
             $_REQUEST['to'] ?? '',
@@ -59,22 +69,42 @@ class RedirectPage
         wp_send_json(['hits' => json_decode(json_encode($posts), true), 'count' => $count]);
     }
 
-    static function wp_bonnier_redirect_setup_admin_menu() {
-        add_management_page('Bonnier Redirects', 'Bonnier Redirects', 'edit_others_pages', 'bonnier_redirects', [__CLASS__, 'wp_bonnier_redirect_options_page']);
+    public static function wpBonnierRedirectSetupAdminMenu()
+    {
+        add_management_page(
+            'Bonnier Redirects',
+            'Bonnier Redirects',
+            'edit_others_pages',
+            'bonnier_redirects',
+            [__CLASS__, 'wpBonnierRedirectOptionsPage']
+        );
     }
 
-    static function wp_bonnier_redirect_options_page() {
-        wp_enqueue_script('vue', plugin_dir_url(Plugin::instance()->file) . 'assets/vue.min.js');
-        wp_enqueue_script('vue-resource', plugin_dir_url(Plugin::instance()->file) . 'assets/vue-resource.min.js');
-        wp_enqueue_script('vue-paginate', plugin_dir_url(Plugin::instance()->file) . 'assets/vue-paginate.js');
-        wp_enqueue_script('lodash', plugin_dir_url(Plugin::instance()->file) . 'assets/lodash.min.js');
+    public static function wpBonnierRedirectOptionsPage()
+    {
+        wp_enqueue_script(
+            'vue',
+            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue.min.js'
+        );
+        wp_enqueue_script(
+            'vue-resource',
+            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue-resource.min.js'
+        );
+        wp_enqueue_script(
+            'vue-paginate',
+            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue-paginate.js'
+        );
+        wp_enqueue_script(
+            'lodash',
+            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/lodash.min.js'
+        );
         ?>
 
         <script>
             window.onload = function () {
                 Vue.component('modal', {
                     template: '#modal-template'
-                })
+                });
 
                 var app = new Vue({
                     el: '#app',
@@ -278,12 +308,30 @@ class RedirectPage
                 -->
                 <h3 slot="header">Add Redirects</h3>
                 <div slot="body">
-                    <span>From: </span> <br/><input type="text" placeholder="Filter From" v-model="newRedirect.from"></br><br/>
-                    <span>To: </span> <br/><input type="text" placeholder="Filter To" v-model="newRedirect.to"></br><br/>
-                    <span>Locale: </span> <br/><input type="text" placeholder="Locale" v-model="newRedirect.locale"></br><br/>
-                    <span>Type: </span> <br/><input disabled type="text" placeholder="Type" v-model="newRedirect.type"></br><br/>
-                    <span>Id: </span> <br/><input disabled type="text" placeholder="Id" v-model="newRedirect.id"></br><br/>
-                    <span>Code: </span> <br/><input disabled type="text" placeholder="Code" v-model="newRedirect.code"></br><br/>
+                    <span>From: </span>
+                    <br/>
+                    <input type="text" placeholder="Filter From" v-model="newRedirect.from">
+                    </br><br/>
+                    <span>To: </span>
+                    <br/>
+                    <input type="text" placeholder="Filter To" v-model="newRedirect.to">
+                    </br><br/>
+                    <span>Locale: </span>
+                    <br/>
+                    <input type="text" placeholder="Locale" v-model="newRedirect.locale">
+                    </br><br/>
+                    <span>Type: </span>
+                    <br/>
+                    <input disabled type="text" placeholder="Type" v-model="newRedirect.type">
+                    </br><br/>
+                    <span>Id: </span>
+                    <br/>
+                    <input disabled type="text" placeholder="Id" v-model="newRedirect.id">
+                    </br><br/>
+                    <span>Code: </span>
+                    <br/>
+                    <input disabled type="text" placeholder="Code" v-model="newRedirect.code">
+                    </br><br/>
                     <div v-if="status" class="alert fade in" v-bind:class="statusClass">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close" @click="status = ''">×</a>
                         <strong>{{status}}</strong>
@@ -301,26 +349,79 @@ class RedirectPage
             }
             .pagination{height:36px;margin:0;padding: 0;}
             .pager,.pagination ul{margin-left:0;*zoom:1}
-            .pagination ul{padding:0;display:inline-block;*display:inline;margin-bottom:0;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 2px rgba(0,0,0,.05);-moz-box-shadow:0 1px 2px rgba(0,0,0,.05);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+            .pagination ul {
+                padding:0;
+                display:inline-block;
+                *display:inline;
+                margin-bottom:0;
+                -webkit-border-radius:3px;
+                -moz-border-radius:3px;
+                border-radius:3px;
+                -webkit-box-shadow:0 1px 2px rgba(0,0,0,.05);
+                -moz-box-shadow:0 1px 2px rgba(0,0,0,.05);
+                box-shadow:0 1px 2px rgba(0,0,0,.05)
+            }
             .pagination li{display:inline}
-            .pagination a{float:left;padding:0 12px;line-height:30px;text-decoration:none;border:1px solid #ddd;border-left-width:0}
+            .pagination a {
+                float:left;
+                padding:0 12px;
+                line-height:30px;
+                text-decoration:none;
+                border:1px solid #ddd;
+                border-left-width:0
+            }
             .pagination .active a,.pagination a:hover{background-color:#f5f5f5;color:#94999E}
             .pagination .active a{color:#94999E;cursor:default}
-            .pagination .disabled a,.pagination .disabled a:hover,.pagination .disabled span{color:#94999E;background-color:transparent;cursor:default}
-            .pagination li:first-child a,.pagination li:first-child span{border-left-width:1px;-webkit-border-radius:3px 0 0 3px;-moz-border-radius:3px 0 0 3px;border-radius:3px 0 0 3px}
-            .pagination li:last-child a{-webkit-border-radius:0 3px 3px 0;-moz-border-radius:0 3px 3px 0;border-radius:0 3px 3px 0}
+            .pagination .disabled a,.pagination .disabled a:hover,.pagination .disabled span {
+                color:#94999E;
+                background-color:transparent;
+                cursor:default
+            }
+            .pagination li:first-child a,.pagination li:first-child span {
+                border-left-width:1px;
+                -webkit-border-radius:3px 0 0 3px;
+                -moz-border-radius:3px 0 0 3px;
+                border-radius:3px 0 0 3px
+            }
+            .pagination li:last-child a {
+                -webkit-border-radius:0 3px 3px 0;
+                -moz-border-radius:0 3px 3px 0;
+                border-radius:0 3px 3px 0
+            }
             .pagination-centered{text-align:center}
             .pagination-right{text-align:right}
             .pager{margin-bottom:18px;text-align:center}
             .pager:after,.pager:before{display:table;content:""}
             .pager li{display:inline}
-            .pager a{display:inline-block;padding:5px 12px;background-color:#fff;border:1px solid #ddd;-webkit-border-radius:15px;-moz-border-radius:15px;border-radius:15px}
+            .pager a {
+                display:inline-block;
+                padding:5px 12px;
+                background-color:#fff;
+                border:1px solid #ddd;
+                -webkit-border-radius:15px;
+                -moz-border-radius:15px;
+                border-radius:15px
+            }
             .pager a:hover{text-decoration:none;background-color:#f5f5f5}
             .pager .next a{float:right}
             .pager .previous a{float:left}
             .pager .disabled a,.pager .disabled a:hover{color:#999;background-color:#fff;cursor:default}
-            .pagination .prev.disabled span{float:left;padding:0 12px;line-height:30px;text-decoration:none;border:1px solid #ddd;border-left-width:1}
-            .pagination .next.disabled span{float:left;padding:0 12px;line-height:30px;text-decoration:none;border:1px solid #ddd;border-left-width:0}
+            .pagination .prev.disabled span {
+                float:left;
+                padding:0 12px;
+                line-height:30px;
+                text-decoration:none;
+                border:1px solid #ddd;
+                border-left-width:1
+            }
+            .pagination .next.disabled span {
+                float:left;
+                padding:0 12px;
+                line-height:30px;
+                text-decoration:none;
+                border:1px solid #ddd;
+                border-left-width:0
+            }
             .pagination li.active, .pagination li.disabled {
                 float:left;padding:0 1px;line-height:30px;text-decoration:none;border:1px solid #ddd;border-left-width:0
             }
@@ -331,14 +432,36 @@ class RedirectPage
             .pagination li:first-child {
                 border-left-width: 1px;
             }
-            .modal-mask{position:fixed;z-index:9998;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.5);display:table;transition:opacity .3s ease}
+            .modal-mask {
+                position:fixed;
+                z-index:9998;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                background-color:rgba(0,0,0,.5);
+                display:table;
+                transition:opacity .3s ease
+            }
             .modal-wrapper{display:table-cell;vertical-align:middle}
-            .modal-container{width:300px;margin:0 auto;padding:20px 30px;background-color:#fff;border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,.33);transition:all .3s ease;font-family:Helvetica,Arial,sans-serif}
+            .modal-container {
+                width:300px;
+                margin:0 auto;
+                padding:20px 30px;
+                background-color:#fff;
+                border-radius:2px;
+                box-shadow:0 2px 8px rgba(0,0,0,.33);
+                transition:all .3s ease;
+                font-family:Helvetica,Arial,sans-serif
+            }
             .modal-header h3{margin-top:0;color:#42b983}
             .modal-body{margin:20px 0}
             .modal-default-button{float:right}
             .modal-enter,.modal-leave-active{opacity:0}
-            .modal-enter .modal-container, .modal-leave-active .modal-container{-webkit-transform:scale(1.1);transform:scale(1.1)}
+            .modal-enter .modal-container, .modal-leave-active .modal-container {
+                -webkit-transform:scale(1.1);
+                transform:scale(1.1)
+            }
             .fade.in {
                 opacity: 1;
             }

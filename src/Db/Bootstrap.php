@@ -4,13 +4,14 @@ namespace Bonnier\WP\Redirect\Db;
 
 class Bootstrap
 {
-    public static function create_redirects_table() {
+    public static function createRedirectsTable()
+    {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'bonnier_redirects';
-        $charset_collate = $wpdb->get_charset_collate();
+        $table = $wpdb->prefix . 'bonnier_redirects';
+        $charset = $wpdb->get_charset_collate();
 
         $sql = "SET sql_notes = 1;
-            CREATE TABLE `$table_name` (
+            CREATE TABLE `$table` (
               `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
               `from` text CHARACTER SET utf8 NOT NULL,
               `from_hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
@@ -26,10 +27,10 @@ class Bootstrap
               KEY `from_hash_2` (`from_hash`,`to_hash`,`locale`),
               KEY `from_hash_3` (`from_hash`),
               KEY `paramless_from_hash` (`paramless_from_hash`)
-            ) $charset_collate;
+            ) $charset;
             SET sql_notes = 1;
             ";
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
     }
 }

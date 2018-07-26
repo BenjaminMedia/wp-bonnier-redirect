@@ -2,13 +2,13 @@
 
 namespace Bonnier\WP\Redirect\Model;
 
-
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 // THIS CLASS IS DEPRECATED
 class Category extends AbstractRedirectionModel
 {
-    public static function register() {
+    public static function register()
+    {
 //        add_action('edited_category', [__CLASS__, 'save'], 1);
 //        add_action('create_category', [__CLASS__, 'save'], 1);
 //        add_action('post_updated_messages', function () {
@@ -26,29 +26,43 @@ class Category extends AbstractRedirectionModel
 //        add_action('delete_post_category', [__CLASS__, 'delete']);
     }
 
-    public static function save($id) {
-        if ( !isset($_REQUEST['custom_permalinks_edit']) || isset($_REQUEST['post_ID']) ) return;
-        $newPermalink = ltrim(stripcslashes($_REQUEST['custom_permalink']),"/");
-        $original_link = custom_permalinks_permalink_for_term($id);
+    public static function save($categoryId)
+    {
+        if (!isset($_REQUEST['custom_permalinks_edit']) || isset($_REQUEST['post_ID'])) {
+            return;
+        }
+        $newPermalink = ltrim(stripcslashes($_REQUEST['custom_permalink']), "/");
+        $originalLink = custom_permalinks_permalink_for_term($categoryId);
 
-        if ( $newPermalink == $original_link ) {
+        if ($newPermalink == $originalLink) {
             $newPermalink = '';
         }
 
-        $term = get_term($id, 'category');
+        // $term = get_term($categoryId, 'category');
 
         // If new URL
         if (!empty($newPermalink)) {
-            $result = BonnierRedirect::handleRedirect($original_link, $newPermalink, pll_get_term_language($id), self::type(), $id);
-            if(!$result) {
-                set_transient(BonnierRedirect::getErrorString(self::type(), $id), 'The URL ' . $newPermalink . ' has already been used.', 45);
-                $_REQUEST['custom_permalinks_edit'] = $original_link;
+            $result = BonnierRedirect::handleRedirect(
+                $originalLink,
+                $newPermalink,
+                pll_get_term_language($categoryId),
+                self::type(),
+                $categoryId
+            );
+            if (!$result) {
+                set_transient(
+                    BonnierRedirect::getErrorString(self::type(), $categoryId),
+                    'The URL ' . $newPermalink . ' has already been used.',
+                    45
+                );
+                $_REQUEST['custom_permalinks_edit'] = $originalLink;
             }
         }
     }
 
-    public static function delete($id) {
-        BonnierRedirect::deleteRedirectFor(self::type(), $id);
+    public static function delete($categoryId)
+    {
+        BonnierRedirect::deleteRedirectFor(self::type(), $categoryId);
     }
 
     public static function type()

@@ -2,13 +2,13 @@
 
 namespace Bonnier\WP\Redirect\Http;
 
-
 use Bonnier\WP\Cache\Services\CacheApi;
 
 class BonnierRedirect
 {
-    public static function register() {
-        add_action('template_redirect', function(){
+    public static function register()
+    {
+        add_action('template_redirect', function () {
             global $wp_query;
             if (isset($wp_query->queried_object->ID)) {
                 // If WordPress has found a post matching the url then we skip checking for redirects
@@ -19,15 +19,14 @@ class BonnierRedirect
             $redirect = self::recursiveRedirectFinder($requestURI);
 
             // If an redirect is found
-            if($redirect && isset($redirect->to)) {
+            if ($redirect && isset($redirect->to)) {
                 // Redirect to it
                 self::redirectTo($redirect->to, $redirect->type, $requestURI);
             }
             // Check case redirect
-            if(is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
+            if (is_page() || is_category() || preg_match('/^\/(tags)\/?/', $requestURI)) {
                 $urlPath = parse_url($requestURI, PHP_URL_PATH);
-                if(preg_match('/[A-Z]/', $urlPath))
-                {
+                if (preg_match('/[A-Z]/', $urlPath)) {
                     self::redirectTo(strtolower($urlPath), 'case', $requestURI);
                 }
             }
@@ -35,7 +34,8 @@ class BonnierRedirect
         });
     }
 
-    private static function redirectTo($to, $case, $requestURI) {
+    private static function redirectTo($to, $case, $requestURI)
+    {
         header('X-Bonnier-Redirect: '.$case);
         wp_redirect(
             static::mergeQueryParams(static::fixEncoding($to), $requestURI), // Build redirect with request query params
@@ -44,13 +44,15 @@ class BonnierRedirect
         die(); // Prevent further execution to avoid hitting wp rocket cache
     }
 
-    public static function getErrorString($type, $id) {
+    public static function getErrorString($type, $id)
+    {
         return "bonner_redirect_save_{$type}_error_{$id}";
     }
 
-    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
+    public static function handleRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false)
+    {
         $urlEncodedTo = static::fixEncoding($to);
-        if(self::redirectExists($urlEncodedTo, $locale) || self::redirectExists($from, $locale)) {
+        if (self::redirectExists($urlEncodedTo, $locale) || self::redirectExists($from, $locale)) {
             return false;
         }
 
@@ -63,16 +65,17 @@ class BonnierRedirect
         return self::addRedirect($from, $urlEncodedTo, $locale, $type, $id, $code, $suppressWarnings);
     }
 
-    public static function createRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false) {
+    public static function createRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressWarnings = false)
+    {
         $urlEncodedTo = static::fixEncoding($to);
-        if(self::redirectExists($urlEncodedTo, $locale)) {
+        if (self::redirectExists($urlEncodedTo, $locale)) {
             return [
                 'success' => false,
                 'message' => 'The URL you are trying to redirect TO, already redirects somewhere else.',
             ];
         }
 
-        if(self::redirectExists($from, $locale)) {
+        if (self::redirectExists($from, $locale)) {
             return [
                 'success' => false,
                 'message' => 'The URL you are trying to redirect FROM, already redirects somewhere else.',
@@ -98,9 +101,10 @@ class BonnierRedirect
         ];
     }
 
-    public static function removeFrom($url, $locale) {
+    public static function removeFrom($url, $locale)
+    {
         $url = static::trimAddSlash($url);
-        if(self::redirectExists($url, $locale)) {
+        if (self::redirectExists($url, $locale)) {
             global $wpdb;
             try {
                 $wpdb->delete('wp_bonnier_redirects', ['from' => $url]);
@@ -113,10 +117,10 @@ class BonnierRedirect
         return false;
     }
 
-    public static function remove($id) {
+    public static function remove($id)
+    {
         global $wpdb;
         return $wpdb->delete('wp_bonnier_redirects', ['id' => $id]);
-        return false;
     }
 
     /**
@@ -127,23 +131,23 @@ class BonnierRedirect
      * @param int $code
      * @return bool|null
      */
-    public static function redirectExists($from, $locale, $code = 301) {
+    public static function redirectExists($from, $locale, $code = 301)
+    {
         $from = static::trimAddSlash($from);
         global $wpdb;
         try {
             return $wpdb->get_row(
-                    $wpdb->prepare(
-                        "SELECT count(1) as `count` 
+                $wpdb->prepare(
+                    "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
                     WHERE `from_hash` = MD5(%s) AND `locale` = %s",
-                        $from,
-                        $locale
-                    )
-                )->count > 0;
+                    $from,
+                    $locale
+                )
+            )->count > 0;
         } catch (\Exception $e) {
             return null;
         }
-        return false;
     }
 
     /**
@@ -153,7 +157,8 @@ class BonnierRedirect
      * @param bool $suppressErrors
      * @return bool|null
      */
-    private static function removeReverse($from, $to, $locale, $suppressErrors = false) {
+    private static function removeReverse($from, $to, $locale, $suppressErrors = false)
+    {
         $from = static::trimAddSlash($from);
         $to = static::trimAddSlash($to);
         global $wpdb;
@@ -166,7 +171,7 @@ class BonnierRedirect
         } catch (\Exception $e) {
             return null;
         }
-        if($removed > 0) {
+        if ($removed > 0) {
             self::cleanBonnierCache($to);
             return true;
         }
@@ -179,24 +184,24 @@ class BonnierRedirect
      * @param int $code
      * @return bool|null
      */
-    public static function urlIsPartOfRedirect($url, $locale, $code = 301) {
+    public static function urlIsPartOfRedirect($url, $locale, $code = 301)
+    {
         $url = static::trimAddSlash($url);
         global $wpdb;
         try {
             return $wpdb->get_row(
-                    $wpdb->prepare(
-                        "SELECT count(1) as `count` 
+                $wpdb->prepare(
+                    "SELECT count(1) as `count` 
                     FROM wp_bonnier_redirects
                     WHERE `from_hash` = MD5(%s) AND `locale` = %s",
-                        $url,
-                        $url,
-                        $locale
-                    )
-                )->count > 0;
+                    $url,
+                    $url,
+                    $locale
+                )
+            )->count > 0;
         } catch (\Exception $e) {
             return null;
         }
-        return false;
     }
 
     /**
@@ -209,7 +214,8 @@ class BonnierRedirect
      * @param bool $suppressErrors
      * @return bool|null
      */
-    public static function addRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressErrors = false) {
+    public static function addRedirect($from, $to, $locale, $type, $id, $code = 301, $suppressErrors = false)
+    {
         global $wpdb;
         if ($suppressErrors) {
             $wpdb->suppress_errors(true);
@@ -233,7 +239,7 @@ class BonnierRedirect
                     ]
                 )
             );
-            if($success) {
+            if ($success) {
                 self::cleanBonnierCache($from);
                 return true;
             }
@@ -243,7 +249,8 @@ class BonnierRedirect
         return null;
     }
 
-    public static function deleteRedirect($id, $suppressErrors = false) {
+    public static function deleteRedirect($id, $suppressErrors = false)
+    {
         global $wpdb;
         if ($suppressErrors) {
             $wpdb->suppress_errors(true);
@@ -258,16 +265,18 @@ class BonnierRedirect
         return true;
     }
 
-    private static function cleanBonnierCache($url) {
+    private static function cleanBonnierCache($url)
+    {
         // This doesn't actually work since the class has to exist
         // to even import the class in the class, but it shows
         // a pretty logical dependency for calling this.
-        if(class_exists(CacheApi::class)) {
+        if (class_exists(CacheApi::class)) {
             CacheApi::post(CacheApi::CACHE_UPDATE, rtrim('/', pll_home_url()) . $url);
         }
     }
 
-    private static function getFromInRedirect($id) {
+    private static function getFromInRedirect($id)
+    {
         try {
             global $wpdb;
             $from = $wpdb->get_var("SELECT `from` FROM wp_bonnier_redirects WHERE id = $id");
@@ -286,8 +295,9 @@ class BonnierRedirect
      * @return mixed
      * @throws \Exception
      */
-    public static function recursiveRedirectFinder($from, $count = 0) {
-        if($count > 50) {
+    public static function recursiveRedirectFinder($from, $count = 0)
+    {
+        if ($count > 50) {
             throw new \Exception('Redirect loop detected: '. $from);
         }
 
@@ -295,11 +305,11 @@ class BonnierRedirect
         $redirect = self::findRedirectFor($from);
 
         // If it is an actual redirect
-        if($redirect && isset($redirect->to)) {
+        if ($redirect && isset($redirect->to)) {
             // Find next redirect
             $next = self::recursiveRedirectFinder($redirect->to, $count+1);
             // If it the next is also an redirect
-            if($next && isset($next->to)) {
+            if ($next && isset($next->to)) {
                 // Update self with new final destination
                 self::updateRedirect($redirect->from, $next->to);
                 // Return final destination
@@ -314,9 +324,10 @@ class BonnierRedirect
      * Finds a redirect in the database for a given uri
      *
      * @param $uri
-     * @return array|null|object|void['a' => $newTo, 'b' => $from]
+     * @return array|null|object['a' => $newTo, 'b' => $from]
      */
-    public static function findRedirectFor($uri) {
+    public static function findRedirectFor($uri)
+    {
         $paramlessUri = static::trimAddSlash($uri, false);
         global $wpdb;
         try {
@@ -327,16 +338,17 @@ class BonnierRedirect
                     function_exists('pll_current_language') ? pll_current_language() : ''
                 )
             ));
-            if($redirects->isEmpty()) {
+            if ($redirects->isEmpty()) {
                 return null;
             }
-            $preciseMatch = $redirects->first(function($redirect) use($uri){
+            $preciseMatch = $redirects->first(function ($redirect) use ($uri) {
                 return $redirect->from === $uri;
             });
-            if($preciseMatch) { // Matches full url with query params
+            if ($preciseMatch) { // Matches full url with query params
                 return $preciseMatch;
             }
-            return $redirects->first(function($redirect) use($uri){ // Matches just url path without query params
+            // Matches just url path without query params
+            return $redirects->first(function ($redirect) use ($uri) {
                 return !str_contains($redirect->from, '?');
             });
         } catch (\Exception $e) {
@@ -351,7 +363,8 @@ class BonnierRedirect
      * @param $newTo
      * @return bool
      */
-    private static function updateRedirect($from, $newTo) {
+    private static function updateRedirect($from, $newTo)
+    {
         $newTo = self::trimAddSlash($newTo);
         global $wpdb;
         $wpdb->suppress_errors(true);
@@ -369,14 +382,19 @@ class BonnierRedirect
                 pll_current_language()
             )
         );
-        if(false === $result && str_contains($wpdb->last_error, 'Duplicate entry')) {
-            if($wpdb->delete('wp_bonnier_redirects', [
+        if (false === $result && str_contains($wpdb->last_error, 'Duplicate entry')) {
+            if ($wpdb->delete('wp_bonnier_redirects', [
                 'from' => $from,
                 'to' => $newTo,
                 'locale' => pll_current_language()
             ])) {
-                if(defined('WP_CLI')) {
-                    \WP_CLI::line(sprintf('Removing duplicate from: %s, to: %s, locale: %s', $from, $newTo, pll_current_language()));
+                if (defined('WP_CLI')) {
+                    \WP_CLI::line(sprintf(
+                        'Removing duplicate from: %s, to: %s, locale: %s',
+                        $from,
+                        $newTo,
+                        pll_current_language()
+                    ));
                 }
                 return static::updateRedirect($from, $newTo);
             }
@@ -385,7 +403,8 @@ class BonnierRedirect
         return $result;
     }
 
-    public static function deleteRedirectFor($type, $id) {
+    public static function deleteRedirectFor($type, $id)
+    {
         global $wpdb;
         try {
             $wpdb->get_row(
@@ -404,8 +423,9 @@ class BonnierRedirect
         return true;
     }
 
-    public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false) {
-        if(empty($url)) {
+    public static function trimAddSlash($url, $withQueryParams = true, $start = true, $end = false)
+    {
+        if (empty($url)) {
             return null;
         }
         return static::fixEncoding(
@@ -417,22 +437,25 @@ class BonnierRedirect
         );
     }
 
-    private static function sortQueryParams($url) {
+    private static function sortQueryParams($url)
+    {
         $params = preg_split('/\&/', parse_url($url, PHP_URL_QUERY), -1, PREG_SPLIT_NO_EMPTY);
-        if(empty($params) || !sort($params)) {
+        if (empty($params) || !sort($params)) {
             return '';
         }
         return '?' . implode('&', $params);
     }
 
-    private static function getHostIfExists($url) {
+    private static function getHostIfExists($url)
+    {
         $host = parse_url($url, PHP_URL_HOST);
         $scheme = parse_url($url, PHP_URL_SCHEME);
         // If there is a host, we add it to the scheme if it is there, else we add https to it.
         return $host ? (($scheme ? $scheme . '://' : 'https://') . $host) : '';
     }
 
-    public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20) {
+    public static function paginateFetchRedirect($page, $filterTo, $filterFrom, $locale, $perPage = 20)
+    {
         global $wpdb;
         $filterFrom = '%' . $wpdb->esc_like(static::trimAddSlash($filterFrom)) . '%';
         $filterTo = '%' . $wpdb->esc_like(static::trimAddSlash($filterTo)) . '%';
@@ -477,7 +500,6 @@ class BonnierRedirect
         } catch (\Exception $e) {
             return false;
         }
-        return null;
     }
 
     /**
@@ -510,7 +532,7 @@ class BonnierRedirect
 
         return static::getHostIfExists($url) . collect(explode('/', static::urlDecode($path)))->map(function ($string) {
                 return urlencode($string); // encode the parts of the url between slashes
-            })->implode('/') . static::encodeUrlQuery($query);
+        })->implode('/') . static::encodeUrlQuery($query);
     }
 
     /**

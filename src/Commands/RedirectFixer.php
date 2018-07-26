@@ -12,10 +12,10 @@ class RedirectFixer
     const CMD_NAMESPACE = 'bonnier redirect fix';
     const TYPE = 'Google Index Fix';
 
-    public static function register() {
+    public static function register()
+    {
         WP_CLI::add_command(static::CMD_NAMESPACE, __CLASS__);
     }
-
 
     /**
      * Runs the redirect fix
@@ -35,8 +35,15 @@ class RedirectFixer
             $title              = $post->post_title;
             $wpTitleSlug        = BonnierRedirect::trimAddSlash(sanitize_title($title));
             $postName           = BonnierRedirect::trimAddSlash($post->post_name);
-            $customPermalink    = BonnierRedirect::trimAddSlash(get_post_meta($post->ID, 'custom_permalink', true));
-            $redirectTo         = BonnierRedirect::trimAddSlash(parse_url(get_permalink($post->ID), PHP_URL_PATH));
+            $customPermalink    = BonnierRedirect::trimAddSlash(get_post_meta(
+                $post->ID,
+                'custom_permalink',
+                true
+            ));
+            $redirectTo         = BonnierRedirect::trimAddSlash(parse_url(
+                get_permalink($post->ID),
+                PHP_URL_PATH
+            ));
             $redirectsMade      = 0;
 
             $categories = $this->getCategories($post->ID);
@@ -90,24 +97,54 @@ class RedirectFixer
             }
 
             if ($wpTitleSlug && $wpTitleSlug != $redirectTo) {
-                if(BonnierRedirect::handleRedirect($wpTitleSlug, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                if (BonnierRedirect::handleRedirect(
+                    $wpTitleSlug,
+                    $redirectTo,
+                    $postLocale,
+                    static::TYPE,
+                    $post->ID,
+                    301,
+                    true
+                )) {
                     $redirectsMade++;
                 }
             }
             if ($postName && $postName != $redirectTo) {
-                if(BonnierRedirect::handleRedirect($postName, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                if (BonnierRedirect::handleRedirect(
+                    $postName,
+                    $redirectTo,
+                    $postLocale,
+                    static::TYPE,
+                    $post->ID,
+                    301,
+                    true
+                )) {
                     $redirectsMade++;
                 }
             }
             if ($customPermalink && $customPermalink != $redirectTo) {
-                if(BonnierRedirect::handleRedirect($customPermalink, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+                if (BonnierRedirect::handleRedirect(
+                    $customPermalink,
+                    $redirectTo,
+                    $postLocale,
+                    static::TYPE,
+                    $post->ID,
+                    301,
+                    true
+                )) {
                     $redirectsMade++;
                 }
             }
 
             BonnierRedirect::removeFrom($redirectTo, $postLocale);
 
-            WP_CLI::line(sprintf("Made %s redirects on %s: %s (%s)", $redirectsMade, $post->ID, $post->post_title, $postLocale));
+            WP_CLI::line(sprintf(
+                "Made %s redirects on %s: %s (%s)",
+                $redirectsMade,
+                $post->ID,
+                $post->post_title,
+                $postLocale
+            ));
         });
 
         WP_CLI::success("DONE!");
@@ -149,12 +186,28 @@ class RedirectFixer
     private function makeCategoryRedirects($catA, $catB, $redirectTo, $postLocale, $post, &$redirectsMade)
     {
         if ($catA != $redirectTo) {
-            if(BonnierRedirect::handleRedirect($catA, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+            if (BonnierRedirect::handleRedirect(
+                $catA,
+                $redirectTo,
+                $postLocale,
+                static::TYPE,
+                $post->ID,
+                301,
+                true
+            )) {
                 $redirectsMade++;
             }
         }
         if ($catB != $redirectTo) {
-            if(BonnierRedirect::handleRedirect($catB, $redirectTo, $postLocale, static::TYPE, $post->ID, 301, true)) {
+            if (BonnierRedirect::handleRedirect(
+                $catB,
+                $redirectTo,
+                $postLocale,
+                static::TYPE,
+                $post->ID,
+                301,
+                true
+            )) {
                 $redirectsMade++;
             }
         }
