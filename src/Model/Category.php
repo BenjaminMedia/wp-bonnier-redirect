@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Model;
 
+use Bonnier\Willow\MuPlugins\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 // THIS CLASS IS DEPRECATED
@@ -45,7 +46,7 @@ class Category extends AbstractRedirectionModel
             $result = BonnierRedirect::handleRedirect(
                 $originalLink,
                 $newPermalink,
-                pll_get_term_language($categoryId),
+                LanguageProvider::getTermLanguage($categoryId),
                 self::type(),
                 $categoryId
             );

@@ -3,6 +3,7 @@
 
 namespace Bonnier\WP\Redirect\Commands;
 
+use Bonnier\Willow\MuPlugins\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 use WP_CLI;
 use Bonnier\WP\ContentHub\Editor\Models\WpComposite;
@@ -30,7 +31,7 @@ class RedirectFixer
     {
         WpComposite::map_all(function (\WP_Post $post) {
             global $locale;
-            $postLocale         = pll_get_post_language($post->ID);
+            $postLocale         = LanguageProvider::getPostLanguage($post->ID);
             $locale             = $this->parseLocale($postLocale);
             $title              = $post->post_title;
             $wpTitleSlug        = BonnierRedirect::trimAddSlash(sanitize_title($title));

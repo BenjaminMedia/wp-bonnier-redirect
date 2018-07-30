@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Http;
 
+use Bonnier\Willow\MuPlugins\LanguageProvider;
 use Bonnier\WP\Cache\Services\CacheApi;
 
 class BonnierRedirect
@@ -271,7 +272,7 @@ class BonnierRedirect
         // to even import the class in the class, but it shows
         // a pretty logical dependency for calling this.
         if (class_exists(CacheApi::class)) {
-            CacheApi::post(CacheApi::CACHE_UPDATE, rtrim('/', pll_home_url()) . $url);
+            CacheApi::post(CacheApi::CACHE_UPDATE, rtrim('/', LanguageProvider::getHomeUrl()) . $url);
         }
     }
 
@@ -335,7 +336,7 @@ class BonnierRedirect
                 $wpdb->prepare(
                     "SELECT * FROM `wp_bonnier_redirects` WHERE `paramless_from_hash` = MD5(%s) AND `locale` = %s",
                     $paramlessUri,
-                    function_exists('pll_current_language') ? pll_current_language() : ''
+                    LanguageProvider::getCurrentLanguage() ?? ''
                 )
             ));
             if ($redirects->isEmpty()) {
@@ -379,21 +380,21 @@ class BonnierRedirect
                 $newTo,
                 static::trimAddSlash($from, false),
                 static::trimAddSlash($from),
-                pll_current_language()
+                LanguageProvider::getCurrentLanguage()
             )
         );
         if (false === $result && str_contains($wpdb->last_error, 'Duplicate entry')) {
             if ($wpdb->delete('wp_bonnier_redirects', [
                 'from' => $from,
                 'to' => $newTo,
-                'locale' => pll_current_language()
+                'locale' => LanguageProvider::getCurrentLanguage()
             ])) {
                 if (defined('WP_CLI')) {
                     \WP_CLI::line(sprintf(
                         'Removing duplicate from: %s, to: %s, locale: %s',
                         $from,
                         $newTo,
-                        pll_current_language()
+                        LanguageProvider::getCurrentLanguage()
                     ));
                 }
                 return static::updateRedirect($from, $newTo);

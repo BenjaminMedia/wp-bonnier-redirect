@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Model;
 
+use Bonnier\Willow\MuPlugins\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 class Tag extends AbstractRedirectionModel
@@ -45,7 +46,7 @@ class Tag extends AbstractRedirectionModel
             } elseif ($error = !BonnierRedirect::handleRedirect(
                 $originalLink,
                 $newPermalink,
-                pll_get_term_language($tagId),
+                LanguageProvider::getTermLanguage($tagId),
                 self::type(),
                 $tagId
             )) {

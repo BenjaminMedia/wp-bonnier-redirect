@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Model;
 
 
+use Bonnier\Willow\MuPlugins\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 class Post extends AbstractRedirectionModel
@@ -69,7 +70,7 @@ class Post extends AbstractRedirectionModel
             } elseif (!BonnierRedirect::handleRedirect(
                 $oldLink,
                 $newLink,
-                pll_get_post_language($postId),
+                LanguageProvider::getPostLanguage($postId),
                 self::type(),
                 $postId
             )) {
