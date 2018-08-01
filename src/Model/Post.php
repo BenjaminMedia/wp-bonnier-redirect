@@ -67,7 +67,7 @@ class Post extends AbstractRedirectionModel
             $newLink = '/' . $newPost->post_name;
         }
 
-        self::createRedirect($oldLink, $newLink);
+        self::createRedirect($id, $oldLink, $newLink);
     }
 
     public static function slugChange($id, $oldLink, $newLink) {
@@ -80,10 +80,10 @@ class Post extends AbstractRedirectionModel
             return;
         }
 
-        self::createRedirect($oldLink, $newLink);
+        self::createRedirect($id, $oldLink, $newLink);
     }
 
-    public static function createRedirect($oldLink, $newLink){
+    public static function createRedirect($id, $oldLink, $newLink){
         if($oldLink != $newLink && $oldLink !== '/') {
             if(self::invalidSlug($newLink)) {
                 self::setError('The slug \'' . $newLink . '\' seems to be an invalid slug');
