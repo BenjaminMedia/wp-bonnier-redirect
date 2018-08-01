@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Model;
 
 
+use Bonnier\WP\ContentHub\Editor\Models\WpComposite;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 class Post extends AbstractRedirectionModel
@@ -17,6 +18,11 @@ class Post extends AbstractRedirectionModel
     public static function register() {
         add_action('save_page', [__CLASS__, 'save'], 5, 2);
         add_action('save_post', [__CLASS__, 'save'], 5, 2);
+
+        if(class_exists('Bonnier\WP\ContentHub\Editor\Models\WpComposite')) {
+            add_action(WpComposite::SLUG_CHANGE_HOOK, [__CLASS__, 'slugChange'], 5, 3);
+        }
+
         add_action('post_updated_messages', function () {
             global $post;
             if(isset($post->ID)) {
@@ -61,6 +67,23 @@ class Post extends AbstractRedirectionModel
             $newLink = '/' . $newPost->post_name;
         }
 
+        self::createRedirect($oldLink, $newLink);
+    }
+
+    public static function slugChange($id, $oldLink, $newLink) {
+        if ($id < 0 ||
+            wp_is_post_revision($id) ||
+            wp_is_post_autosave($id) ||
+            empty($oldLink)||
+            empty($newLink)
+        ) {
+            return;
+        }
+
+        self::createRedirect($oldLink, $newLink);
+    }
+
+    public static function createRedirect($oldLink, $newLink){
         if($oldLink != $newLink && $oldLink !== '/') {
             if(self::invalidSlug($newLink)) {
                 self::setError('The slug \'' . $newLink . '\' seems to be an invalid slug');
