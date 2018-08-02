@@ -2,7 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Http;
 
-use Bonnier\Willow\MuPlugins\LanguageProvider;
+use Bonnier\Willow\MuPlugins\Helpers\LanguageProvider;
 use Bonnier\WP\Cache\Services\CacheApi;
 
 class BonnierRedirect

@@ -3,7 +3,7 @@
 
 namespace Bonnier\WP\Redirect\Commands;
 
-use Bonnier\Willow\MuPlugins\LanguageProvider;
+use Bonnier\Willow\MuPlugins\Helpers\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 use WP_CLI;
 use Bonnier\WP\ContentHub\Editor\Models\WpComposite;

@@ -3,7 +3,7 @@
 namespace Bonnier\WP\Redirect\Model;
 
 
-use Bonnier\Willow\MuPlugins\LanguageProvider;
+use Bonnier\Willow\MuPlugins\Helpers\LanguageProvider;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
 
 class Post extends AbstractRedirectionModel
