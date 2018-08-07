@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9581d802658993589645fb9442ccc210",
+    "content-hash": "1ecb01c4ad740dded997b9fd9e0941c6",
     "packages": [
         {
             "name": "advanced-custom-fields/advanced-custom-fields-pro",
@@ -27,12 +27,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/BenjaminMedia/wp-contenthub-editor.git",
-                "reference": "c33dfc60dc2b301a194bab1a96e781ae3745c7d0"
+                "reference": "6ed1f95f75146f618548b2346743a0a37b166607"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BenjaminMedia/wp-contenthub-editor/zipball/c33dfc60dc2b301a194bab1a96e781ae3745c7d0",
-                "reference": "c33dfc60dc2b301a194bab1a96e781ae3745c7d0",
+                "url": "https://api.github.com/repos/BenjaminMedia/wp-contenthub-editor/zipball/6ed1f95f75146f618548b2346743a0a37b166607",
+                "reference": "6ed1f95f75146f618548b2346743a0a37b166607",
                 "shasum": ""
             },
             "require": {
@@ -77,7 +77,7 @@
                 "plugin",
                 "wordpress"
             ],
-            "time": "2018-08-07T10:30:47+00:00"
+            "time": "2018-08-07T10:41:25+00:00"
         },
         {
             "name": "bonnier/php-video-helper",
@@ -183,12 +183,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/BenjaminMedia/WP-Bonnier-Cache.git",
-                "reference": "c83c14ff40b7fc13371a3fc88fe365622406abe8"
+                "reference": "48bc1c377e6577e30d5f6f4ee429d62b49a559e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BenjaminMedia/WP-Bonnier-Cache/zipball/c83c14ff40b7fc13371a3fc88fe365622406abe8",
-                "reference": "c83c14ff40b7fc13371a3fc88fe365622406abe8",
+                "url": "https://api.github.com/repos/BenjaminMedia/WP-Bonnier-Cache/zipball/48bc1c377e6577e30d5f6f4ee429d62b49a559e9",
+                "reference": "48bc1c377e6577e30d5f6f4ee429d62b49a559e9",
                 "shasum": ""
             },
             "require": {
@@ -213,7 +213,7 @@
                 }
             ],
             "description": "Integrates Bonnier Caching into WordPress",
-            "time": "2018-08-07T10:35:00+00:00"
+            "time": "2018-08-07T10:40:03+00:00"
         },
         {
             "name": "composer/installers",
