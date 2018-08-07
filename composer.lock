@@ -22,77 +22,33 @@
             "type": "wordpress-plugin"
         },
         {
-            "name": "benjaminmedia/wp-cxense",
-            "version": "dev-IVD",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/BenjaminMedia/wp-cxense.git",
-                "reference": "6c38d30a4a239e700d2bd8c89a35610f415b386d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/BenjaminMedia/wp-cxense/zipball/6c38d30a4a239e700d2bd8c89a35610f415b386d",
-                "reference": "6c38d30a4a239e700d2bd8c89a35610f415b386d",
-                "shasum": ""
-            },
-            "require": {
-                "bonnier/willow-mu-plugins": "dev-master",
-                "illuminate/support": "^5.6",
-                "johnpbloch/wordpress": "4.9.7",
-                "php": ">=7.1"
-            },
-            "type": "wordpress-plugin",
-            "autoload": {
-                "psr-4": {
-                    "Bonnier\\WP\\Cxense\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "authors": [
-                {
-                    "name": "Bonnier Publications",
-                    "email": "interactive@bonnier.dk",
-                    "homepage": "http://bonnierpublications.com"
-                }
-            ],
-            "description": "This plugin integrates your site with cXense by adding meta tags and calling the cXense api",
-            "homepage": "https://github.com/BenjaminMedia/wp-cxense",
-            "keywords": [
-                "plugin",
-                "wordpress"
-            ],
-            "time": "2018-08-02T13:10:29+00:00"
-        },
-        {
             "name": "bonnier/contenthub-editor",
             "version": "dev-IVD",
             "source": {
                 "type": "git",
                 "url": "https://github.com/BenjaminMedia/wp-contenthub-editor.git",
-                "reference": "b763a457f3467d2c415dfa37e7da087f378f8811"
+                "reference": "c33dfc60dc2b301a194bab1a96e781ae3745c7d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BenjaminMedia/wp-contenthub-editor/zipball/b763a457f3467d2c415dfa37e7da087f378f8811",
-                "reference": "b763a457f3467d2c415dfa37e7da087f378f8811",
+                "url": "https://api.github.com/repos/BenjaminMedia/wp-contenthub-editor/zipball/c33dfc60dc2b301a194bab1a96e781ae3745c7d0",
+                "reference": "c33dfc60dc2b301a194bab1a96e781ae3745c7d0",
                 "shasum": ""
             },
             "require": {
                 "advanced-custom-fields/advanced-custom-fields-pro": "*",
-                "benjaminmedia/wp-cxense": "dev-IVD",
                 "bonnier/php-video-helper": "1.0.*",
                 "bonnier/willow-mu-plugins": "dev-master",
                 "bonnier/wp-bonnier-cache": "dev-IVD",
                 "bonnier/wp-bonnier-redirect": "dev-IVD",
                 "composer/installers": "~1.0",
-                "ext-curl": "*",
                 "guzzlehttp/guzzle": "^6.3",
                 "illuminate/support": "^5.6",
-                "johnpbloch/wordpress": "4.9.7",
                 "php": ">=7.1",
                 "wpackagist-plugin/amazon-s3-and-cloudfront": "^1.4"
             },
             "require-dev": {
+                "johnpbloch/wordpress": "^4.9",
                 "lucatume/wp-browser": "^2.1",
                 "phpunit/phpunit": "7.1.*"
             },
@@ -100,7 +56,7 @@
             "autoload": {
                 "psr-4": {
                     "Bonnier\\WP\\ContentHub\\Editor\\": "src",
-                    "Tests\\": "tests"
+                    "Bonnier\\WP\\ContentHub\\Editor\\Tests\\": "tests"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -121,7 +77,7 @@
                 "plugin",
                 "wordpress"
             ],
-            "time": "2018-08-02T13:11:55+00:00"
+            "time": "2018-08-07T10:30:47+00:00"
         },
         {
             "name": "bonnier/php-video-helper",
