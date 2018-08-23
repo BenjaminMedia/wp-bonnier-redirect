@@ -84,19 +84,19 @@ class RedirectPage
     {
         wp_enqueue_script(
             'vue',
-            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue.min.js'
+            plugin_dir_url(WpBonnierRedirect::instance()->pluginDir) . 'assets/vue.min.js'
         );
         wp_enqueue_script(
             'vue-resource',
-            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue-resource.min.js'
+            plugin_dir_url(WpBonnierRedirect::instance()->pluginDir) . 'assets/vue-resource.min.js'
         );
         wp_enqueue_script(
             'vue-paginate',
-            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/vue-paginate.js'
+            plugin_dir_url(WpBonnierRedirect::instance()->pluginDir) . 'assets/vue-paginate.js'
         );
         wp_enqueue_script(
             'lodash',
-            plugin_dir_url(WpBonnierRedirect::instance()->file) . 'assets/lodash.min.js'
+            plugin_dir_url(WpBonnierRedirect::instance()->pluginDir) . 'assets/lodash.min.js'
         );
         ?>
 
