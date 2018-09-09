@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect;
 
+use Bonnier\WP\Redirect\Commands\CategorySpecialCharFix;
 use Bonnier\WP\Redirect\Commands\CsvImport;
 use Bonnier\WP\Redirect\Commands\ParamLessHasher;
 use Bonnier\WP\Redirect\Commands\RedirectFixer;
@@ -64,6 +65,7 @@ class WpBonnierRedirect
             CsvImport::register();
             RedirectFixer::register();
             ParamLessHasher::register();
+            CategorySpecialCharFix::register();
         }
 
         BonnierRedirect::register();
