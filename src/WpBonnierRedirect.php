@@ -7,7 +7,6 @@ use Bonnier\WP\Redirect\Commands\CsvImport;
 use Bonnier\WP\Redirect\Commands\ParamLessHasher;
 use Bonnier\WP\Redirect\Commands\RedirectFixer;
 use Bonnier\WP\Redirect\Http\BonnierRedirect;
-use Bonnier\WP\Redirect\Model\Post;
 use Bonnier\WP\Redirect\Model\Tag;
 use Bonnier\WP\Redirect\Page\RedirectPage;
 
@@ -71,7 +70,6 @@ class WpBonnierRedirect
         BonnierRedirect::register();
         RedirectPage::register();
 
-        Post::register();
         Tag::register();
     }
 
