@@ -10,7 +10,7 @@ use WP_CLI_Command;
 
 class CsvImport extends WP_CLI_Command
 {
-    const CMD_NAMESPACE = 'bonnier redirect-import';
+    const CMD_NAMESPACE = 'bonnier redirect import';
 
     public static function register()
     {
@@ -18,7 +18,7 @@ class CsvImport extends WP_CLI_Command
     }
 
     /**
-     * Imports redirects from a csv generated drupal file
+     * Imports redirects from a csv with from and to columns
      *
      * ## OPTIONS
      *
@@ -30,7 +30,7 @@ class CsvImport extends WP_CLI_Command
      *
      * ## EXAMPLES
      *
-     * wp bonnier redirect-import csv <file> <locale>
+     * wp bonnier redirect import csv <file> <locale>
      *
      * @param $args
      * @param $assoc_args
@@ -40,33 +40,36 @@ class CsvImport extends WP_CLI_Command
      */
     public function csv( $args, $assoc_args )
     {
-
         list($file, $locale) = $args;
-        list($csv, $headers) = $this->getCsv($file);
+
+        $csv = $this->getCsv($file);
 
         $count = 0;
 
+        collect($csv->getRecords())->each(function ($data) use ($locale, &$count) {
 
-        $csv->setOffset(1)->fetchAll(function ($row, $offset) use ($headers, $locale, &$count) {
-
-            $data = array_combine($headers, $row);
-
-            if (isset($data['path']) && isset($data['redirect_url'])) {
+            if (($redirectSource = $data['from'] ?? null) &&
+                ($redirectDestination = $data['to'] ?? null)
+            ) {
                 $response = BonnierRedirect::createRedirect(
-                    $data['path'],
-                    $data['redirect_url'],
+                    $redirectSource,
+                    $redirectDestination,
                     $locale,
-                    'imported',
+                    'csv-import',
                     null
                 );
                 if ($response['success']) {
-                    WP_CLI::success(sprintf('Created redirect from: %s to: %s', $data['path'], $data['redirect_url']));
+                    WP_CLI::success(sprintf(
+                        'Created redirect from: %s to: %s',
+                        $redirectSource,
+                        $redirectDestination
+                    ));
                     $count++;
                 } else {
                     WP_CLI::warning(sprintf(
                         'Failed creating redirect from: %s to: %s',
-                        $data['path'],
-                        $data['redirect_url']
+                        $data['from'],
+                        $data['to']
                     ));
                 }
             }
@@ -75,7 +78,6 @@ class CsvImport extends WP_CLI_Command
         WP_CLI::success(sprintf('Import done %s redirects were imported', $count));
     }
 
-
     private function getCsv($file)
     {
         WP_CLI::line(sprintf('Trying to get file from: %s', $file));
@@ -83,15 +85,13 @@ class CsvImport extends WP_CLI_Command
         try {
             $csv = Reader::createFromPath($file, 'r');
             $csv->setDelimiter(',');
-            $csv->getInputEncoding('UTF-8');
         } catch (Exception $e) {
             return WP_CLI::error('Failed loading csv file double check path');
         }
+
         // Get the headers/keys to match with values
-        $headers = $csv->fetchOne();
+        $csv->setHeaderOffset(0);
 
-        return [$csv, $headers];
+        return $csv;
     }
-
-
 }
