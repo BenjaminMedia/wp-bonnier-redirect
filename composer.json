@@ -53,8 +53,8 @@
     "php": ">=7.1",
     "illuminate/support": "^5.6",
     "league/csv": "^9.1",
-    "bonnier/contenthub-editor": "^3.0",
-    "bonnier/wp-bonnier-cache": "^2.0",
+    "bonnier/contenthub-editor": "^4.0",
+    "bonnier/wp-bonnier-cache": "^3.0",
     "bonnier/willow-mu-plugins": "^1.1"
   },
   "require-dev": {
