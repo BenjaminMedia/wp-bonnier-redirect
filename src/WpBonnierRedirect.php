@@ -2,42 +2,39 @@
 
 namespace Bonnier\WP\Redirect;
 
+use Bonnier\WP\Redirect\Admin\Dashboard;
 
 class WpBonnierRedirect
 {
-    /**
-     * Text domain for translators
-     */
-    const TEXT_DOMAIN = 'wp-bonnier-redirect';
-
-    const CLASS_DIR = 'src';
-
     /**
      * @var object Instance of this class.
      */
     private static $instance;
 
-    public $settings;
-
     /**
      * @var string Filename of this class.
      */
-    public $file;
+    private $file;
 
     /**
      * @var string Basename of this class.
      */
-    public $basename;
+    private $basename;
 
     /**
      * @var string Plugins directory for this plugin.
      */
-    public $pluginDir;
+    private $pluginDir;
 
     /**
      * @var string Plugins url for this plugin.
      */
-    public $pluginUrl;
+    private $pluginUrl;
+
+    /**
+     * @var string Path to the Views folder
+     */
+    private $viewsDir;
 
     /**
      * Do not load this more than once.
@@ -49,9 +46,10 @@ class WpBonnierRedirect
         $this->basename = plugin_basename($this->file);
         $this->pluginDir = plugin_dir_path($this->file);
         $this->pluginUrl = plugin_dir_url($this->file);
+        $this->viewsDir = sprintf('%s/Views/', rtrim($this->pluginDir, '/'));
 
-        // Load textdomain
-        load_plugin_textdomain(self::TEXT_DOMAIN, false, dirname($this->basename) . '/languages');
+        // Load admin menu
+        add_action('admin_menu', [Dashboard::class, 'addPluginMenus']);
     }
 
     /**
@@ -73,5 +71,18 @@ class WpBonnierRedirect
     public static function boot()
     {
         self::$instance = new self;
+    }
+
+    /**
+     * @param string $viewFile
+     * @return string
+     */
+    public function getViewPath(string $viewFile)
+    {
+        $fileName = sprintf('%s/%s', rtrim($this->viewsDir, '/'), ltrim($viewFile, '/'));
+        if (!file_exists($fileName)) {
+            throw new \RuntimeException(sprintf('The file \'%s\' does not exist!', $viewFile));
+        }
+        return $fileName;
     }
 }
