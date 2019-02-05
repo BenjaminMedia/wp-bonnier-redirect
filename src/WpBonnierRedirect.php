@@ -2,13 +2,6 @@
 
 namespace Bonnier\WP\Redirect;
 
-use Bonnier\WP\Redirect\Commands\CategorySpecialCharFix;
-use Bonnier\WP\Redirect\Commands\CsvImport;
-use Bonnier\WP\Redirect\Commands\ParamLessHasher;
-use Bonnier\WP\Redirect\Commands\RedirectFixer;
-use Bonnier\WP\Redirect\Http\BonnierRedirect;
-use Bonnier\WP\Redirect\Model\Tag;
-use Bonnier\WP\Redirect\Page\RedirectPage;
 
 class WpBonnierRedirect
 {
@@ -59,18 +52,6 @@ class WpBonnierRedirect
 
         // Load textdomain
         load_plugin_textdomain(self::TEXT_DOMAIN, false, dirname($this->basename) . '/languages');
-
-        if (defined('WP_CLI') && WP_CLI) {
-            CsvImport::register();
-            RedirectFixer::register();
-            ParamLessHasher::register();
-            CategorySpecialCharFix::register();
-        }
-
-        BonnierRedirect::register();
-        RedirectPage::register();
-
-        Tag::register();
     }
 
     /**
@@ -87,5 +68,10 @@ class WpBonnierRedirect
         }
 
         return self::$instance;
+    }
+
+    public static function boot()
+    {
+        self::$instance = new self;
     }
 }
