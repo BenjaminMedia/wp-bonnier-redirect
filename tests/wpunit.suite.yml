@@ -9,6 +9,8 @@ modules:
         - \Helper\Wpunit
     config:
         WPLoader:
+            loadOnly: false
+            isolatedInstall: true
             wpRootFolder: "%WP_ROOT_FOLDER%"
             dbName: "%TEST_DB_NAME%"
             dbHost: "%TEST_DB_HOST%"
@@ -17,6 +19,8 @@ modules:
             tablePrefix: "%TEST_TABLE_PREFIX%"
             domain: "%TEST_SITE_WP_DOMAIN%"
             adminEmail: "%TEST_SITE_ADMIN_EMAIL%"
-            title: "Test"        
+            title: "Test"
             plugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
             activatePlugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
+            bootstrapActions:
+              - [Bonnier\WP\Redirect\Database\DB, createRedirectsTable]

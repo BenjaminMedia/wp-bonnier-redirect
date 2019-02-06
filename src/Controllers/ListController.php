@@ -1,7 +1,9 @@
 <?php
 
-namespace Bonnier\WP\Redirect\Admin;
+namespace Bonnier\WP\Redirect\Controllers;
 
+use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Http\Request;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
 
 /**
@@ -10,19 +12,20 @@ use Bonnier\WP\Redirect\WpBonnierRedirect;
  *
  * @package Bonnier\WP\Redirect\Admin
  */
-class Overview extends \WP_List_Table
+class ListController extends \WP_List_Table
 {
-    /** @var Overview */
+    /** @var ListController */
     protected static $redirectsTable;
+    private $notices;
 
-    public static function loadRedirectsTable()
+    public static function displayRedirectsTable()
     {
         self::$redirectsTable->prepare_items();
 
-        include_once(WpBonnierRedirect::instance()->getViewPath('redirects-table-display.php'));
+        include_once(WpBonnierRedirect::instance()->getViewPath('redirectsTable.php'));
     }
 
-    public static function loadRedirectsTableScreenOptions()
+    public static function loadRedirectsTable()
     {
         $arguments = [
             'label' => 'Redirects per page',
@@ -45,6 +48,22 @@ class Overview extends \WP_List_Table
         self::$redirectsTable->display();
     }
 
+    public static function displayNotices()
+    {
+        foreach (self::$redirectsTable->getNotices() as $notice) {
+            $notice();
+        }
+    }
+
+    public function getNotices()
+    {
+        if ($this->notices) {
+            return $this->notices;
+        }
+
+        return [];
+    }
+
     public function get_columns()
     {
         return [
@@ -60,13 +79,13 @@ class Overview extends \WP_List_Table
 
     public function no_items()
     {
-        echo 'No redirects created.';
+        echo 'No redirects found.';
     }
 
     public function prepare_items()
     {
         // Check if a search was performed
-        $redirectSearchKey = isset($_REQUEST['s']) ? wp_unslash(trim($_REQUEST['s'])) : null;
+        $redirectSearchKey = wp_unslash(trim(Request::instance()->query->get('s'))) ?: null;
 
         // Column headers
         $this->_column_headers = $this->get_column_info();
@@ -74,23 +93,17 @@ class Overview extends \WP_List_Table
         // Check and process any actions such as bulk actions.
         $this->handleTableActions();
 
-        // Fetch table data
-        $tableData = $this->fetchTableData();
-
-        // Filter data in relation to a search
-        if ($redirectSearchKey) {
-            $tableData = $this->filterTableData($tableData, $redirectSearchKey);
-        }
-
         // Pagination
         $redirectsPerPage = $this->get_items_per_page('redirects_per_page');
         $tablePage = $this->get_pagenum();
 
-        // Slice results according to pagination
-        $this->items = array_slice($tableData, (($tablePage - 1) * $redirectsPerPage), $redirectsPerPage);
+        $offset = ($tablePage - 1) * $redirectsPerPage;
+
+        // Fetch table data
+        $this->items = $this->fetchTableData($redirectSearchKey, $offset, $redirectsPerPage);
 
         // Set pagination arguments
-        $totalRedirects = count($tableData);
+        $totalRedirects = DB::countRedirects($redirectSearchKey);
         $this->set_pagination_args([
             'total_items' => $totalRedirects,
             'per_page' => $redirectsPerPage,
@@ -108,10 +121,10 @@ class Overview extends \WP_List_Table
 
     public function column_redirect_from($item)
     {
-        $pageUrl = admin_url('options-general.php');
+        $pageUrl = admin_url('admin.php');
 
         $deleteRedirectArgs = [
-            'page' => wp_unslash($_REQUEST['page']),
+            'page' => Request::instance()->query->get('page'),
             'action' => 'delete_redirect',
             'redirect_id' => absint($item['id']),
             '_wpnonce' => wp_create_nonce('delete_redirect_nonce'),
@@ -120,7 +133,12 @@ class Overview extends \WP_List_Table
         $deleteRedirectLink = esc_url(add_query_arg($deleteRedirectArgs, $pageUrl));
 
         $actions = [
-            'trash' => sprintf('<a href="%s" onclick="return confirm(\'Are you sure, you want to delete this redirect?\')">Delete redirect</a>', $deleteRedirectLink),
+            'trash' => sprintf(
+                '<a href="%s" onclick="return confirm(\'%s\')">%s</a>',
+                $deleteRedirectLink,
+                'Are you sure, you want to delete this redirect?',
+                'Delete redirect'
+            ),
         ];
 
 
@@ -158,27 +176,12 @@ class Overview extends \WP_List_Table
         ];
     }
 
-    private function fetchTableData()
+    private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20)
     {
-        global $wpdb;
-        $table = $wpdb->prefix . 'bonnier_redirects';
-        $orderby = (isset($_GET['orderby'])) ? esc_sql($_GET['orderby']) : 'id';
-        $order = (isset($_GET['order'])) ? esc_sql($_GET['order']) : 'ASC';
+        $orderby = esc_sql(Request::instance()->query->get('orderby', 'id'));
+        $order = esc_sql(Request::instance()->query->get('order', 'DESC'));
 
-        $query = "SELECT
-          `id`, `from`, `to`, `locale`, `type`, `code`
-        FROM
-          $table
-        ORDER BY `$orderby` $order";
-
-        return $wpdb->get_results($query, ARRAY_A);
-    }
-
-    private function filterTableData($tableData, $searchKey)
-    {
-        return collect($tableData)->reject(function ($row) use ($searchKey) {
-            return !str_contains($row['from'], $searchKey) && !str_contains($row['to'], $searchKey);
-        })->values()->toArray();
+        return DB::fetchTable($searchKey, $orderby, $order, $perPage, $offset, ARRAY_A);
     }
 
     private function handleTableActions()
@@ -186,14 +189,14 @@ class Overview extends \WP_List_Table
         $tableAction = $this->current_action();
 
         if ('delete_redirect' === $tableAction) {
-            $nonce = wp_unslash($_REQUEST['_wpnonce']);
+            $nonce = wp_unslash(Request::instance()->query->get('_wpnonce'));
             if (!wp_verify_nonce($nonce, 'delete_redirect_nonce')) {
                 $this->invalidNonceRedirect();
             } else {
                 // TODO: Delete single redirect
-                add_action('admin_notices', function () {
+                $this->addNotice(function () {
                     ?>
-                    <div class="notice notice-success is-dismissible">
+                    <div id="message" class="updated notice is-dismissible">
                         <p>
                             <strong>Success:</strong>
                             The redirect was deleted!
@@ -204,20 +207,20 @@ class Overview extends \WP_List_Table
             }
         }
 
-        if ((isset($_REQUEST['action']) && $_REQUEST['action'] === 'bulk-delete') ||
-            (isset($_REQUEST['action2']) && $_REQUEST['action2'] === 'bulk-delete')
+        if (Request::instance()->query->get('action') === 'bulk-delete' ||
+            Request::instance()->query->get('action2') === 'bulk-delete'
         ) {
-            $nonce = wp_unslash($_REQUEST['_wpnonce']);
-            if (!wp_verify_nonce($nonce, 'bulk-settings_page_bonnier-redirects')) {
+            $nonce = wp_unslash(Request::instance()->query->get('_wpnonce'));
+            if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural'])) {
                 $this->invalidNonceRedirect();
-            } elseif (isset($_REQUEST['redirects'])) {
-                // TODO: delete all redirects
-                add_action('admin_notices', function () {
+            } elseif ($redirects = Request::instance()->query->get('redirects')) {
+                DB::deleteMultiple($redirects);
+                $this->addNotice(function () use ($redirects) {
                     ?>
                     <div class="notice notice-success is-dismissible">
                         <p>
                             <strong>Success:</strong>
-                            <?php echo count($_REQUEST['redirects']); ?> redirect(s) was deleted!
+                            <?php echo count($redirects); ?> redirect(s) was deleted!
                         </p>
                     </div>
                     <?php
@@ -231,8 +234,18 @@ class Overview extends \WP_List_Table
         wp_die('Invalid Nonce', 'Error', [
             'response' => 403,
             'back_link' => esc_url(
-                add_query_arg(['page' => wp_unslash($_REQUEST['page'])], admin_url('options-general.php'))
+                add_query_arg([
+                        'page' => wp_unslash(Request::instance()->query->get('page'))
+                ], admin_url('admin.php'))
             ),
         ]);
+    }
+
+    private function addNotice(callable $notice)
+    {
+        if (!$this->notices) {
+            $this->notices = [];
+        }
+        $this->notices[] = $notice;
     }
 }

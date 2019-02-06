@@ -11,7 +11,8 @@
   ],
   "require": {
     "php": ">=7.1",
-    "illuminate/support": "^5.7"
+    "illuminate/support": "^5.7",
+    "symfony/http-foundation": "^4.2"
   },
   "require-dev": {
     "johnpbloch/wordpress": "^4.9",
@@ -20,6 +21,11 @@
   "autoload": {
     "psr-4": {
       "Bonnier\\WP\\Redirect\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Bonnier\\WP\\Redirect\\Tests\\": "tests"
     }
   }
 }

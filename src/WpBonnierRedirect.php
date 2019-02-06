@@ -2,19 +2,21 @@
 
 namespace Bonnier\WP\Redirect;
 
-use Bonnier\WP\Redirect\Admin\Dashboard;
+use Bonnier\WP\Redirect\Controllers\Dashboard;
+use Bonnier\WP\Redirect\Controllers\CrudController;
+use Bonnier\WP\Redirect\Controllers\ListController;
 
 class WpBonnierRedirect
 {
     /**
-     * @var object Instance of this class.
+     * @var WpBonnierRedirect Instance of this class.
      */
     private static $instance;
 
     /**
      * @var string Filename of this class.
      */
-    private $file;
+    private $dir;
 
     /**
      * @var string Basename of this class.
@@ -37,19 +39,31 @@ class WpBonnierRedirect
     private $viewsDir;
 
     /**
+     * @var string Path to the Assets folder
+     */
+    private $assetsDir;
+
+    /**
+     * @var string Assets url
+     */
+    private $assetsUrl;
+
+    /**
      * Do not load this more than once.
      */
     private function __construct()
     {
         // Set plugin file variables
-        $this->file = __FILE__;
-        $this->basename = plugin_basename($this->file);
-        $this->pluginDir = plugin_dir_path($this->file);
-        $this->pluginUrl = plugin_dir_url($this->file);
-        $this->viewsDir = sprintf('%s/Views/', rtrim($this->pluginDir, '/'));
+        $this->dir = __DIR__;
+        $this->basename = plugin_basename($this->dir);
+        $this->pluginDir = plugin_dir_path($this->dir);
+        $this->pluginUrl = plugin_dir_url($this->dir);
+        $this->viewsDir = sprintf('%s/src/Views/', rtrim($this->pluginDir, '/'));
+        $this->assetsDir = sprintf('%s/assets', rtrim($this->pluginDir, '/'));
+        $this->assetsUrl = sprintf('%s/assets', rtrim($this->pluginUrl, '/'));
 
         // Load admin menu
-        add_action('admin_menu', [Dashboard::class, 'addPluginMenus']);
+        add_action('admin_menu', [$this, 'loadAdminMenus']);
     }
 
     /**
@@ -84,5 +98,56 @@ class WpBonnierRedirect
             throw new \RuntimeException(sprintf('The file \'%s\' does not exist!', $viewFile));
         }
         return $fileName;
+    }
+
+    public function loadAdminMenus()
+    {
+        add_menu_page(
+            'Bonnier Redirects',
+            'Bonnier Redirects',
+            'manage_options',
+            'bonnier-redirects',
+            [ListController::class, 'displayRedirectsTable'],
+            'dashicons-external'
+        );
+        $allRedirectsPageHook = add_submenu_page(
+            'bonnier-redirects',
+            'All Redirects',
+            'All Redirects',
+            'manage_options',
+            'bonnier-redirects',
+            [ListController::class, 'displayRedirectsTable']
+        );
+        $managePageHook = add_submenu_page(
+            'bonnier-redirects',
+            'Add New',
+            'Add New',
+            'manage_options',
+            'add-redirect',
+            [CrudController::class, 'displayAddRedirectPage']
+        );
+
+        add_action(sprintf('load-%s', $allRedirectsPageHook), [ListController::class, 'loadRedirectsTable']);
+        add_action(sprintf('load-%s', $managePageHook), [CrudController::class, 'handlePost']);
+        add_action(sprintf('load-%s', $managePageHook), [CrudController::class, 'registerScripts']);
+    }
+
+    public function assetURI(string $file)
+    {
+        if (!file_exists(sprintf('%s/%s', rtrim($this->assetsDir, '/'), ltrim($file, '/')))) {
+            throw new \RuntimeException(sprintf('The asset file \'%s\' does not exist!', $file));
+        }
+
+        return sprintf('%s/%s', rtrim($this->assetsUrl, '/'), ltrim($file, '/'));
+    }
+
+    public function assetVersion(string $file)
+    {
+        $filename = sprintf('%s/%s', rtrim($this->assetsDir, '/'), ltrim($file, '/'));
+        if (!file_exists($filename)) {
+            throw new \RuntimeException(sprintf('The asset file \'%s\' does not exist!', $file));
+        }
+
+        return filemtime($filename);
     }
 }

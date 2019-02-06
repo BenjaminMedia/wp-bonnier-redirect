@@ -1,0 +1,9 @@
+#bonnier-redirect-add-form table {
+    border-spacing: 0 20px;
+}
+#bonnier-redirect-add-form table tr td:first-child {
+    text-align: right;
+}
+#bonnier-redirect-add-form select {
+    width: 100%;
+}
