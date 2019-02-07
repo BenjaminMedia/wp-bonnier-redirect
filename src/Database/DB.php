@@ -20,6 +20,8 @@ class DB
     public function __construct(\wpdb $wpdb)
     {
         $this->wpdb = $wpdb;
+        $this->wpdb->hide_errors();
+        $this->wpdb->suppress_errors(true);
     }
 
     /**

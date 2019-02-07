@@ -6,18 +6,31 @@ use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Http\Request;
 use Bonnier\WP\Redirect\Models\Redirect;
+use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 
 class RedirectTest extends \Codeception\TestCase\WPTestCase
 {
+    /** @var RedirectRepository */
+    private $redirectRepository;
+
+    public function setUp()
+    {
+        parent::setUp();
+
+        global $wpdb;
+        $database = new DB($wpdb);
+        $this->redirectRepository = new RedirectRepository($database);
+    }
+
     public function testCanSaveRedirect()
     {
         $redirect = new Redirect();
+        $redirect->setFrom('/my/old/slug')
+            ->setTo('/my/new/slug')
+            ->setLocale('da')
+            ->setCode(Request::HTTP_PERMANENT_REDIRECT);
         try {
-            $redirect->setFrom('/my/old/slug')
-                ->setTo('/my/new/slug')
-                ->setLocale('da')
-                ->setCode(Request::HTTP_PERMANENT_REDIRECT)
-                ->save();
+            $redirect = $this->redirectRepository->save($redirect);
         } catch (DuplicateEntryException $e) {
             $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
         } catch (\Exception $e) {
@@ -25,8 +38,9 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         }
         $this->assertNotEquals(0, $redirect->getID());
 
-        $savedRedirect = new Redirect($redirect->getID());
+        $savedRedirect = $this->redirectRepository->getRedirectById($redirect->getID());
 
+        $this->assertNotNull($savedRedirect);
         $this->assertSame($redirect->toArray(), $savedRedirect->toArray());
     }
 
@@ -36,8 +50,9 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $firstRedirect->setFrom('/my/old/slug')
             ->setTo('/my/first/destination')
             ->setLocale('da')
-            ->setCode(Request::HTTP_PERMANENT_REDIRECT)
-            ->save();
+            ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+
+        $this->redirectRepository->save($firstRedirect);
 
         $secondRedirect = new Redirect();
         $secondRedirect->setFrom('/my/old/slug')
@@ -46,7 +61,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
             ->setCode(Request::HTTP_PERMANENT_REDIRECT);
 
         try {
-            $secondRedirect->save();
+            $this->redirectRepository->save($secondRedirect);
         } catch (DuplicateEntryException $exception) {
             $this->assertEquals(
                 'Cannot create entry, due to key constraint \'from_hash_locale\'',
@@ -65,10 +80,10 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
             $redirect->setFrom('/from/old/slug/' . $index)
                 ->setTo('/same/destination/slug')
                 ->setLocale('da')
-                ->setCode(Request::HTTP_PERMANENT_REDIRECT)
-                ->save();
+                ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+            $this->redirectRepository->save($redirect);
         }
 
-        $this->assertEquals(10, DB::countRedirects());
+        $this->assertEquals(10, $this->redirectRepository->countRows());
     }
 }

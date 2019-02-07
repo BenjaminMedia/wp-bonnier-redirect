@@ -14,7 +14,7 @@ class RedirectRepository extends BaseRepository
         $data = $this->database->findById($redirectID);
         if ($data) {
             $redirect = new Redirect();
-            $redirect->fromArray($data);
+            return $redirect->fromArray($data);
         }
 
         return null;
