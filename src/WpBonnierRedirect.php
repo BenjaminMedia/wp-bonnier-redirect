@@ -5,6 +5,9 @@ namespace Bonnier\WP\Redirect;
 use Bonnier\WP\Redirect\Controllers\Dashboard;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
+use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Repositories\RedirectRepository;
+use Symfony\Component\HttpFoundation\Request;
 
 class WpBonnierRedirect
 {
@@ -102,12 +105,17 @@ class WpBonnierRedirect
 
     public function loadAdminMenus()
     {
+        global $wpdb;
+        $database = new DB($wpdb);
+        $redirectRepository = new RedirectRepository($database);
+        $request = Request::createFromGlobals();
+        $listController = new ListController($redirectRepository, $request);
         add_menu_page(
             'Bonnier Redirects',
             'Bonnier Redirects',
             'manage_options',
             'bonnier-redirects',
-            [ListController::class, 'displayRedirectsTable'],
+            [$listController, 'displayRedirectsTable'],
             'dashicons-external'
         );
         $allRedirectsPageHook = add_submenu_page(
@@ -116,7 +124,7 @@ class WpBonnierRedirect
             'All Redirects',
             'manage_options',
             'bonnier-redirects',
-            [ListController::class, 'displayRedirectsTable']
+            [$listController, 'displayRedirectsTable']
         );
         $managePageHook = add_submenu_page(
             'bonnier-redirects',

@@ -3,7 +3,6 @@
 namespace Bonnier\WP\Redirect\Models;
 
 use Bonnier\WP\Redirect\Database\DB;
-use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Http\Request;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -63,6 +62,16 @@ class Redirect implements Arrayable
     }
 
     /**
+     * @param int $redirectID
+     * @return Redirect
+     */
+    public function setID(int $redirectID): Redirect
+    {
+        $this->redirectID = $redirectID;
+        return $this;
+    }
+
+    /**
      * @return string|null
      */
     public function getFrom(): ?string
@@ -90,7 +99,8 @@ class Redirect implements Arrayable
         }
 
         if ($from = $this->getFrom()) {
-            return hash('md5', $from);
+            $this->fromHash = hash('md5', $from);
+            return $this->fromHash;
         }
 
         return null;
@@ -124,7 +134,8 @@ class Redirect implements Arrayable
         }
 
         if ($destination = $this->getTo()) {
-            return hash('md5', $destination);
+            $this->toHash = hash('md5', $destination);
+            return $this->toHash;
         }
 
         return null;
@@ -220,51 +231,16 @@ class Redirect implements Arrayable
         }
 
         if ($from = $this->getFrom()) {
-            return hash('md5', parse_url($from, PHP_URL_PATH));
+            $this->paramlessFromHash = hash('md5', parse_url($from, PHP_URL_PATH));
+            return $this->paramlessFromHash;
         }
 
         return null;
     }
 
     /**
-     * @throws \Exception
-     * @throws DuplicateEntryException
-     *
-     * @return Redirect
+     * @return array
      */
-    public function save()
-    {
-        $data = [
-            'from' => $this->getFrom(),
-            'from_hash' => $this->getFromHash(),
-            'paramless_from_hash' => $this->getParamlessFromHash(),
-            'to' => $this->getTo(),
-            'to_hash' => $this->getToHash(),
-            'locale' => $this->getLocale(),
-            'type' => $this->getType(),
-            'wp_id' => $this->getWpID(),
-            'code' => $this->getCode(),
-        ];
-
-        if ($redirectId = $this->getID()) {
-            DB::update($redirectId, $data);
-        } else {
-            $this->redirectID = DB::insert($data);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @throws
-     *
-     * @return bool
-     */
-    public function delete()
-    {
-        return DB::delete($this->getID()) !== false;
-    }
-
     public function toArray()
     {
         return [
@@ -279,5 +255,26 @@ class Redirect implements Arrayable
             'code' => $this->getCode(),
             'paramless_from_hash' => $this->getParamlessFromHash(),
         ];
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return Redirect
+     */
+    public function fromArray(array $data): Redirect
+    {
+        $this->redirectID = intval(array_get($data, 'id', 0));
+        $this->from = array_get($data, 'from');
+        $this->fromHash = array_get($data, 'from_hash');
+        $this->destination = array_get($data, 'to');
+        $this->toHash = array_get($data, 'to_hash');
+        $this->locale = array_get($data, 'locale');
+        $this->type = array_get($data, 'type');
+        $this->wpID = intval(array_get($data, 'wp_id', 0));
+        $this->setCode(intval(array_get($data, 'code')));
+        $this->paramlessFromHash = array_get($data, 'paramless_from_hash');
+
+        return $this;
     }
 }

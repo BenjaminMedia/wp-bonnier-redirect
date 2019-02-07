@@ -6,97 +6,96 @@ use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 
 class DB
 {
-    const TABLE_NAME = 'bonnier_redirects';
-
-    /** @var bool */
-    private static $instantiated;
+    const REDIRECTS_TABLE = 'bonnier_redirects';
 
     /** @var \wpdb */
-    private static $wpdb;
-    private static $table;
+    private $wpdb;
+    /** @var string */
+    private $table;
 
     /**
-     * @param int $redirectID
-     * @return array|object|null
+     * DB constructor.
+     * @param \wpdb $wpdb
      */
-    public static function getRedirect(int $redirectID)
+    public function __construct(\wpdb $wpdb)
     {
-        self::init();
-
-        return self::$wpdb->get_row("SELECT * FROM " . self::$table . " WHERE id = $redirectID");
+        $this->wpdb = $wpdb;
     }
 
     /**
-     * @param string|null $searchQuery
-     * @param string|null $orderBy
-     * @param string|null $order
-     * @param int|null $perPage
-     * @param int|null $offset
-     * @param string $output
-     * @return array|object|null
+     * @param string $tableName
+     * @return string
      */
-    public static function fetchTable(
-        ?string $searchQuery = null,
-        ?string $orderBy = null,
-        ?string $order = null,
-        ?int $perPage = null,
-        ?int $offset = null,
-        string $output = OBJECT
-    ) {
-        self::init();
-
-        $query = "SELECT * FROM " . self::$table;
-        if ($searchQuery) {
-            $query .= " WHERE `from` LIKE '%$searchQuery%' OR `to` LIKE '%$searchQuery%'";
-        }
-        if ($orderBy && $order) {
-            $query .= " ORDER BY `$orderBy` $order";
-        }
-        if ($orderBy && !$order) {
-            $query .= " ORDER BY `$orderBy`";
-        }
-        if (!is_null($perPage)) {
-            $query .= " LIMIT $perPage";
-        }
-        if (!is_null($offset)) {
-            $query .= " OFFSET $offset";
-        }
-
-        return self::$wpdb->get_results($query, $output);
+    public function setTable(string $tableName)
+    {
+        return $this->table = $this->wpdb->prefix . $tableName;
     }
 
     /**
-     * @param string|null $searchQuery
-     *
+     * @param int $rowID
+     * @return array|null
+     */
+    public function findById(int $rowID): ?array
+    {
+        return $this->wpdb->get_row(
+            $this->wpdb->prepare("SELECT * FROM $this->table WHERE id = %d", $rowID),
+            ARRAY_A
+        );
+    }
+
+    public function query(): Query
+    {
+        return new Query($this->table);
+    }
+
+    public function getResults(Query $query)
+    {
+        return $this->wpdb->get_results($query->getQuery(), ARRAY_A);
+    }
+
+    public function getVar(Query $query)
+    {
+        return $this->wpdb->get_var($query->getQuery());
+    }
+
+    /**
+     * @param array $data
      * @return int
+     * @throws DuplicateEntryException
      */
-    public static function countRedirects(?string $searchQuery = null)
+    public function insert(array $data)
     {
-        self::init();
-
-        $query = "SELECT COUNT(id) FROM " . self::$table;
-
-        if ($searchQuery) {
-            $query .= " WHERE `from` LIKE '%$searchQuery%' OR `to` LIKE '%$searchQuery%'";
+        if (!$this->wpdb->insert($this->table, $data, $this->getDataFormat($data))) {
+            $error = $this->wpdb->last_error;
+            if (starts_with($error, 'Duplicate entry ')) {
+                $uniqueKey = str_after($error, ' for key ');
+                $exception = new DuplicateEntryException(
+                    sprintf('Cannot create entry, due to key constraint %s', $uniqueKey)
+                );
+                $exception->setData($data);
+                throw $exception;
+            } else {
+                throw new \Exception(sprintf('Unable to insert redirect! (%s)', $error));
+            }
         }
-
-        return intval(self::$wpdb->get_var($query));
+        return $this->wpdb->insert_id;
     }
 
     /**
-     * @param int $redirectID
-     *
+     * @param int $rowID
      * @return bool
-     *
      * @throws \Exception
      */
-    public static function delete(int $redirectID)
+    public function delete(int $rowID)
     {
-        self::init();
-
-        if (self::$wpdb->delete(self::$table, ['id' => $redirectID], ['%d']) === false) {
+        if ($this->wpdb->delete($this->table, ['id' => $rowID], ['%d']) === false) {
             throw new \Exception(
-                sprintf('Could not delete redirect ID:%s (%s)', $redirectID, self::$wpdb->last_error)
+                sprintf(
+                    'Could not delete row with ID %s from table \'%s\' (%s)',
+                    $rowID,
+                    $this->table,
+                    $this->wpdb->last_error
+                )
             );
         }
 
@@ -130,33 +129,6 @@ class DB
     }
 
     /**
-     * @param array $data
-     *
-     * @return int
-     *
-     * @throws \Exception
-     * @throws DuplicateEntryException
-     */
-    public static function insert(array $data)
-    {
-        self::init();
-        if (!self::$wpdb->insert(self::$table, $data, self::getDataFormat($data))) {
-            $error = self::$wpdb->last_error;
-            if (starts_with($error, 'Duplicate entry ')) {
-                $uniqueKey = str_after($error, ' for key ');
-                $exception = new DuplicateEntryException(
-                    sprintf('Cannot create entry, due to key constraint %s', $uniqueKey)
-                );
-                $exception->setData($data);
-                throw $exception;
-            } else {
-                throw new \Exception(sprintf('Unable to insert redirect! (%s)', $error));
-            }
-        }
-        return self::$wpdb->insert_id;
-    }
-
-    /**
      * @param int $redirectID
      * @param array $data
      *
@@ -184,9 +156,9 @@ class DB
 
     public static function createRedirectsTable()
     {
-        self::init();
-        $table = self::$table;
-        $charset = self::$wpdb->get_charset_collate();
+        global $wpdb;
+        $table = $wpdb->prefix . self::REDIRECTS_TABLE;
+        $charset = $wpdb->get_charset_collate();
 
         $sql = "SET sql_notes = 1;
             CREATE TABLE `$table` (
@@ -217,7 +189,7 @@ class DB
      * @param array $data
      * @return array
      */
-    private static function getDataFormat(array $data)
+    private function getDataFormat(array $data)
     {
         $format = [];
         foreach ($data as $index => $item) {

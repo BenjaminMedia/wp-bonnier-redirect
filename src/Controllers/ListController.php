@@ -3,8 +3,9 @@
 namespace Bonnier\WP\Redirect\Controllers;
 
 use Bonnier\WP\Redirect\Database\DB;
-use Bonnier\WP\Redirect\Http\Request;
+use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Overview - Renders redirect overview table
@@ -18,9 +19,21 @@ class ListController extends \WP_List_Table
     protected static $redirectsTable;
     private $notices;
 
-    public static function displayRedirectsTable()
+    /** @var RedirectRepository */
+    private $redirects;
+    /** @var Request */
+    private $request;
+
+    public function __construct(RedirectRepository $redirects, Request $request)
     {
-        self::$redirectsTable->prepare_items();
+        parent::__construct();
+        $this->redirects = $redirects;
+        $this->request = $request;
+    }
+
+    public function displayRedirectsTable()
+    {
+        $this->prepare_items();
 
         include_once(WpBonnierRedirect::instance()->getViewPath('redirectsTable.php'));
     }
@@ -34,23 +47,21 @@ class ListController extends \WP_List_Table
         ];
 
         add_screen_option('per_page', $arguments);
-
-        self::$redirectsTable = new self();
     }
 
-    public static function displaySearch()
+    public function displaySearch()
     {
-        self::$redirectsTable->search_box('Find redirect', 'bonnier-redirect-find');
+        $this->search_box('Find redirect', 'bonnier-redirect-find');
     }
 
-    public static function displayTable()
+    public function displayTable()
     {
-        self::$redirectsTable->display();
+        $this->display();
     }
 
-    public static function displayNotices()
+    public function displayNotices()
     {
-        foreach (self::$redirectsTable->getNotices() as $notice) {
+        foreach ($this->getNotices() as $notice) {
             $notice();
         }
     }
@@ -85,7 +96,7 @@ class ListController extends \WP_List_Table
     public function prepare_items()
     {
         // Check if a search was performed
-        $redirectSearchKey = wp_unslash(trim(Request::instance()->query->get('s'))) ?: null;
+        $redirectSearchKey = wp_unslash(trim($this->request->query->get('s'))) ?: null;
 
         // Column headers
         $this->_column_headers = $this->get_column_info();
@@ -103,7 +114,7 @@ class ListController extends \WP_List_Table
         $this->items = $this->fetchTableData($redirectSearchKey, $offset, $redirectsPerPage);
 
         // Set pagination arguments
-        $totalRedirects = DB::countRedirects($redirectSearchKey);
+        $totalRedirects = $this->redirects->countRows($redirectSearchKey);
         $this->set_pagination_args([
             'total_items' => $totalRedirects,
             'per_page' => $redirectsPerPage,
@@ -124,7 +135,7 @@ class ListController extends \WP_List_Table
         $pageUrl = admin_url('admin.php');
 
         $deleteRedirectArgs = [
-            'page' => Request::instance()->query->get('page'),
+            'page' => $this->request->query->get('page'),
             'action' => 'delete_redirect',
             'redirect_id' => absint($item['id']),
             '_wpnonce' => wp_create_nonce('delete_redirect_nonce'),
@@ -178,10 +189,10 @@ class ListController extends \WP_List_Table
 
     private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20)
     {
-        $orderby = esc_sql(Request::instance()->query->get('orderby', 'id'));
-        $order = esc_sql(Request::instance()->query->get('order', 'DESC'));
+        $orderby = esc_sql($this->request->query->get('orderby', 'id'));
+        $order = esc_sql($this->request->query->get('order', 'DESC'));
 
-        return DB::fetchTable($searchKey, $orderby, $order, $perPage, $offset, ARRAY_A);
+        return $this->redirects->find($searchKey, $orderby, $order, $perPage, $offset);
     }
 
     private function handleTableActions()
@@ -189,7 +200,7 @@ class ListController extends \WP_List_Table
         $tableAction = $this->current_action();
 
         if ('delete_redirect' === $tableAction) {
-            $nonce = wp_unslash(Request::instance()->query->get('_wpnonce'));
+            $nonce = wp_unslash($this->request->query->get('_wpnonce'));
             if (!wp_verify_nonce($nonce, 'delete_redirect_nonce')) {
                 $this->invalidNonceRedirect();
             } else {
@@ -207,14 +218,14 @@ class ListController extends \WP_List_Table
             }
         }
 
-        if (Request::instance()->query->get('action') === 'bulk-delete' ||
-            Request::instance()->query->get('action2') === 'bulk-delete'
+        if ($this->request->query->get('action') === 'bulk-delete' ||
+            $this->request->query->get('action2') === 'bulk-delete'
         ) {
-            $nonce = wp_unslash(Request::instance()->query->get('_wpnonce'));
+            $nonce = wp_unslash($this->request->query->get('_wpnonce'));
             if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural'])) {
                 $this->invalidNonceRedirect();
-            } elseif ($redirects = Request::instance()->query->get('redirects')) {
-                DB::deleteMultiple($redirects);
+            } elseif ($redirects = $this->redirects->query->get('redirects')) {
+                $this->redirects->deleteByID($redirects);
                 $this->addNotice(function () use ($redirects) {
                     ?>
                     <div class="notice notice-success is-dismissible">
@@ -235,7 +246,7 @@ class ListController extends \WP_List_Table
             'response' => 403,
             'back_link' => esc_url(
                 add_query_arg([
-                        'page' => wp_unslash(Request::instance()->query->get('page'))
+                        'page' => wp_unslash($this->redirects->query->get('page'))
                 ], admin_url('admin.php'))
             ),
         ]);

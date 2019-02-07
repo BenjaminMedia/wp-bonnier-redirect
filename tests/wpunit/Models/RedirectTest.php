@@ -12,12 +12,17 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
     public function testCanSaveRedirect()
     {
         $redirect = new Redirect();
-        $redirect->setFrom('/my/old/slug')
-            ->setTo('/my/new/slug')
-            ->setLocale('da')
-            ->setCode(Request::HTTP_PERMANENT_REDIRECT)
-            ->save();
-
+        try {
+            $redirect->setFrom('/my/old/slug')
+                ->setTo('/my/new/slug')
+                ->setLocale('da')
+                ->setCode(Request::HTTP_PERMANENT_REDIRECT)
+                ->save();
+        } catch (DuplicateEntryException $e) {
+            $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
+        } catch (\Exception $e) {
+            $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
+        }
         $this->assertNotEquals(0, $redirect->getID());
 
         $savedRedirect = new Redirect($redirect->getID());
