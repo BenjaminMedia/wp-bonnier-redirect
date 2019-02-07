@@ -203,15 +203,4 @@ class DB
         }
         return $format;
     }
-
-    private static function init()
-    {
-        if (!self::$instantiated) {
-            global $wpdb;
-            self::$wpdb = $wpdb;
-            self::$wpdb->hide_errors();
-            self::$wpdb->suppress_errors(true);
-            self::$table = self::$wpdb->prefix . self::TABLE_NAME;
-        }
-    }
 }

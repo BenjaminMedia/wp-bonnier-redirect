@@ -4,9 +4,9 @@ namespace Bonnier\WP\Redirect\Tests\Wpunit\Models;
 
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
-use Bonnier\WP\Redirect\Http\Request;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
+use Symfony\Component\HttpFoundation\Response;
 
 class RedirectTest extends \Codeception\TestCase\WPTestCase
 {
@@ -28,7 +28,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $redirect->setFrom('/my/old/slug')
             ->setTo('/my/new/slug')
             ->setLocale('da')
-            ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
         try {
             $redirect = $this->redirectRepository->save($redirect);
         } catch (DuplicateEntryException $e) {
@@ -50,7 +50,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $firstRedirect->setFrom('/my/old/slug')
             ->setTo('/my/first/destination')
             ->setLocale('da')
-            ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
 
         $this->redirectRepository->save($firstRedirect);
 
@@ -58,7 +58,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $secondRedirect->setFrom('/my/old/slug')
             ->setTo('/my/second/destination')
             ->setLocale('da')
-            ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
 
         try {
             $this->redirectRepository->save($secondRedirect);
@@ -80,7 +80,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
             $redirect->setFrom('/from/old/slug/' . $index)
                 ->setTo('/same/destination/slug')
                 ->setLocale('da')
-                ->setCode(Request::HTTP_PERMANENT_REDIRECT);
+                ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
             $this->redirectRepository->save($redirect);
         }
 

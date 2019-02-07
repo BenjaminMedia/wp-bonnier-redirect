@@ -109,7 +109,10 @@ class WpBonnierRedirect
         $database = new DB($wpdb);
         $redirectRepository = new RedirectRepository($database);
         $request = Request::createFromGlobals();
+
         $listController = new ListController($redirectRepository, $request);
+        $crudController = new CrudController($redirectRepository, $request);
+
         add_menu_page(
             'Bonnier Redirects',
             'Bonnier Redirects',
@@ -118,7 +121,7 @@ class WpBonnierRedirect
             [$listController, 'displayRedirectsTable'],
             'dashicons-external'
         );
-        $allRedirectsPageHook = add_submenu_page(
+        $listPageHook = add_submenu_page(
             'bonnier-redirects',
             'All Redirects',
             'All Redirects',
@@ -126,18 +129,18 @@ class WpBonnierRedirect
             'bonnier-redirects',
             [$listController, 'displayRedirectsTable']
         );
-        $managePageHook = add_submenu_page(
+        $crudPageHook = add_submenu_page(
             'bonnier-redirects',
             'Add New',
             'Add New',
             'manage_options',
             'add-redirect',
-            [CrudController::class, 'displayAddRedirectPage']
+            [$crudController, 'displayAddRedirectPage']
         );
 
-        add_action(sprintf('load-%s', $allRedirectsPageHook), [ListController::class, 'loadRedirectsTable']);
-        add_action(sprintf('load-%s', $managePageHook), [CrudController::class, 'handlePost']);
-        add_action(sprintf('load-%s', $managePageHook), [CrudController::class, 'registerScripts']);
+        add_action(sprintf('load-%s', $listPageHook), [$listController, 'loadRedirectsTable']);
+        add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'handlePost']);
+        add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'registerScripts']);
     }
 
     public function assetURI(string $file)

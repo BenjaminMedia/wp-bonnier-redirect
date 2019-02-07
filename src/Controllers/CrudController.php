@@ -2,19 +2,31 @@
 
 namespace Bonnier\WP\Redirect\Controllers;
 
-use Bonnier\WP\Redirect\Http\Request;
+use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
+use Symfony\Component\HttpFoundation\Request;
 
 class CrudController
 {
-    public static function displayAddRedirectPage()
+    /** @var RedirectRepository */
+    private $redirects;
+    /** @var Request */
+    private $request;
+
+    public function __construct(RedirectRepository $redirectRepository, Request $request)
+    {
+        $this->redirects = $redirectRepository;
+        $this->request = $request;
+    }
+
+    public function displayAddRedirectPage()
     {
         include_once(WpBonnierRedirect::instance()->getViewPath('addRedirect.php'));
     }
 
-    public static function handlePost()
+    public function handlePost()
     {
-        if (Request::instance()->isMethod('post')) {
+        if ($this->request->isMethod(Request::METHOD_POST)) {
             /*
             [
                 'from' => Request::instance()->request->get('from_url'),
@@ -26,7 +38,7 @@ class CrudController
         }
     }
 
-    public static function registerScripts()
+    public function registerScripts()
     {
         add_action('admin_enqueue_scripts', function () {
             wp_register_script(

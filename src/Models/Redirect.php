@@ -2,9 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Models;
 
-use Bonnier\WP\Redirect\Database\DB;
-use Bonnier\WP\Redirect\Http\Request;
 use Illuminate\Contracts\Support\Arrayable;
+use Symfony\Component\HttpFoundation\Response;
 
 class Redirect implements Arrayable
 {
@@ -29,28 +28,12 @@ class Redirect implements Arrayable
     /** @var string */
     private $paramlessFromHash;
 
-    public function __construct(?int $redirectID = null)
+    public function __construct()
     {
-        if ($redirectID) {
-            if (!$redirect = DB::getRedirect($redirectID)) {
-                throw new \RuntimeException(sprintf('A redirect with id \'%s\' does not exist!', $redirectID));
-            }
-            $this->redirectID = intval(data_get($redirect, 'id', 0));
-            $this->from = data_get($redirect, 'from');
-            $this->fromHash = data_get($redirect, 'from_hash');
-            $this->destination = data_get($redirect, 'to');
-            $this->toHash = data_get($redirect, 'to_hash');
-            $this->locale = data_get($redirect, 'locale');
-            $this->type = data_get($redirect, 'type');
-            $this->wpID = intval(data_get($redirect, 'wp_id', 0));
-            $this->setCode(intval(data_get($redirect, 'code')));
-            $this->paramlessFromHash = data_get($redirect, 'paramless_from_hash');
-        } else {
-            $this->redirectID = 0;
-            $this->type = '';
-            $this->wpID = 0;
-            $this->code = Request::HTTP_PERMANENT_REDIRECT;
-        }
+        $this->redirectID = 0;
+        $this->type = '';
+        $this->wpID = 0;
+        $this->code = Response::HTTP_MOVED_PERMANENTLY;
     }
 
     /**
@@ -210,8 +193,8 @@ class Redirect implements Arrayable
     public function setCode(int $code): Redirect
     {
         if (!in_array($code, [
-            Request::HTTP_PERMANENT_REDIRECT,
-            Request::HTTP_TEMPORARY_REDIRECT,
+            Response::HTTP_MOVED_PERMANENTLY,
+            Response::HTTP_FOUND,
         ])) {
             throw new \InvalidArgumentException(
                 sprintf('Code \'%s\' is not a valid redirect response code!', $code)

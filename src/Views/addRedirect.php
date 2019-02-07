@@ -28,10 +28,10 @@
                 <td><label for="redirect_code"><strong>Redirect type:</strong></label></td>
                 <td>
                     <select id="redirect_code" name="redirect_code">
-                        <option value="<?php echo \Bonnier\WP\Redirect\Http\Request::HTTP_PERMANENT_REDIRECT; ?>">
+                        <option value="<?php echo \Symfony\Component\HttpFoundation\Response::HTTP_MOVED_PERMANENTLY; ?>">
                             Permanent Redirect (301)
                         </option>
-                        <option value="<?php echo \Bonnier\WP\Redirect\Http\Request::HTTP_TEMPORARY_REDIRECT; ?>">
+                        <option value="<?php echo \Symfony\Component\HttpFoundation\Response::HTTP_FOUND; ?>">
                             Temporary Redirect (302)
                         </option>
                     </select>
