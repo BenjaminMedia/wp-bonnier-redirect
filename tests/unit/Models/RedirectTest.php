@@ -45,4 +45,38 @@ class RedirectTest extends Unit
         $this->assertSame($toHash, $redirect->getToHash());
         $this->assertSame($paramlessHash, $redirect->getParamlessFromHash());
     }
+
+    public function testGeneratesParamlessHashCorrect()
+    {
+        $fromWithoutParams = '/path/from/slug';
+        $fromWithParams = $fromWithoutParams . '?with=params';
+
+        $redirect = new Redirect();
+        $redirect->fromArray([
+            'id' => 1,
+            'from' => $fromWithParams,
+            'to' => '/path/to/slug',
+            'locale' => 'da',
+            'code' => 301,
+        ]);
+
+        $fromHash = hash('md5', $fromWithParams);
+        $paramlessFromHash = hash('md5', $fromWithoutParams);
+
+        $this->assertSame($fromHash, $redirect->getFromHash());
+        $this->assertSame($paramlessFromHash, $redirect->getParamlessFromHash());
+    }
+
+    public function testFailsWhenSettingInvalidRedirectCode()
+    {
+        try {
+            $redirect = new Redirect();
+            $redirect->setCode(200);
+        } catch (\InvalidArgumentException $exception) {
+            $expectedMessage = 'Code \'200\' is not a valid redirect response code!';
+            $this->assertSame($expectedMessage, $exception->getMessage());
+            return;
+        }
+        $this->fail('Failed throwing exception, when setting invalid redirect code');
+    }
 }

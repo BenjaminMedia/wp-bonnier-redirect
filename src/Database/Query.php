@@ -13,14 +13,36 @@ class Query
     private $table;
     private $query;
 
+    /** @var bool */
+    private $selection;
+
     public function __construct($table)
     {
         $this->table = $table;
+        $this->selection = false;
     }
 
-    public function select(string $columns): Query
+    /**
+     * @param string|array $columns
+     * @return Query
+     * @throws \Exception
+     */
+    public function select($columns): Query
     {
-        $this->query = "SELECT $columns FROM $this->table";
+        if ($this->selection) {
+            throw new \Exception('Selection already specified!');
+        }
+        $this->query = "SELECT ";
+        if (is_array($columns)) {
+            foreach ($columns as $column) {
+                $this->query .= $this->formatSelectColumn($column) . ", ";
+            }
+            $this->query = substr($this->query, 0, -2);
+        } else {
+            $this->query .= $this->formatSelectColumn($columns);
+        }
+        $this->query .= " FROM `$this->table`";
+        $this->selection = true;
         return $this;
     }
 
@@ -81,6 +103,17 @@ class Query
 
     public function getQuery(): string
     {
+        if (!$this->selection) {
+            throw new \Exception('A selection needs to be specified!');
+        }
         return $this->query;
+    }
+
+    private function formatSelectColumn($column): string
+    {
+        if (preg_match('/^(\*)|[A-Z]+\([\w]+\)/', $column)) {
+            return $column;
+        }
+        return "`$column`";
     }
 }

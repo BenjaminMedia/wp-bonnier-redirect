@@ -12,12 +12,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function bootstrapDatabase()
-{
-    \Bonnier\WP\Redirect\Database\DB::createRedirectsTable();
-}
-
-register_activation_hook(__FILE__, 'bootstrapDatabase');
+register_activation_hook(__FILE__, function () {
+    \Bonnier\WP\Redirect\Database\Bootstrap::createRedirectsTable();
+});
 
 add_action('plugins_loaded', function () {
     \Bonnier\WP\Redirect\WpBonnierRedirect::boot();

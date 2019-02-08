@@ -27,5 +27,9 @@
     "psr-4": {
       "Bonnier\\WP\\Redirect\\Tests\\": "tests"
     }
+  },
+  "scripts": {
+    "unit": "vendor/bin/codecept run unit",
+    "integration": "vendor/bin/codecept run integration"
   }
 }

@@ -1,12 +1,11 @@
 <?php
 
-namespace Bonnier\WP\Redirect\Tests\Wpunit\Models;
+namespace Bonnier\WP\Redirect\Tests\Integration\Models;
 
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
-use Symfony\Component\HttpFoundation\Response;
 
 class RedirectTest extends \Codeception\TestCase\WPTestCase
 {
@@ -28,7 +27,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $redirect->setFrom('/my/old/slug')
             ->setTo('/my/new/slug')
             ->setLocale('da')
-            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
+            ->setCode(301);
         try {
             $redirect = $this->redirectRepository->save($redirect);
         } catch (DuplicateEntryException $e) {
@@ -50,7 +49,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $firstRedirect->setFrom('/my/old/slug')
             ->setTo('/my/first/destination')
             ->setLocale('da')
-            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
+            ->setCode(301);
 
         $this->redirectRepository->save($firstRedirect);
 
@@ -58,7 +57,7 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
         $secondRedirect->setFrom('/my/old/slug')
             ->setTo('/my/second/destination')
             ->setLocale('da')
-            ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
+            ->setCode(301);
 
         try {
             $this->redirectRepository->save($secondRedirect);
@@ -80,8 +79,10 @@ class RedirectTest extends \Codeception\TestCase\WPTestCase
             $redirect->setFrom('/from/old/slug/' . $index)
                 ->setTo('/same/destination/slug')
                 ->setLocale('da')
-                ->setCode(Response::HTTP_PERMANENTLY_REDIRECT);
-            $this->redirectRepository->save($redirect);
+                ->setCode(301);
+            $savedRedirect = $this->redirectRepository->save($redirect);
+            $this->assertInstanceOf(Redirect::class, $savedRedirect);
+            $this->assertGreaterThan(0, $savedRedirect->getID());
         }
 
         $this->assertEquals(10, $this->redirectRepository->countRows());

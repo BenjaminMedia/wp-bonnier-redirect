@@ -2,7 +2,6 @@
 
 namespace Bonnier\WP\Redirect;
 
-use Bonnier\WP\Redirect\Controllers\Dashboard;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
 use Bonnier\WP\Redirect\Database\DB;
