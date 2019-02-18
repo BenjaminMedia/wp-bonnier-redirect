@@ -5,15 +5,17 @@ namespace Bonnier\WP\Redirect\Database;
 class Bootstrap
 {
     const REDIRECTS_TABLE = 'bonnier_redirects';
+    const LOG_TABLE = 'bonnier_redirects_log';
 
     public static function createRedirectsTable()
     {
         global $wpdb;
-        $table = $wpdb->prefix . self::REDIRECTS_TABLE;
+        $redirectTable = $wpdb->prefix . self::REDIRECTS_TABLE;
+        $logTable = $wpdb->prefix . self::LOG_TABLE;
         $charset = $wpdb->get_charset_collate();
 
         $sql = "SET sql_notes = 1;
-            CREATE TABLE `$table` (
+            CREATE TABLE `$redirectTable` (
               `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
               `from` text CHARACTER SET utf8 NOT NULL,
               `from_hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
@@ -30,6 +32,16 @@ class Bootstrap
               KEY `from_hash_2` (`from_hash`,`to_hash`,`locale`),
               KEY `from_hash_3` (`from_hash`),
               KEY `paramless_from_hash` (`paramless_from_hash`)
+            ) $charset;
+            CREATE TABLE `$logTable` (
+              `id` INT(11) unsigned NOT NULL AUTO_INCREMENT,
+              `slug` text CHARACTER SET utf8 NOT NULL,
+              `hash` char(32) COLLATE utf8mb4_unicode_520_ci NOT NULL,
+              `type` text CHARACTER SET utf8 NOT NULL,
+              `wp_id` INT(11) unsigned NOT NULL,
+              `created_at` TIMESTAMP NOT NULL DEFAULT NOW(),
+              PRIMARY KEY (`id`),
+              KEY `hash` (`hash`)
             ) $charset;
             SET sql_notes = 1;
             ";

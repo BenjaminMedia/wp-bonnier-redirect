@@ -5,6 +5,10 @@ namespace Bonnier\WP\Redirect;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Observers\Observers;
+use Bonnier\WP\Redirect\Observers\PostObserver;
+use Bonnier\WP\Redirect\Observers\PostSubject;
+use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -50,6 +54,18 @@ class WpBonnierRedirect
      */
     private $assetsUrl;
 
+    /** @var DB */
+    private $database;
+
+    /** @var LogRepository */
+    private $logRepository;
+
+    /** @var RedirectRepository */
+    private $redirectRepository;
+
+    /** @var Request */
+    private $request;
+
     /**
      * Do not load this more than once.
      */
@@ -63,6 +79,14 @@ class WpBonnierRedirect
         $this->viewsDir = sprintf('%s/src/Views/', rtrim($this->pluginDir, '/'));
         $this->assetsDir = sprintf('%s/assets', rtrim($this->pluginDir, '/'));
         $this->assetsUrl = sprintf('%s/assets', rtrim($this->pluginUrl, '/'));
+
+
+        global $wpdb;
+        $this->database = new DB($wpdb);
+        $this->redirectRepository = new RedirectRepository($this->database);
+        $this->logRepository = new LogRepository($this->database);
+        $this->request = Request::createFromGlobals();
+        Observers::bootstrap($this->logRepository);
 
         // Load admin menu
         add_action('admin_menu', [$this, 'loadAdminMenus']);
@@ -104,13 +128,8 @@ class WpBonnierRedirect
 
     public function loadAdminMenus()
     {
-        global $wpdb;
-        $database = new DB($wpdb);
-        $redirectRepository = new RedirectRepository($database);
-        $request = Request::createFromGlobals();
-
-        $listController = new ListController($redirectRepository, $request);
-        $crudController = new CrudController($redirectRepository, $request);
+        $listController = new ListController($this->redirectRepository, $this->request);
+        $crudController = new CrudController($this->redirectRepository, $this->request);
 
         add_menu_page(
             'Bonnier Redirects',

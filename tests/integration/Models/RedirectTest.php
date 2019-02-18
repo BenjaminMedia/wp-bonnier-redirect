@@ -6,8 +6,9 @@ use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
+use Bonnier\WP\Redirect\Tests\integration\TestCase;
 
-class RedirectTest extends \Codeception\TestCase\WPTestCase
+class RedirectTest extends TestCase
 {
     /** @var RedirectRepository */
     private $redirectRepository;

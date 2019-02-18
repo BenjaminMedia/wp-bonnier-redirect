@@ -2,12 +2,18 @@
 
 namespace Bonnier\WP\Redirect\Repositories;
 
+use Bonnier\WP\Redirect\Database\Bootstrap;
+use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Models\Redirect;
 
 class RedirectRepository extends BaseRepository
 {
-    protected $tableName = 'bonnier_redirects';
+    public function __construct(DB $database)
+    {
+        $this->tableName = Bootstrap::REDIRECTS_TABLE;
+        parent::__construct($database);
+    }
 
     public function getRedirectById(int $redirectID): ?Redirect
     {

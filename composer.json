@@ -30,6 +30,7 @@
   },
   "scripts": {
     "unit": "vendor/bin/codecept run unit",
-    "integration": "vendor/bin/codecept run integration"
+    "integration": "vendor/bin/codecept run integration",
+    "run-tests": "composer unit; composer integration"
   }
 }

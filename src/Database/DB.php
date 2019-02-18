@@ -82,6 +82,30 @@ class DB
     }
 
     /**
+     * @param int $rowId
+     * @param array $data
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function update(int $rowId, array $data)
+    {
+        if ($this->wpdb->update(
+            $this->table,
+            $data,
+            ['id' => $rowId],
+            self::getDataFormat($data),
+            ['%d']
+        ) === false) {
+            throw new \Exception(
+                sprintf('Unable to update row with ID:%s (%s)', $rowId, $this->wpdb->last_error)
+            );
+        }
+
+        return true;
+    }
+
+    /**
      * @param int $rowID
      * @return bool
      * @throws \Exception
@@ -122,32 +146,6 @@ class DB
         if ($result === false) {
             throw new \Exception(
                 sprintf('Could not delete redirects! (%s)', self::$wpdb->last_error)
-            );
-        }
-
-        return true;
-    }
-
-    /**
-     * @param int $redirectID
-     * @param array $data
-     *
-     * @throws \Exception
-     *
-     * @return bool
-     */
-    public static function update(int $redirectID, array $data)
-    {
-        self::init();
-        if (self::$wpdb->update(
-            self::$table,
-            $data,
-            ['id' => $redirectID],
-            self::getDataFormat($data),
-            ['%d']
-        ) === false) {
-            throw new \Exception(
-                sprintf('Unable to update redirect ID:%s (%s)', $redirectID, self::$wpdb->last_error)
             );
         }
 
