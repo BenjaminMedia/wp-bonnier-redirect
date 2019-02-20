@@ -377,6 +377,49 @@ class PostObserverTest extends ObserverTestCase
         $this->assertNull($this->redirectRepository->findAll());
     }
 
+    public function testCanDeletePostAndCreateNewPostWithSameSlug()
+    {
+        $category = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur'
+        ]);
+        $subCategory = $this->getCategory([
+            'name' => 'Carnivorous',
+            'slug' => 'carnivorous',
+            'parent' => $category->term_id,
+        ]);
+        $post = $this->getPost([
+            'post_title' => 'T-Rex',
+            'post_name' => 't-rex',
+            'post_category' => [$subCategory->term_id]
+        ]);
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
+
+        $this->updatePost($post->ID, [
+            'post_status' => 'trash'
+        ]);
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post,
+            $redirects->last(),
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous',
+            'post-trash'
+        );
+
+        $newPost = $this->getPost([
+            'post_title' => 'New T-rex',
+            'post_name' => 't-rex',
+            'post_category' => [$subCategory->term_id]
+        ]);
+
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($newPost));
+
+        $this->assertNull($this->redirectRepository->findAll());
+    }
+
     private function assertLog(\WP_Post $post, Log $log, ?string $slug = null)
     {
         if ($slug) {
