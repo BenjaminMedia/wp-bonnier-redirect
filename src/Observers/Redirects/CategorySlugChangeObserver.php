@@ -49,6 +49,14 @@ class CategorySlugChangeObserver extends AbstractObserver
             }
         });
 
+        if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
+            $categorySubject = Observers::bootstrapCategorySubject($this->logRepository, $this->redirectRepository);
+            foreach ($categories as $cat) {
+                $categorySubject->setCategory($cat)
+                    ->notify();
+            }
+        }
+
         if ($posts = get_posts(['category' => $category->term_id, 'posts_per_page' => -1])) {
             $postSubject = Observers::bootstrapPostSubject($this->logRepository, $this->redirectRepository);
             foreach ($posts as $post) {
