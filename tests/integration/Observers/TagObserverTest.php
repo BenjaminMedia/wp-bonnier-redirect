@@ -43,6 +43,6 @@ class TagObserverTest extends ObserverTestCase
         $log = $logs->last();
         $this->assertSame($tag->term_id, $log->getWpID());
         $this->assertSame('post_tag', $log->getType());
-        $this->assertSame('/tags/updated-tag', $log->getSlug());
+        $this->assertSame('/updated-tag', $log->getSlug());
     }
 }

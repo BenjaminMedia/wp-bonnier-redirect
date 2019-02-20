@@ -11,6 +11,7 @@ use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
 use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 class PostSlugChangeObserver extends AbstractObserver
@@ -29,16 +30,29 @@ class PostSlugChangeObserver extends AbstractObserver
      */
     public function update(SubjectInterface $subject)
     {
-        $logs = $this->logRepository->findByWpIDAndType($subject->getPost()->ID, $subject->getPost()->post_type);
+        $post = $subject->getPost();
+        $logs = $this->logRepository->findByWpIDAndType($post->ID, $post->post_type);
         /** @var Log $latest */
-        $latest = $logs->last();
-        $logs->each(function (Log $log) use ($latest, $subject) {
-            if ($log->getSlug() !== $latest->getSlug()) {
+        $latest = $logs->pop();
+        $slug = $latest->getSlug();
+        $type = 'post-slug-change';
+        if (in_array($post->post_status, ['trash', 'draft'])) {
+            if (!empty($categories = $subject->getPost()->post_category)) {
+                $category = $categories[0];
+                $slug = rtrim(parse_url(get_category_link($category), PHP_URL_PATH), '/');
+            } else {
+                $slug = '/';
+            }
+            $type = 'post-' . $post->post_status;
+        }
+
+        $logs->each(function (Log $log) use ($slug, $subject, $type) {
+            if ($log->getSlug() !== $slug) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
-                    ->setTo($latest->getSlug())
+                    ->setTo($slug)
                     ->setWpID($subject->getPost()->ID)
-                    ->setType('post-slug-change')
+                    ->setType($type)
                     ->setCode(Response::HTTP_MOVED_PERMANENTLY)
                     ->setLocale(LocaleHelper::getPostLocale($subject->getPost()->ID));
                 $this->redirectRepository->save($redirect, true);

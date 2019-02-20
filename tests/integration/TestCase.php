@@ -11,8 +11,8 @@ class TestCase extends WPTestCase
         /** @var \WP_Rewrite $wp_rewrite */
         global $wp_rewrite;
         $wp_rewrite->set_permalink_structure('/%category%/%postname%/');
-        $wp_rewrite->add_permastruct('category', 'category/%category%');
-        $wp_rewrite->add_permastruct('post_tag', 'tags/%post_tag%');
+        $wp_rewrite->add_permastruct('category', '/%category%');
+        $wp_rewrite->add_permastruct('post_tag', '/%post_tag%');
         $wp_rewrite->flush_rules();
         return parent::setUpBeforeClass();
     }

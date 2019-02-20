@@ -216,6 +216,78 @@ class PostObserverTest extends ObserverTestCase
         );
     }
 
+    public function testTrashedPostCreatesRedirectToParentCategory()
+    {
+        $parentCategory = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur',
+        ]);
+        $postCategory = $this->getCategory([
+            'name' => 'Carnivorous',
+            'slug' => 'carnivorous',
+            'parent' => $parentCategory->term_id,
+        ]);
+
+        $post = $this->getPost([
+            'post_title' => 'T-Rex',
+            'post_name' => 't-rex',
+            'post_category' => [$postCategory->term_id],
+        ]);
+        $slug = rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $slug);
+
+        $this->updatePost($post->ID, [
+            'post_status' => 'trash',
+        ]);
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+
+        $this->assertRedirect(
+            $post,
+            $redirects->last(),
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous',
+            'post-trash'
+        );
+    }
+
+    public function testUnpublishPostCreatesRedirectToParentCategory()
+    {
+        $parentCategory = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur',
+        ]);
+        $postCategory = $this->getCategory([
+            'name' => 'Carnivorous',
+            'slug' => 'carnivorous',
+            'parent' => $parentCategory->term_id,
+        ]);
+
+        $post = $this->getPost([
+            'post_title' => 'T-Rex',
+            'post_name' => 't-rex',
+            'post_category' => [$postCategory->term_id],
+        ]);
+        $slug = rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $slug);
+
+        $this->updatePost($post->ID, [
+            'post_status' => 'draft',
+        ]);
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+
+        $this->assertRedirect(
+            $post,
+            $redirects->last(),
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous',
+            'post-draft'
+        );
+    }
+
     private function assertLog(\WP_Post $post, Log $log, ?string $slug = null)
     {
         if ($slug) {

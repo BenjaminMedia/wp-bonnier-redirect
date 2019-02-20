@@ -43,6 +43,6 @@ class CategoryObserverTest extends ObserverTestCase
         $log = $logs->last();
         $this->assertSame($category->term_id, $log->getWpID());
         $this->assertSame('category', $log->getType());
-        $this->assertSame('/category/updated-category', $log->getSlug());
+        $this->assertSame('/updated-category', $log->getSlug());
     }
 }

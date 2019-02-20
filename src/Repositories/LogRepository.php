@@ -35,7 +35,7 @@ class LogRepository extends BaseRepository
         return null;
     }
 
-    public function findByWpIDAndType(int $wpID, string $type)
+    public function findByWpIDAndType(int $wpID, string $type): ?Collection
     {
         $query = $this->database->query()->select('*')
             ->where(['wp_id', $wpID], Query::FORMAT_INT)
