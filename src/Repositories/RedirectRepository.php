@@ -6,6 +6,7 @@ use Bonnier\WP\Redirect\Database\Bootstrap;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Models\Redirect;
+use Illuminate\Support\Collection;
 
 class RedirectRepository extends BaseRepository
 {
@@ -23,6 +24,15 @@ class RedirectRepository extends BaseRepository
             return $redirect->fromArray($data);
         }
 
+        return null;
+    }
+
+    public function findAll(): ?Collection
+    {
+        $query = $this->database->query()->select('*');
+        if ($redirects = $this->database->getResults($query)) {
+            return $this->mapRedirects($redirects);
+        }
         return null;
     }
 
@@ -64,10 +74,11 @@ class RedirectRepository extends BaseRepository
 
     /**
      * @param Redirect $redirect
+     * @param bool $updateOnDuplicate
      * @return Redirect
-     * @throws DuplicateEntryException|\Exception
+     * @throws DuplicateEntryException
      */
-    public function save(Redirect $redirect): Redirect
+    public function save(Redirect $redirect, bool $updateOnDuplicate = false): Redirect
     {
         $data = $redirect->toArray();
         unset($data['id']);
@@ -75,7 +86,11 @@ class RedirectRepository extends BaseRepository
         if ($redirectId = $redirect->getID()) {
             $this->database->update($redirectId, $data);
         } else {
-            $redirect->setID($this->database->insert($data));
+            if ($updateOnDuplicate) {
+                $redirect->setID($this->database->insertOrUpdate($data));
+            } else {
+                $redirect->setID($this->database->insert($data));
+            }
         }
 
         return $redirect;
@@ -89,5 +104,13 @@ class RedirectRepository extends BaseRepository
     public function delete(Redirect $redirect)
     {
         return $this->database->delete($redirect->getID()) !== false;
+    }
+
+    private function mapRedirects(array $redirects)
+    {
+        return collect($redirects)->map(function (array $data) {
+            $redirect = new Redirect();
+            return $redirect->fromArray($data);
+        });
     }
 }

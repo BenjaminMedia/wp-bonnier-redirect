@@ -11,14 +11,11 @@ class DB
     /** @var string */
     private $table;
 
-    /**
-     * DB constructor.
-     * @param \wpdb $wpdb
-     */
-    public function __construct(\wpdb $wpdb)
+    public function __construct()
     {
+        global $wpdb;
         $this->wpdb = $wpdb;
-        $this->wpdb->hide_errors();
+        $this->wpdb->show_errors(false);
         $this->wpdb->suppress_errors(true);
     }
 
@@ -28,7 +25,7 @@ class DB
      */
     public function setTable(string $tableName)
     {
-        return $this->table = $this->wpdb->prefix . $tableName;
+        return $this->table = str_start($tableName, $this->wpdb->prefix);
     }
 
     /**
@@ -75,7 +72,20 @@ class DB
                 $exception->setData($data);
                 throw $exception;
             } else {
-                throw new \Exception(sprintf('Unable to insert redirect! (%s)', $error));
+                throw new \Exception(sprintf('Unable to insert row in `%s`! (%s)', $this->table, $error));
+            }
+        }
+        return $this->wpdb->insert_id;
+    }
+
+    public function insertOrUpdate(array $data)
+    {
+        try {
+            return $this->insert($data);
+        } catch (DuplicateEntryException $exception) {
+            if (!$this->wpdb->replace($this->table, $data, $this->getDataFormat($data))) {
+                $error = $this->wpdb->last_error;
+                throw new \Exception(sprintf('Unable to replace row in `%s`! (%s)', $this->table, $error));
             }
         }
         return $this->wpdb->insert_id;
@@ -127,43 +137,17 @@ class DB
     }
 
     /**
-     * @param array $redirectIDs
-     *
-     * @return bool
-     *
-     * @throws \Exception
-     */
-    public static function deleteMultiple(array $redirectIDs)
-    {
-        self::init();
-        $placeholder = implode(',', array_fill(0, count($redirectIDs), '%d'));
-        $result = self::$wpdb->query(
-            self::$wpdb->prepare(
-                "DELETE FROM " . self::$table . " WHERE id IN (" . $placeholder . ");",
-                $redirectIDs
-            )
-        );
-        if ($result === false) {
-            throw new \Exception(
-                sprintf('Could not delete redirects! (%s)', self::$wpdb->last_error)
-            );
-        }
-
-        return true;
-    }
-
-    /**
      * @param array $data
      * @return array
      */
     private function getDataFormat(array $data)
     {
         $format = [];
-        foreach ($data as $index => $item) {
+        foreach ($data as $item) {
             if (is_int($item)) {
-                $format[$index] = '%d';
+                $format[] = '%d';
             } else {
-                $format[$index] = '%s';
+                $format[] = '%s';
             }
         }
         return $format;

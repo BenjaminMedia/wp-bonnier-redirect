@@ -3,7 +3,7 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Observers;
 
 use Bonnier\WP\Redirect\Models\Log;
-use Bonnier\WP\Redirect\Observers\TagObserver;
+use Bonnier\WP\Redirect\Observers\Loggers\TagObserver;
 use Bonnier\WP\Redirect\Observers\TagSubject;
 use Codeception\Stub\Expected;
 

@@ -77,6 +77,23 @@ class Query
         return $this;
     }
 
+    public function andWhere(array $clause, $format = self::FORMAT_STRING): Query
+    {
+        if (count($clause) === 3) {
+            $this->query .= " AND `$clause[0]` $clause[2] ";
+        } else {
+            $this->query .= " AND `$clause[0]` = ";
+        }
+
+        if ($format === self::FORMAT_INT) {
+            $this->query .= $clause[1];
+        } else {
+            $this->query .= "'$clause[1]'";
+        }
+
+        return $this;
+    }
+
     public function orderBy(string $orderBy, ?string $order = null): Query
     {
         $this->query .= " ORDER BY `$orderBy`";

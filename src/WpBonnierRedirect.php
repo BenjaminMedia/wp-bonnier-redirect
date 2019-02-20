@@ -6,8 +6,6 @@ use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Observers\Observers;
-use Bonnier\WP\Redirect\Observers\PostObserver;
-use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Request;
@@ -54,9 +52,6 @@ class WpBonnierRedirect
      */
     private $assetsUrl;
 
-    /** @var DB */
-    private $database;
-
     /** @var LogRepository */
     private $logRepository;
 
@@ -80,13 +75,10 @@ class WpBonnierRedirect
         $this->assetsDir = sprintf('%s/assets', rtrim($this->pluginDir, '/'));
         $this->assetsUrl = sprintf('%s/assets', rtrim($this->pluginUrl, '/'));
 
-
-        global $wpdb;
-        $this->database = new DB($wpdb);
-        $this->redirectRepository = new RedirectRepository($this->database);
-        $this->logRepository = new LogRepository($this->database);
+        $this->redirectRepository = new RedirectRepository(new DB);
+        $this->logRepository = new LogRepository(new DB);
         $this->request = Request::createFromGlobals();
-        Observers::bootstrap($this->logRepository);
+        Observers::bootstrap($this->logRepository, $this->redirectRepository);
 
         // Load admin menu
         add_action('admin_menu', [$this, 'loadAdminMenus']);

@@ -138,6 +138,9 @@ class Redirect implements Arrayable
      */
     public function setLocale(string $locale): Redirect
     {
+        if (strlen($locale) !== 2) {
+            throw new \InvalidArgumentException(sprintf('The locale \'%s\' is not valid!', $locale));
+        }
         $this->locale = $locale;
         return $this;
     }

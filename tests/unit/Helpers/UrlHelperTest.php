@@ -66,6 +66,22 @@ class UrlHelperTest extends Unit
         ], $queryParams);
     }
 
+    public function testParseQueryParamsSortsKeysAndValues()
+    {
+        $url = 'https://willow.test/slug?a=1&c=3&b[]=2&b[]=1';
+
+        $queryParams = UrlHelper::parseQueryParams($url);
+
+        $this->assertSame([
+            'a' => '1',
+            'b' => [
+                '1',
+                '2',
+            ],
+            'c' => '3'
+        ], $queryParams);
+    }
+
     public function urlSanitizeProvider()
     {
         return [

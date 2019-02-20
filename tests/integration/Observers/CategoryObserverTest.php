@@ -3,8 +3,8 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Observers;
 
 use Bonnier\WP\Redirect\Models\Log;
-use Bonnier\WP\Redirect\Observers\CategoryObserver;
 use Bonnier\WP\Redirect\Observers\CategorySubject;
+use Bonnier\WP\Redirect\Observers\Loggers\CategoryObserver;
 use Codeception\Stub\Expected;
 
 class CategoryObserverTest extends ObserverTestCase

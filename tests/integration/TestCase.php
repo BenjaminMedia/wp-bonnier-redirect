@@ -23,4 +23,9 @@ class TestCase extends WPTestCase
         $_POST = array_merge($_POST, $args);
         edit_post();
     }
+
+    protected function getPost(array $args = []): \WP_Post
+    {
+        return $this->factory()->post->create_and_get($args);
+    }
 }

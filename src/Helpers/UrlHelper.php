@@ -49,10 +49,15 @@ class UrlHelper
     public static function parseQueryParams(string $url): ?array
     {
         if ($query = parse_url($url, PHP_URL_QUERY)) {
-            return collect(explode('&', $query))->mapWithKeys(function ($queryParam) {
-                $parts = explode('=', $queryParam);
-                return [$parts[0] => $parts[1]];
-            })->sortKeys()->toArray();
+            parse_str($query, $params);
+            ksort($params);
+            foreach ($params as $key => $item) {
+                if (is_array($item)) {
+                    sort($item);
+                }
+                $params[$key] = $item;
+            }
+            return $params;
         }
 
         return null;
