@@ -178,6 +178,44 @@ class PostObserverTest extends ObserverTestCase
         }
     }
 
+    public function testChangingSlugAndCategoryCreatesRedirect()
+    {
+        $category = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur'
+        ]);
+        $post = $this->getPost([
+            'post_title' => 'T-Rex',
+            'post_name' => 't-rex',
+            'post_category' => [$category->term_id],
+        ]);
+
+        $this->assertSame('/dinosaur/t-rex', rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/'));
+
+        $newCategory = $this->getCategory([
+            'name' => 'Fossils',
+            'slug' => 'fossils',
+        ]);
+
+        $this->updatePost($post->ID, [
+            'post_title' => 'T-Rex is Awesome',
+            'post_name' => 't-rex-is-awesome',
+            'post_category' => [$newCategory->term_id]
+        ]);
+
+        $this->assertSame('/fossils/t-rex-is-awesome', rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/'));
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post,
+            $redirects->first(),
+            '/dinosaur/t-rex',
+            '/fossils/t-rex-is-awesome',
+            'post-slug-change'
+        );
+    }
+
     private function assertLog(\WP_Post $post, Log $log, ?string $slug = null)
     {
         if ($slug) {
