@@ -136,6 +136,24 @@ class DB
         return true;
     }
 
+    public function deleteMultiple(array $rowIDs)
+    {
+        $placeholder = implode(',', array_fill(0, count($rowIDs), '%d'));
+        $result = $this->wpdb->query(
+            $this->wpdb->prepare(
+                "DELETE FROM $this->table WHERE id IN ($placeholder);",
+                $rowIDs
+            )
+        );
+        if ($result === false) {
+            throw new \Exception(
+                sprintf('Could not delete rows! (%s)', $this->wpdb->last_error)
+            );
+        }
+
+        return true;
+    }
+
     /**
      * @param array $data
      * @return array

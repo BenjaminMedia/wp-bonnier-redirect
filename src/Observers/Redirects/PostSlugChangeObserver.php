@@ -11,7 +11,6 @@ use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
 use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
-use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 class PostSlugChangeObserver extends AbstractObserver
@@ -45,6 +44,10 @@ class PostSlugChangeObserver extends AbstractObserver
             $latest = $logs->pop();
             $slug = $latest->getSlug();
             $type = 'post-slug-change';
+        }
+
+        if ($redirects = $this->redirectRepository->findBy('from', $slug)) {
+            $this->redirectRepository->deleteMultiple($redirects);
         }
 
         $logs->each(function (Log $log) use ($slug, $subject, $type) {

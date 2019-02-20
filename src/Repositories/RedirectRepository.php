@@ -36,6 +36,17 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    public function findBy($key, $value): ?Collection
+    {
+        $query = $this->database->query()->select('*')
+            ->where([$key, $value]);
+        if ($redirects = $this->database->getResults($query)) {
+            return $this->mapRedirects($redirects);
+        }
+
+        return null;
+    }
+
     public function find(
         ?string $searchQuery = null,
         ?string $orderBy = null,
@@ -106,7 +117,19 @@ class RedirectRepository extends BaseRepository
         return $this->database->delete($redirect->getID()) !== false;
     }
 
-    private function mapRedirects(array $redirects)
+    /**
+     * @param Collection $redirects
+     * @return bool
+     * @throws \Exception
+     */
+    public function deleteMultiple(Collection $redirects)
+    {
+        return $this->database->deleteMultiple($redirects->map(function (Redirect $redirect) {
+            return $redirect->getID();
+        })->toArray());
+    }
+
+    private function mapRedirects(array $redirects): Collection
     {
         return collect($redirects)->map(function (array $data) {
             $redirect = new Redirect();
