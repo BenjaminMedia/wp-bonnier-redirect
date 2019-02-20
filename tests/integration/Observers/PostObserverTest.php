@@ -39,14 +39,14 @@ class PostObserverTest extends ObserverTestCase
 
         $logs = $this->logRepository->findAll();
         $this->assertCount(2, $logs); // Create and update logs
-        $this->assertLog($post, $logs->last(), '/log-created');
+        $this->assertLog($post, $logs->last(), '/uncategorized/log-created');
     }
 
     public function testSlugChangeCreatesRedirect()
     {
         $post = $this->getPost();
 
-        $initialSlug = str_start($post->post_name, '/');
+        $initialSlug = '/uncategorized/' . $post->post_name;
 
         $createdLogs = $this->logRepository->findAll();
         $this->assertCount(1, $createdLogs);
@@ -58,11 +58,17 @@ class PostObserverTest extends ObserverTestCase
 
         $logs = $this->logRepository->findAll();
         $this->assertCount(2, $logs);
-        $this->assertLog($post, $logs->last(), '/new-post-slug');
+        $this->assertLog($post, $logs->last(), '/uncategorized/new-post-slug');
 
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
-        $this->assertRedirect($post, $redirects->first(), $initialSlug, '/new-post-slug', 'post-slug-change');
+        $this->assertRedirect(
+            $post,
+            $redirects->first(),
+            $initialSlug,
+            '/uncategorized/new-post-slug',
+            'post-slug-change'
+        );
     }
 
     public function testSlugChangesDoesntCreateRedirectChains()
@@ -82,7 +88,7 @@ class PostObserverTest extends ObserverTestCase
             'post-slug-ten',
         ];
         $slugs = array_map(function ($slug) {
-            return str_start($slug, '/');
+            return '/uncategorized/' . $slug;
         }, array_merge([$initialPostName], $postNames));
 
         foreach ($postNames as $index => $postName) {
@@ -95,10 +101,79 @@ class PostObserverTest extends ObserverTestCase
             $this->updatePost($post->ID, [
                 'post_name' => $postName,
             ]);
+            $newSlug = '/uncategorized/' . $postName;
             $redirectsAfter = $this->redirectRepository->findAll();
             $this->assertCount($index + 1, $redirectsAfter);
-            $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $postName, $slugs) {
-                $this->assertRedirect($post, $redirect, $slugs[$index], str_start($postName, '/'), 'post-slug-change');
+            $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
+                $this->assertRedirect(
+                    $post,
+                    $redirect,
+                    $slugs[$index],
+                    $newSlug,
+                    'post-slug-change'
+                );
+            });
+        }
+    }
+
+    public function testChangingCategoryCreatesRedirects()
+    {
+        $category = $this->getCategory();
+        $post = $this->getPost([
+            'post_category' => [$category->term_id],
+        ]);
+
+        $this->assertNull($this->redirectRepository->findAll());
+
+        $newCategory = $this->getCategory();
+        $this->updatePost($post->ID, [
+            'post_category' => [$newCategory->term_id],
+        ]);
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post,
+            $redirects->first(),
+            sprintf('/%s/%s', $category->slug, $post->post_name),
+            sprintf('/%s/%s', $newCategory->slug, $post->post_name),
+            'post-slug-change'
+        );
+    }
+
+    public function testChangingCategoryMultipleTimesDoesNotCreateRedirectChains()
+    {
+        $firstCategory = $this->getCategory();
+        $categories = [
+            $this->getCategory(),
+            $this->getCategory(),
+            $this->getCategory(),
+            $this->getCategory(),
+            $this->getCategory(),
+        ];
+
+        $post = $this->getPost([
+            'post_category' => [$firstCategory->term_id],
+        ]);
+
+        $slugs = array_map(function (\WP_Term $category) use ($post) {
+            return sprintf('/%s/%s', $category->slug, $post->post_name);
+        }, array_merge([$firstCategory], $categories));
+
+        foreach ($categories as $index => $category) {
+            $this->updatePost($post->ID, [
+                'post_category' => [$category->term_id],
+            ]);
+            $newSlug = sprintf('/%s/%s', $category->slug, $post->post_name);
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount($index + 1, $redirects);
+            $redirects->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
+                $this->assertRedirect(
+                    $post,
+                    $redirect,
+                    $slugs[$index],
+                    $newSlug,
+                    'post-slug-change'
+                );
             });
         }
     }
@@ -108,7 +183,8 @@ class PostObserverTest extends ObserverTestCase
         if ($slug) {
             $this->assertSame($slug, $log->getSlug());
         } else {
-            $this->assertSame(str_start($post->post_name, '/'), $log->getSlug());
+            $url = parse_url(get_permalink($post), PHP_URL_PATH);
+            $this->assertSame(rtrim($url, '/'), $log->getSlug());
         }
         $this->assertSame($post->ID, $log->getWpID());
         $this->assertSame($post->post_type, $log->getType());

@@ -10,7 +10,7 @@ class TestCase extends WPTestCase
     {
         /** @var \WP_Rewrite $wp_rewrite */
         global $wp_rewrite;
-        $wp_rewrite->set_permalink_structure('/%postname%/');
+        $wp_rewrite->set_permalink_structure('/%category%/%postname%/');
         $wp_rewrite->add_permastruct('category', 'category/%category%');
         $wp_rewrite->add_permastruct('post_tag', 'tags/%post_tag%');
         $wp_rewrite->flush_rules();
@@ -27,5 +27,10 @@ class TestCase extends WPTestCase
     protected function getPost(array $args = []): \WP_Post
     {
         return $this->factory()->post->create_and_get($args);
+    }
+
+    protected function getCategory(array $args = []): \WP_Term
+    {
+        return $this->factory()->category->create_and_get($args);
     }
 }
