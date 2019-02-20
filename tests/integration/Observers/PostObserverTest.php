@@ -190,7 +190,7 @@ class PostObserverTest extends ObserverTestCase
             'post_category' => [$category->term_id],
         ]);
 
-        $this->assertSame('/dinosaur/t-rex', rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/'));
+        $this->assertSame('/dinosaur/t-rex', $this->getPostSlug($post));
 
         $newCategory = $this->getCategory([
             'name' => 'Fossils',
@@ -233,8 +233,7 @@ class PostObserverTest extends ObserverTestCase
             'post_name' => 't-rex',
             'post_category' => [$postCategory->term_id],
         ]);
-        $slug = rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
-        $this->assertSame('/dinosaur/carnivorous/t-rex', $slug);
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
 
         $this->updatePost($post->ID, [
             'post_status' => 'trash',
@@ -269,8 +268,7 @@ class PostObserverTest extends ObserverTestCase
             'post_name' => 't-rex',
             'post_category' => [$postCategory->term_id],
         ]);
-        $slug = rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
-        $this->assertSame('/dinosaur/carnivorous/t-rex', $slug);
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
 
         $this->updatePost($post->ID, [
             'post_status' => 'draft',
@@ -285,6 +283,56 @@ class PostObserverTest extends ObserverTestCase
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
             'post-draft'
+        );
+    }
+
+    public function testCanUnpublishAndRepublishPostWithNewSlug()
+    {
+        $category = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur'
+        ]);
+        $subCategory = $this->getCategory([
+            'name' => 'Carnivorous',
+            'slug' => 'carnivorous',
+            'parent' => $category->term_id,
+        ]);
+        $post = $this->getPost([
+            'post_title' => 'T-Rex',
+            'post_name' => 't-rex',
+            'post_category' => [$subCategory->term_id]
+        ]);
+        $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
+
+        $this->updatePost($post->ID, [
+            'post_status' => 'draft'
+        ]);
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post,
+            $redirects->last(),
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous',
+            'post-draft'
+        );
+
+        $this->updatePost($post->ID, [
+            'post_name' => 't-rex-is-awesome',
+            'post_status' => 'publish'
+        ]);
+
+        $this->assertSame('/dinosaur/carnivorous/t-rex-is-awesome', $this->getPostSlug($post));
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post,
+            $redirects->first(),
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous/t-rex-is-awesome',
+            'post-slug-change'
         );
     }
 

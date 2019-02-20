@@ -32,10 +32,6 @@ class PostSlugChangeObserver extends AbstractObserver
     {
         $post = $subject->getPost();
         $logs = $this->logRepository->findByWpIDAndType($post->ID, $post->post_type);
-        /** @var Log $latest */
-        $latest = $logs->pop();
-        $slug = $latest->getSlug();
-        $type = 'post-slug-change';
         if (in_array($post->post_status, ['trash', 'draft'])) {
             if (!empty($categories = $subject->getPost()->post_category)) {
                 $category = $categories[0];
@@ -44,6 +40,11 @@ class PostSlugChangeObserver extends AbstractObserver
                 $slug = '/';
             }
             $type = 'post-' . $post->post_status;
+        } else {
+            /** @var Log $latest */
+            $latest = $logs->pop();
+            $slug = $latest->getSlug();
+            $type = 'post-slug-change';
         }
 
         $logs->each(function (Log $log) use ($slug, $subject, $type) {

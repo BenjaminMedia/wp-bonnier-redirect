@@ -19,6 +19,9 @@ class PostObserver extends AbstractObserver
     public function update(SubjectInterface $subject)
     {
         $post = $subject->getPost();
+        if ($post->post_status !== 'publish') {
+            return;
+        }
         $log = new Log();
         $log->setSlug(UrlHelper::normalizePath(get_permalink($post)))
             ->setType($post->post_type)

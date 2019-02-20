@@ -24,6 +24,11 @@ class TestCase extends WPTestCase
         edit_post();
     }
 
+    protected function getPostSlug(\WP_Post $post)
+    {
+        return rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
+    }
+
     protected function getPost(array $args = []): \WP_Post
     {
         return $this->factory()->post->create_and_get($args);
