@@ -3,6 +3,8 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Observers;
 
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Models\Log;
+use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -24,5 +26,32 @@ class ObserverTestCase extends TestCase
         $userID = self::factory()->user->create(['role' => 'administrator']);
         wp_set_current_user($userID);
         Observers::bootstrap($this->logRepository, $this->redirectRepository);
+    }
+
+    protected function assertLog(\WP_Post $post, Log $log, ?string $slug = null)
+    {
+        if ($slug) {
+            $this->assertSame($slug, $log->getSlug());
+        } else {
+            $url = parse_url(get_permalink($post), PHP_URL_PATH);
+            $this->assertSame(rtrim($url, '/'), $log->getSlug());
+        }
+        $this->assertSame($post->ID, $log->getWpID());
+        $this->assertSame($post->post_type, $log->getType());
+    }
+
+    protected function assertRedirect(
+        \WP_Post $post,
+        Redirect $redirect,
+        string $fromSlug,
+        string $toSlug,
+        string $type,
+        int $status = 301
+    ) {
+        $this->assertSame($fromSlug, $redirect->getFrom());
+        $this->assertSame($toSlug, $redirect->getTo());
+        $this->assertSame($status, $redirect->getCode());
+        $this->assertSame($post->ID, $redirect->getWpID());
+        $this->assertSame($type, $redirect->getType());
     }
 }
