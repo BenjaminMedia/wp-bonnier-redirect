@@ -26,6 +26,7 @@ class PostSlugChangeObserver extends AbstractObserver
 
     /**
      * @param SubjectInterface|PostSubject $subject
+     * @throws \Exception
      */
     public function update(SubjectInterface $subject)
     {

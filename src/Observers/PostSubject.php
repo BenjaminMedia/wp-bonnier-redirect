@@ -18,6 +18,12 @@ class PostSubject extends AbstractSubject
         return $this->post;
     }
 
+    public function setPost(\WP_Post $post): PostSubject
+    {
+        $this->post = $post;
+        return $this;
+    }
+
     public function updatePost(int $postID, \WP_Post $post)
     {
         if (!(wp_is_post_revision($postID) || wp_is_post_autosave($postID))) {

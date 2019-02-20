@@ -38,4 +38,21 @@ class TestCase extends WPTestCase
     {
         return $this->factory()->category->create_and_get($args);
     }
+
+    protected function getCategorySlug(\WP_Term $category)
+    {
+        return rtrim(parse_url(get_category_link($category->term_id), PHP_URL_PATH), '/');
+    }
+
+    /**
+     * Asserts whether or not two arrays contains the same
+     * items, ignoring the order of the items.
+     *
+     * @param array $expectedArray
+     * @param array $actualArray
+     */
+    protected function assertArraysAreEqual(array $expectedArray, array $actualArray)
+    {
+        $this->assertEmpty(array_diff($expectedArray, $actualArray));
+    }
 }

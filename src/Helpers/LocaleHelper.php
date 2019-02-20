@@ -11,4 +11,12 @@ class LocaleHelper
         }
         return substr(get_locale(), 0, 2);
     }
+
+    public static function getTermLocale(int $categoryID)
+    {
+        if (function_exists('pll_get_term_language')) {
+            return pll_get_term_language($categoryID);
+        }
+        return substr(get_locale(), 0, 2);
+    }
 }
