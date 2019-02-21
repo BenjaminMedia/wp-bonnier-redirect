@@ -68,4 +68,44 @@ class StatusChangeTest extends ObserverTestCase
             $this->assertSame('/dinosaur/' . $post->post_name, $redirect->getTo());
         }
     }
+
+    public function testCanDeleteTopCategoryAndRedirectsAreCreated()
+    {
+        $category = $this->getCategory([
+            'name' => 'Dinosaur',
+            'slug' => 'dinosaur'
+        ]);
+
+        $posts = [
+            $this->getPost(['post_category' => [$category->term_id]]),
+            $this->getPost(['post_category' => [$category->term_id]]),
+            $this->getPost(['post_category' => [$category->term_id]]),
+            $this->getPost(['post_category' => [$category->term_id]]),
+        ];
+
+        $this->assertSame('/dinosaur', $this->getCategorySlug($category));
+
+        foreach ($posts as $post) {
+            $this->assertSame('/dinosaur/' . $post->post_name, $this->getPostSlug($post));
+        }
+
+        wp_delete_category($category->term_id);
+
+        foreach ($posts as $post) {
+            $this->assertSame('/uncategorized/' . $post->post_name, $this->getPostSlug($post));
+        }
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(5, $redirects);
+
+        $categoryRedirect = $redirects->shift();
+        $this->assertSame('/dinosaur', $categoryRedirect->getFrom());
+        $this->assertSame('/', $categoryRedirect->getTo());
+
+        foreach ($posts as $index => $post) {
+            $redirect = $redirects->get($index);
+            $this->assertSame('/dinosaur/' . $post->post_name, $redirect->getFrom());
+            $this->assertSame('/uncategorized/' . $post->post_name, $redirect->getTo());
+        }
+    }
 }
