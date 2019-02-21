@@ -49,13 +49,23 @@ class CategoryChangeTest extends ObserverTestCase
         $this->assertCount(5, $redirects);
 
         $categoryRedirect = $redirects->shift();
-        $this->assertSame('/dinosaur/carnivorous', $categoryRedirect->getFrom());
-        $this->assertSame('/animals/carnivorous', $categoryRedirect->getTo());
+        $this->assertRedirect(
+            $childCategory->term_id,
+            $categoryRedirect,
+            '/dinosaur/carnivorous',
+            '/animals/carnivorous',
+            'category-slug-change'
+        );
 
         foreach ($posts as $index => $post) {
             $redirect = $redirects->get($index);
-            $this->assertSame('/dinosaur/carnivorous/' . $post->post_name, $redirect->getFrom());
-            $this->assertSame('/animals/carnivorous/' . $post->post_name, $redirect->getTo());
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/carnivorous/' . $post->post_name,
+                '/animals/carnivorous/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 
@@ -72,9 +82,21 @@ class CategoryChangeTest extends ObserverTestCase
         $cat3 = $this->getCategory(['parent' => $cat2->term_id]);
 
         $expectedFroms = [
-            sprintf('/%s/%s', $initialCategory->slug, $cat1->slug),
-            sprintf('/%s/%s/%s', $initialCategory->slug, $cat1->slug, $cat2->slug),
-            sprintf('/%s/%s/%s/%s', $initialCategory->slug, $cat1->slug, $cat2->slug, $cat3->slug),
+            [
+                'id' => $cat1->term_id,
+                'type' => 'category-slug-change',
+                'slug' => sprintf('/%s/%s', $initialCategory->slug, $cat1->slug)
+            ],
+            [
+                'id' => $cat2->term_id,
+                'type' => 'category-slug-change',
+                'slug' => sprintf('/%s/%s/%s', $initialCategory->slug, $cat1->slug, $cat2->slug),
+            ],
+            [
+                'id' => $cat3->term_id,
+                'type' => 'category-slug-change',
+                'slug' => sprintf('/%s/%s/%s/%s', $initialCategory->slug, $cat1->slug, $cat2->slug, $cat3->slug),
+            ]
         ];
         $expectedTos = [
             sprintf('/%s/%s', $newCategory->slug, $cat1->slug),
@@ -117,7 +139,11 @@ class CategoryChangeTest extends ObserverTestCase
                 sprintf('/%s/%s/%s', $initialCategory->slug, $cat1->slug, $post->post_name),
                 $this->getPostSlug($post)
             );
-            $expectedFroms[] = sprintf('/%s/%s/%s', $initialCategory->slug, $cat1->slug, $post->post_name);
+            $expectedFroms[] = [
+                'id' => $post->ID,
+                'type' => 'post-slug-change',
+                'slug' => sprintf('/%s/%s/%s', $initialCategory->slug, $cat1->slug, $post->post_name)
+            ];
             $expectedTos[] = sprintf('/%s/%s/%s', $newCategory->slug, $cat1->slug, $post->post_name);
         }
         foreach ($cat2Posts as $post) {
@@ -125,13 +151,17 @@ class CategoryChangeTest extends ObserverTestCase
                 sprintf('/%s/%s/%s/%s', $initialCategory->slug, $cat1->slug, $cat2->slug, $post->post_name),
                 $this->getPostSlug($post)
             );
-            $expectedFroms[] = sprintf(
-                '/%s/%s/%s/%s',
-                $initialCategory->slug,
-                $cat1->slug,
-                $cat2->slug,
-                $post->post_name
-            );
+            $expectedFroms[] = [
+                'id' => $post->ID,
+                'type' => 'post-slug-change',
+                'slug' => sprintf(
+                    '/%s/%s/%s/%s',
+                    $initialCategory->slug,
+                    $cat1->slug,
+                    $cat2->slug,
+                    $post->post_name
+                )
+            ];
             $expectedTos[] = sprintf(
                 '/%s/%s/%s/%s',
                 $newCategory->slug,
@@ -152,14 +182,18 @@ class CategoryChangeTest extends ObserverTestCase
                 ),
                 $this->getPostSlug($post)
             );
-            $expectedFroms[] = sprintf(
-                '/%s/%s/%s/%s/%s',
-                $initialCategory->slug,
-                $cat1->slug,
-                $cat2->slug,
-                $cat3->slug,
-                $post->post_name
-            );
+            $expectedFroms[] = [
+                'id' => $post->ID,
+                'type' => 'post-slug-change',
+                'slug' => sprintf(
+                    '/%s/%s/%s/%s/%s',
+                    $initialCategory->slug,
+                    $cat1->slug,
+                    $cat2->slug,
+                    $cat3->slug,
+                    $post->post_name
+                )
+            ];
             $expectedTos[] = sprintf(
                 '/%s/%s/%s/%s/%s',
                 $newCategory->slug,
@@ -216,11 +250,18 @@ class CategoryChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(12, $redirects);
 
-        $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
-            return [$redirect->getFrom() => $redirect->getTo()];
-        })->toArray();
-
-        $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
-        $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
+        foreach ($expectedFroms as $index => $expectedFrom) {
+            $expectedTo = $expectedTos[$index];
+            $redirect = $redirects->first(function (Redirect $redirect) use ($expectedFrom) {
+                return $redirect->getType() === $expectedFrom['type'] && $redirect->getWpID() === $expectedFrom['id'];
+            });
+            $this->assertRedirect(
+                $expectedFrom['id'],
+                $redirect,
+                $expectedFrom['slug'],
+                $expectedTo,
+                $expectedFrom['type']
+            );
+        }
     }
 }

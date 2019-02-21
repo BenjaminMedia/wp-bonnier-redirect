@@ -33,7 +33,7 @@ class StatusChangeTest extends ObserverTestCase
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->last(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
@@ -68,7 +68,7 @@ class StatusChangeTest extends ObserverTestCase
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->last(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
@@ -101,7 +101,7 @@ class StatusChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->last(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
@@ -118,7 +118,7 @@ class StatusChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->first(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous/t-rex-is-awesome',
@@ -151,7 +151,7 @@ class StatusChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->last(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
@@ -192,7 +192,7 @@ class StatusChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->last(),
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',

@@ -28,7 +28,7 @@ class SlugChangesTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->first(),
             $initialSlug,
             '/uncategorized/new-post-slug',
@@ -71,7 +71,7 @@ class SlugChangesTest extends ObserverTestCase
             $this->assertCount($index + 1, $redirectsAfter);
             $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
                 $this->assertRedirect(
-                    $post,
+                    $post->ID,
                     $redirect,
                     $slugs[$index],
                     $newSlug,

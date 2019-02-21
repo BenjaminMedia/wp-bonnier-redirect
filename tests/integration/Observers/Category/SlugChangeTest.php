@@ -31,26 +31,39 @@ class SlugChangeTest extends ObserverTestCase
 
         wp_update_category(['cat_ID' => $category->term_id, 'category_nicename' => 'dinosaur-fossils']);
 
-        $expectedTos = [
-            '/dinosaur-fossils',
-        ];
+        $expectedTos = [[
+            'id' => $category->term_id,
+            'type' => 'category-slug-change',
+            'slug' => '/dinosaur-fossils',
+        ]];
         $this->assertSame('/dinosaur-fossils', $this->getCategorySlug($category));
 
-        foreach ($posts as $index => $post) {
-            $expectedTos[] = '/dinosaur-fossils/post-' . $index;
-            $this->assertSame('/dinosaur-fossils/post-' . $index, $this->getPostSlug($post));
+        foreach ($posts as $post) {
+            $expectedTos[] = [
+                'id' => $post->ID,
+                'type' => 'post-slug-change',
+                'slug' => '/dinosaur-fossils/' . $post->post_name
+            ];
+            $this->assertSame('/dinosaur-fossils/' . $post->post_name, $this->getPostSlug($post));
         }
 
         $redirects = $this->redirectRepository->findAll();
         // One redirect per post (30) and one redirect for the category - 31 in total.
         $this->assertCount(31, $redirects);
 
-        $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
-            return [$redirect->getFrom() => $redirect->getTo()];
-        })->toArray();
-
-        $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
-        $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
+        foreach ($expectedFroms as $index => $expectedFrom) {
+            $expectedTo = $expectedTos[$index];
+            $redirect = $redirects->first(function (Redirect $redirect) use ($expectedTo) {
+                return $redirect->getType() === $expectedTo['type'] && $redirect->getWpID() === $expectedTo['id'];
+            });
+            $this->assertRedirect(
+                $expectedTo['id'],
+                $redirect,
+                $expectedFrom,
+                $expectedTo['slug'],
+                $expectedTo['type']
+            );
+        }
     }
 
     public function testRedirectsCreatedForAllCategoriesAndPostsWhenTopCategorySlugChanges()

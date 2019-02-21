@@ -41,7 +41,7 @@ class ObserverTestCase extends TestCase
     }
 
     protected function assertRedirect(
-        \WP_Post $post,
+        int $wpID,
         Redirect $redirect,
         string $fromSlug,
         string $toSlug,
@@ -51,7 +51,7 @@ class ObserverTestCase extends TestCase
         $this->assertSame($fromSlug, $redirect->getFrom());
         $this->assertSame($toSlug, $redirect->getTo());
         $this->assertSame($status, $redirect->getCode());
-        $this->assertSame($post->ID, $redirect->getWpID());
+        $this->assertSame($wpID, $redirect->getWpID());
         $this->assertSame($type, $redirect->getType());
     }
 }

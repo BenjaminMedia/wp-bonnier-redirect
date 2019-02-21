@@ -8,6 +8,8 @@ use Bonnier\WP\Redirect\Observers\Loggers\TagObserver;
 use Bonnier\WP\Redirect\Observers\Redirects\CategoryDeleteObserver;
 use Bonnier\WP\Redirect\Observers\Redirects\CategorySlugChangeObserver;
 use Bonnier\WP\Redirect\Observers\Redirects\PostSlugChangeObserver;
+use Bonnier\WP\Redirect\Observers\Redirects\TagDeleteObserver;
+use Bonnier\WP\Redirect\Observers\Redirects\TagSlugChangeObserver;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 
@@ -38,7 +40,6 @@ class Observers
         $categorySubject->attach($logObserver);
         $categorySubject->attach($slugChangeObserver);
         $categorySubject->attach($deleteObserver);
-        return $categorySubject;
     }
 
     public static function bootstrapPostSubject()
@@ -48,13 +49,16 @@ class Observers
         $postSubject = new PostSubject();
         $postSubject->attach($logObserver);
         $postSubject->attach($slugChangeObserver);
-        return $postSubject;
     }
 
     public static function bootstrapTagSubject()
     {
         $logObserver = new TagObserver(self::$logRepo);
+        $slugChangeObserver = new TagSlugChangeObserver(self::$logRepo, self::$redirectRepo);
+        $deleteObserver = new TagDeleteObserver(self::$logRepo, self::$redirectRepo);
         $tagSubject = new TagSubject();
         $tagSubject->attach($logObserver);
+        $tagSubject->attach($slugChangeObserver);
+        $tagSubject->attach($deleteObserver);
     }
 }

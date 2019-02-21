@@ -23,7 +23,7 @@ class CategoryChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->first(),
             sprintf('/%s/%s', $category->slug, $post->post_name),
             sprintf('/%s/%s', $newCategory->slug, $post->post_name),
@@ -59,7 +59,7 @@ class CategoryChangeTest extends ObserverTestCase
             $this->assertCount($index + 1, $redirects);
             $redirects->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
                 $this->assertRedirect(
-                    $post,
+                    $post->ID,
                     $redirect,
                     $slugs[$index],
                     $newSlug,
@@ -94,12 +94,12 @@ class CategoryChangeTest extends ObserverTestCase
             'post_category' => [$newCategory->term_id]
         ]);
 
-        $this->assertSame('/fossils/t-rex-is-awesome', rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/'));
+        $this->assertSame('/fossils/t-rex-is-awesome', $this->getPostSlug($post));
 
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
-            $post,
+            $post->ID,
             $redirects->first(),
             '/dinosaur/t-rex',
             '/fossils/t-rex-is-awesome',

@@ -20,8 +20,13 @@ class StatusChangeTest extends ObserverTestCase
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
 
-        $this->assertSame('/dinosaur', $redirects->first()->getFrom());
-        $this->assertSame('/', $redirects->first()->getTo());
+        $this->assertRedirect(
+            $category->term_id,
+            $redirects->first(),
+            '/dinosaur',
+            '/',
+            'category-deleted'
+        );
     }
 
     public function testSubcategoryDeletionCreatesRedirects()
@@ -60,12 +65,23 @@ class StatusChangeTest extends ObserverTestCase
 
         $firstRedirect = $redirects->shift();
 
-        $this->assertSame('/dinosaur/carnivorous', $firstRedirect->getFrom());
-        $this->assertSame('/dinosaur', $firstRedirect->getTo());
+        $this->assertRedirect(
+            $subCategory->term_id,
+            $firstRedirect,
+            '/dinosaur/carnivorous',
+            '/dinosaur',
+            'category-deleted'
+        );
+
         foreach ($posts as $index => $post) {
             $redirect = $redirects->get($index);
-            $this->assertSame('/dinosaur/carnivorous/' . $post->post_name, $redirect->getFrom());
-            $this->assertSame('/dinosaur/' . $post->post_name, $redirect->getTo());
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/carnivorous/' . $post->post_name,
+                '/dinosaur/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 
@@ -99,13 +115,23 @@ class StatusChangeTest extends ObserverTestCase
         $this->assertCount(5, $redirects);
 
         $categoryRedirect = $redirects->shift();
-        $this->assertSame('/dinosaur', $categoryRedirect->getFrom());
-        $this->assertSame('/', $categoryRedirect->getTo());
+        $this->assertRedirect(
+            $category->term_id,
+            $categoryRedirect,
+            '/dinosaur',
+            '/',
+            'category-deleted'
+        );
 
         foreach ($posts as $index => $post) {
             $redirect = $redirects->get($index);
-            $this->assertSame('/dinosaur/' . $post->post_name, $redirect->getFrom());
-            $this->assertSame('/uncategorized/' . $post->post_name, $redirect->getTo());
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/' . $post->post_name,
+                '/uncategorized/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 }

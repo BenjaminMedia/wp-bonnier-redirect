@@ -26,7 +26,7 @@ class TestCase extends WPTestCase
 
     protected function getPostSlug(\WP_Post $post)
     {
-        return rtrim(parse_url(get_permalink($post->ID), PHP_URL_PATH), '/');
+        return $this->trimUrl(get_permalink($post->ID));
     }
 
     protected function getPost(array $args = []): \WP_Post
@@ -41,7 +41,17 @@ class TestCase extends WPTestCase
 
     protected function getCategorySlug(\WP_Term $category)
     {
-        return rtrim(parse_url(get_category_link($category->term_id), PHP_URL_PATH), '/');
+        return $this->trimUrl(get_category_link($category->term_id));
+    }
+
+    protected function getTag(array $args = []): \WP_Term
+    {
+        return $this->factory()->tag->create_and_get($args);
+    }
+
+    protected function getTagSlug(\WP_Term $tag)
+    {
+        return $this->trimUrl(get_tag_link($tag->term_id));
     }
 
     /**
@@ -54,5 +64,10 @@ class TestCase extends WPTestCase
     protected function assertArraysAreEqual(array $expectedArray, array $actualArray)
     {
         $this->assertEmpty(array_diff($expectedArray, $actualArray));
+    }
+
+    private function trimUrl(string $url)
+    {
+        return rtrim(parse_url($url, PHP_URL_PATH), '/');
     }
 }
