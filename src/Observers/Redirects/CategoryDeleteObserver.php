@@ -13,9 +13,8 @@ use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
 
-class CategorySlugChangeObserver extends AbstractObserver
+class CategoryDeleteObserver extends AbstractObserver
 {
-    /** @var RedirectRepository */
     private $redirectRepository;
 
     public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository)
@@ -29,42 +28,38 @@ class CategorySlugChangeObserver extends AbstractObserver
      */
     public function update(SubjectInterface $subject)
     {
-        if ($subject->getType() !== CategorySubject::UPDATE) {
+        if ($subject->getType() !== CategorySubject::DELETE) {
             return;
         }
         $category = $subject->getCategory();
         if (!$category) {
             return;
         }
+
+        $slug = '/';
+        $parentID = $category->parent;
+        if ($parentID) {
+            $slug = rtrim(parse_url(get_category_link($parentID), PHP_URL_PATH), '/');
+        }
         $logs = $this->logRepository->findByWpIDAndType($category->term_id, $category->taxonomy);
-
-        $latest = $logs->pop();
-
-        $slug = $latest->getSlug();
-
         $logs->each(function (Log $log) use ($slug, $category) {
             if ($log->getSlug() !== $slug) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo($slug)
                     ->setWpID($category->term_id)
-                    ->setType('category-slug-change')
+                    ->setType('category-deleted')
                     ->setCode(Response::HTTP_MOVED_PERMANENTLY)
                     ->setLocale(LocaleHelper::getTermLocale($category->term_id));
                 $this->redirectRepository->save($redirect, true);
             }
         });
 
-        if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
-            $categorySubject = Observers::bootstrapCategorySubject();
-            foreach ($categories as $cat) {
-                $categorySubject->update($cat);
-            }
-        }
-
-        if ($posts = get_posts(['category' => $category->term_id, 'posts_per_page' => -1])) {
-            foreach ($posts as $post) {
-                do_action('save_post', $post->ID, $post, true);
+        if ($posts = $subject->getAffectedPosts()) {
+            $postCategory = $parentID ?: intval(get_option('default_category'));
+            foreach ($posts as $postID) {
+                wp_set_post_categories($postID, $postCategory);
+                do_action('save_post', $postID, get_post($postID), true);
             }
         }
     }

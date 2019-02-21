@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect\Observers;
 use Bonnier\WP\Redirect\Observers\Loggers\CategoryObserver;
 use Bonnier\WP\Redirect\Observers\Loggers\PostObserver;
 use Bonnier\WP\Redirect\Observers\Loggers\TagObserver;
+use Bonnier\WP\Redirect\Observers\Redirects\CategoryDeleteObserver;
 use Bonnier\WP\Redirect\Observers\Redirects\CategorySlugChangeObserver;
 use Bonnier\WP\Redirect\Observers\Redirects\PostSlugChangeObserver;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
@@ -12,39 +13,48 @@ use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 
 class Observers
 {
+    private static $logRepo;
+    private static $redirectRepo;
+
     public static function bootstrap(LogRepository $logRepo, RedirectRepository $redirectRepo)
     {
-        self::bootstrapCategorySubject($logRepo, $redirectRepo);
+        self::$logRepo = $logRepo;
+        self::$redirectRepo = $redirectRepo;
 
-        self::bootstrapPostSubject($logRepo, $redirectRepo);
+        self::bootstrapCategorySubject();
 
-        self::bootstrapTagSubject($logRepo);
+        self::bootstrapPostSubject();
+
+        self::bootstrapTagSubject();
     }
 
-    public static function bootstrapCategorySubject(LogRepository $logRepo, RedirectRepository $redirectRepo)
+    public static function bootstrapCategorySubject()
     {
-        $categoryObserver = new CategoryObserver($logRepo);
-        $categorySlugObserver = new CategorySlugChangeObserver($logRepo, $redirectRepo);
+        $logObserver = new CategoryObserver(self::$logRepo);
+        $slugChangeObserver = new CategorySlugChangeObserver(self::$logRepo, self::$redirectRepo);
+        $deleteObserver = new CategoryDeleteObserver(self::$logRepo, self::$redirectRepo);
+
         $categorySubject = new CategorySubject();
-        $categorySubject->attach($categoryObserver);
-        $categorySubject->attach($categorySlugObserver);
+        $categorySubject->attach($logObserver);
+        $categorySubject->attach($slugChangeObserver);
+        $categorySubject->attach($deleteObserver);
         return $categorySubject;
     }
 
-    public static function bootstrapPostSubject(LogRepository $logRepo, RedirectRepository $redirectRepo)
+    public static function bootstrapPostSubject()
     {
-        $postObserver = new PostObserver($logRepo);
-        $postSlugObserver = new PostSlugChangeObserver($logRepo, $redirectRepo);
+        $logObserver = new PostObserver(self::$logRepo);
+        $slugChangeObserver = new PostSlugChangeObserver(self::$logRepo, self::$redirectRepo);
         $postSubject = new PostSubject();
-        $postSubject->attach($postObserver);
-        $postSubject->attach($postSlugObserver);
+        $postSubject->attach($logObserver);
+        $postSubject->attach($slugChangeObserver);
         return $postSubject;
     }
 
-    public static function bootstrapTagSubject(LogRepository $logRepo)
+    public static function bootstrapTagSubject()
     {
-        $tagObserver = new TagObserver($logRepo);
+        $logObserver = new TagObserver(self::$logRepo);
         $tagSubject = new TagSubject();
-        $tagSubject->attach($tagObserver);
+        $tagSubject->attach($logObserver);
     }
 }

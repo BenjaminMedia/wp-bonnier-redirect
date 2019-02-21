@@ -16,13 +16,14 @@ class CategoryObserver extends AbstractObserver
      */
     public function update(SubjectInterface $subject)
     {
-        $category = $subject->getCategory();
-        $log = new Log();
-        $log->setSlug(UrlHelper::normalizePath(get_category_link($category->term_id)))
-            ->setType($category->taxonomy)
-            ->setWpID($category->term_id)
-            ->setCreatedAt(new \DateTime());
+        if ($subject->getType() === CategorySubject::UPDATE && $category = $subject->getCategory()) {
+            $log = new Log();
+            $log->setSlug(UrlHelper::normalizePath(get_category_link($category->term_id)))
+                ->setType($category->taxonomy)
+                ->setWpID($category->term_id)
+                ->setCreatedAt(new \DateTime());
 
-        $this->logRepository->save($log);
+            $this->logRepository->save($log);
+        }
     }
 }
