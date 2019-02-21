@@ -53,14 +53,7 @@ class CategorySubject extends AbstractSubject
             $this->notify();
         }
     }
-
-    public function update(\WP_Term $category)
-    {
-        $this->type = self::UPDATE;
-        $this->category = $category;
-        $this->notify();
-    }
-
+    
     public function deletedCategory(int $termID, string $taxonomy, \WP_Term $category, array $objectIds)
     {
         $this->affectedPosts = $objectIds;

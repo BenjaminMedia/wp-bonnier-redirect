@@ -8,7 +8,6 @@ use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\AbstractObserver;
 use Bonnier\WP\Redirect\Observers\CategorySubject;
 use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
-use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,9 +55,8 @@ class CategorySlugChangeObserver extends AbstractObserver
         });
 
         if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
-            $categorySubject = Observers::bootstrapCategorySubject();
             foreach ($categories as $cat) {
-                $categorySubject->update($cat);
+                do_action('edited_category', $cat->term_id, $cat->term_taxonomy_id);
             }
         }
 
