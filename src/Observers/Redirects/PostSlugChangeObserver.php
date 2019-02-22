@@ -32,6 +32,9 @@ class PostSlugChangeObserver extends AbstractObserver
     {
         $post = $subject->getPost();
         $logs = $this->logRepository->findByWpIDAndType($post->ID, $post->post_type);
+        if (is_null($logs)) {
+            return;
+        }
         if (in_array($post->post_status, ['trash', 'draft'])) {
             if (!empty($categories = $subject->getPost()->post_category)) {
                 $category = $categories[0];
@@ -47,7 +50,7 @@ class PostSlugChangeObserver extends AbstractObserver
             $type = 'post-slug-change';
         }
 
-        if ($redirects = $this->redirectRepository->findBy('from', $slug)) {
+        if ($redirects = $this->redirectRepository->findAllBy('from', $slug)) {
             $this->redirectRepository->deleteMultiple($redirects);
         }
 

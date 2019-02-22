@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -66,6 +67,8 @@ class WpBonnierRedirect
      */
     private function __construct()
     {
+        add_option(Migrate::OPTION);
+        Migrate::run();
         // Set plugin file variables
         $this->dir = __DIR__;
         $this->basename = plugin_basename($this->dir);

@@ -57,8 +57,10 @@ class CategoryChangeTest extends ObserverTestCase
             'category-slug-change'
         );
 
-        foreach ($posts as $index => $post) {
-            $redirect = $redirects->get($index);
+        foreach ($posts as $post) {
+            $redirect = $redirects->first(function (Redirect $redirect) use ($post) {
+                return $redirect->getWpID() === $post->ID;
+            });
             $this->assertRedirect(
                 $post->ID,
                 $redirect,

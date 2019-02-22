@@ -23,4 +23,4 @@ modules:
             plugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
             activatePlugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
             bootstrapActions:
-              - [Bonnier\WP\Redirect\Database\Bootstrap, createRedirectsTable]
+              - [Bonnier\WP\Redirect\Database\Migrations\Migrate, run]

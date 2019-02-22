@@ -2,9 +2,9 @@
 
 namespace Bonnier\WP\Redirect\Repositories;
 
-use Bonnier\WP\Redirect\Database\Bootstrap;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
+use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Illuminate\Support\Collection;
 
@@ -12,7 +12,7 @@ class RedirectRepository extends BaseRepository
 {
     public function __construct(DB $database)
     {
-        $this->tableName = Bootstrap::REDIRECTS_TABLE;
+        $this->tableName = Migrate::REDIRECTS_TABLE;
         parent::__construct($database);
     }
 
@@ -36,7 +36,7 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
-    public function findBy($key, $value): ?Collection
+    public function findAllBy($key, $value): ?Collection
     {
         $query = $this->database->query()->select('*')
             ->where([$key, $value]);
@@ -89,7 +89,7 @@ class RedirectRepository extends BaseRepository
      * @return Redirect
      * @throws DuplicateEntryException
      */
-    public function save(Redirect $redirect, bool $updateOnDuplicate = false): Redirect
+    public function save(Redirect &$redirect, bool $updateOnDuplicate = false): Redirect
     {
         $data = $redirect->toArray();
         unset($data['id']);

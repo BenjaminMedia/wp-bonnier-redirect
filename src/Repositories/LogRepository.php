@@ -2,8 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Repositories;
 
-use Bonnier\WP\Redirect\Database\Bootstrap;
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Database\Query;
 use Bonnier\WP\Redirect\Models\Log;
 use Illuminate\Support\Collection;
@@ -12,7 +12,7 @@ class LogRepository extends BaseRepository
 {
     public function __construct(DB $database)
     {
-        $this->tableName = Bootstrap::LOG_TABLE;
+        $this->tableName = Migrate::LOG_TABLE;
         parent::__construct($database);
     }
 

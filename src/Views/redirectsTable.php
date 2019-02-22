@@ -1,3 +1,8 @@
+<?php
+/**
+ * @var \Bonnier\WP\Redirect\Controllers\ListController $this
+ */
+?>
 <div class="wrap">
     <h1 class="wp-heading-inline">Bonnier Redirects</h1>
     <a
@@ -9,9 +14,11 @@
     <form id="bonnier-redirect-overview-form" method="get">
         <input type="hidden" name="page" value="<?php echo $_REQUEST['page'] ?>" />
         <?php
-        \Bonnier\WP\Redirect\Controllers\ListController::displayNotices();
-        \Bonnier\WP\Redirect\Controllers\ListController::displaySearch();
-        \Bonnier\WP\Redirect\Controllers\ListController::displayTable();
+        foreach ($this->getNotices() as $notice) {
+            $notice();
+        }
+        $this->displaySearch();
+        $this->display();
         ?>
     </form>
 </div>

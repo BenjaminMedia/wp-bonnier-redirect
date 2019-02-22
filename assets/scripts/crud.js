@@ -1,18 +1,28 @@
 (function () {
-  var externalCheckbox = document.getElementById('external_checkbox');
-  function toggleExternalRedirect() {
-    var spanToUrl = document.getElementById('to_home_url');
-    var inputToUrl = document.getElementById('to_url');
-    if (externalCheckbox.checked) {
-      spanToUrl.style.display = 'none';
-      inputToUrl.setAttribute('placeholder', 'https://bonnier.com');
-      inputToUrl.style.width = '100%';
-    } else {
-      spanToUrl.style.display = 'inline';
-      inputToUrl.setAttribute('placeholder', '/new/page/slug');
-      inputToUrl.style.width = 'auto';
-    }
-  }
-  externalCheckbox.addEventListener('change', toggleExternalRedirect);
-  toggleExternalRedirect();
+    var allowLeave = true;
+    document.getElementById('bonnier-redirect-add-form').addEventListener('submit', function () {
+        allowLeave = true;
+    });
+
+    var edited = function () {
+        allowLeave = false;
+    };
+
+    document.querySelectorAll('#bonnier-redirect-add-form input').forEach(function (element) {
+        element.addEventListener('input', edited);
+    });
+    document.querySelectorAll('#bonnier-redirect-add-form select').forEach(function (element) {
+        element.addEventListener('change', edited);
+    });
+
+    window.addEventListener('beforeunload', function (event) {
+        if (allowLeave) {
+            return;
+        }
+
+        var confirmation = 'Are you sure you want to leave the page with unsaved changes?';
+
+        (event || window.event).returnValue = confirmation;
+        return confirmation;
+    });
 })();

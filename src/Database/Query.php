@@ -97,7 +97,7 @@ class Query
     public function orderBy(string $orderBy, ?string $order = null): Query
     {
         $this->query .= " ORDER BY `$orderBy`";
-        if ($order && in_array($order, [self::ORDER_ASC, self::ORDER_DESC])) {
+        if ($order && in_array(strtoupper($order), [self::ORDER_ASC, self::ORDER_DESC])) {
             $this->query .= " $order";
         }
 

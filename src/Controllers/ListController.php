@@ -54,18 +54,6 @@ class ListController extends \WP_List_Table
         $this->search_box('Find redirect', 'bonnier-redirect-find');
     }
 
-    public function displayTable()
-    {
-        $this->display();
-    }
-
-    public function displayNotices()
-    {
-        foreach ($this->getNotices() as $notice) {
-            $notice();
-        }
-    }
-
     public function getNotices()
     {
         if ($this->notices) {
@@ -141,9 +129,21 @@ class ListController extends \WP_List_Table
             '_wpnonce' => wp_create_nonce('delete_redirect_nonce'),
         ];
 
+        $editRedirectArgs = [
+            'page' => 'add-redirect',
+            'action' => 'edit',
+            'redirect_id' => absint($item['id']),
+        ];
+
         $deleteRedirectLink = esc_url(add_query_arg($deleteRedirectArgs, $pageUrl));
+        $editRedirectLink = esc_url(add_query_arg($editRedirectArgs, $pageUrl));
 
         $actions = [
+            'edit' => sprintf(
+                '<a href="%s">%s</a>',
+                $editRedirectLink,
+                'Edit redirect'
+            ),
             'trash' => sprintf(
                 '<a href="%s" onclick="return confirm(\'%s\')">%s</a>',
                 $deleteRedirectLink,
@@ -152,8 +152,12 @@ class ListController extends \WP_List_Table
             ),
         ];
 
-
-        return sprintf('<strong>%s</strong>', $item['from']) . $this->row_actions($actions);
+        return sprintf(
+            '<strong><a href="%s">%s</a></strong>%s',
+            $editRedirectLink,
+            $item['from'],
+            $this->row_actions($actions)
+        );
     }
 
     public function get_bulk_actions()
