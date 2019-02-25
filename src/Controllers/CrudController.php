@@ -2,12 +2,12 @@
 
 namespace Bonnier\WP\Redirect\Controllers;
 
-use Bonnier\WP\Redirect\Database\Bootstrap;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 
 class CrudController
@@ -21,6 +21,7 @@ class CrudController
     private $redirect;
 
     private $notices = [];
+    private $validationErrors = [];
 
     public function __construct(RedirectRepository $redirectRepository, Request $request)
     {
@@ -38,9 +39,6 @@ class CrudController
 
     public function displayAddRedirectPage()
     {
-        $redirect = $this->redirect;
-        $languages = LocaleHelper::getLanguages();
-
         include_once(WpBonnierRedirect::instance()->getViewPath('addRedirect.php'));
     }
 
@@ -78,16 +76,57 @@ class CrudController
 
     public function getNotices(): array
     {
-        if ($notices = $this->notices) {
-            return $notices;
-        }
+        return $this->notices;
+    }
 
-        return [];
+    public function getRedirect(): Redirect
+    {
+        return $this->redirect;
+    }
+
+    public function getValidationErrors(): array
+    {
+        return $this->validationErrors;
+    }
+
+    public function getError(string $field): ?string
+    {
+        return $this->validationErrors[$field] ?? null;
     }
 
     private function updateRedirect()
     {
+        if (!$this->validateRequest()) {
+            $this->addNotice('Invalid data was submitted - fix fields marked with red.');
+            return;
+        }
+        if (($redirectID = $this->request->request->get('redirect_id')) &&
+            $redirect = $this->redirects->getRedirectById($redirectID)
+        ) {
+            $redirectFrom = $this->request->request->get('redirect_from');
+            $redirectTo = $this->request->request->get('redirect_to');
+            $redirectLocale = $this->request->request->get('redirect_locale');
+            $redirectCode = $this->request->request->get('redirect_code');
+            $redirectKeepQuery = boolval($this->request->request->get('redirect_keep_query'));
+            if ($redirect->getFrom() !== $redirectFrom) {
+                $redirect->setFrom($redirectFrom);
+            }
+            if ($redirect->getTo() !== $redirectTo) {
+                $redirect->setTo($redirectTo);
+            }
+            $redirect->setLocale($redirectLocale);
+            $redirect->setCode($redirectCode);
+            $redirect->setKeepQuery($redirectKeepQuery);
 
+            try {
+                $this->redirects->save($redirect);
+                $this->addNotice('Redirect updated!', 'success');
+            } catch (DuplicateEntryException $exception) {
+                $this->addNotice('A redirect with the same \'from\' and \'locale\' already exists!');
+            } catch (\Exception $exception) {
+                $this->addNotice(sprintf('Unable to update redirect! (%s)', $exception->getMessage()));
+            }
+        }
     }
 
     private function createRedirect()
@@ -99,25 +138,46 @@ class CrudController
             'locale' => $this->request->request->get('redirect_locale'),
             'type' => 'manual',
             'code' => $this->request->request->get('redirect_code'),
+            'keep_query' => $this->request->request->get('redirect_keep_query') ? 1 : 0,
         ]);
+        if (!$this->validateRequest()) {
+            $this->addNotice('Invalid data was submitted - fix fields marked with red.');
+            return;
+        }
         try {
             $this->redirects->save($this->redirect);
+            $this->addNotice('The redirect was saved!', 'success');
         } catch (DuplicateEntryException $exception) {
-            $this->addNotice(function () use ($exception) {
-                ?>
-                <div id="message" class="notice notice-error is-dismissible">
-                    <p>
-                        <strong>Error:</strong>
-                        <?php echo $exception->getMessage(); ?>
-                    </p>
-                </div>
-                <?php
-            });
+            $this->addNotice('A redirect with the same \'from\' and \'locale\' already exists!');
+        } catch (\Exception $exception) {
+            $this->addNotice(sprintf('An error occured, creating the redirect (%s)', $exception->getMessage()));
         }
     }
 
-    private function addNotice(callable $notice)
+    private function validateRequest(): bool
     {
-        $this->notices[] = $notice;
+        $validRequest = true;
+        $redirectFrom = $this->request->request->get('redirect_from');
+        if (empty($redirectFrom)) {
+            $this->validationErrors['redirect_from'] = 'The \'from\'-value cannot be empty!';
+            $validRequest = false;
+        } elseif ($redirectFrom === '/*' || $redirectFrom === '*') {
+            $this->validationErrors['redirect_from'] = 'You cannot create this destructive wildcard redirect!';
+            $validRequest = false;
+        } elseif ($redirectFrom === '/') {
+            $this->validationErrors['redirect_from'] = 'You cannot create a redirect from the frontpage!';
+            $validRequest = false;
+        }
+        if (empty($this->request->request->get('redirect_to'))) {
+            $this->validationErrors['redirect_to'] = 'The \'to\'-value cannot be empty!';
+            $validRequest = false;
+        }
+
+        return $validRequest;
+    }
+
+    private function addNotice(string $message, string $type = 'error')
+    {
+        $this->notices[] = [$type => $message];
     }
 }

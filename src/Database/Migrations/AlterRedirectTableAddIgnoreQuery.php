@@ -15,7 +15,7 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
 
         $sql = "
         ALTER TABLE `$table`
-        ADD `ignore_query` tinyint(1) DEFAULT 0,
+        ADD `keep_query` tinyint(1) DEFAULT 0,
         ADD UNIQUE KEY `from_hash_locale` (`from_hash`, `locale`);
         ";
         $wpdb->query($sql);
@@ -31,6 +31,6 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
         global $wpdb;
         $table = $wpdb->prefix . Migrate::REDIRECTS_TABLE;
         $result = $wpdb->get_row("SHOW CREATE TABLE $table", ARRAY_A);
-        return isset($result['Create Table']) && str_contains($result['Create Table'], 'ignore_query');
+        return isset($result['Create Table']) && str_contains($result['Create Table'], 'keep_query');
     }
 }

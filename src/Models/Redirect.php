@@ -27,6 +27,8 @@ class Redirect implements Arrayable
     private $code;
     /** @var string */
     private $paramlessFromHash;
+    /** @var boolean */
+    private $keepQuery;
 
     public function __construct()
     {
@@ -34,6 +36,7 @@ class Redirect implements Arrayable
         $this->type = '';
         $this->wpID = 0;
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
+        $this->keepQuery = false;
     }
 
     /**
@@ -69,6 +72,8 @@ class Redirect implements Arrayable
     public function setFrom(string $from): Redirect
     {
         $this->from = $from;
+        $this->fromHash = hash('md5', $this->from);
+        $this->paramlessFromHash = hash('md5', parse_url($this->from, PHP_URL_PATH));
         return $this;
     }
 
@@ -104,6 +109,7 @@ class Redirect implements Arrayable
     public function setTo(string $destination): Redirect
     {
         $this->destination = $destination;
+        $this->toHash = hash('md5', $this->destination);
         return $this;
     }
 
@@ -224,6 +230,18 @@ class Redirect implements Arrayable
         return null;
     }
 
+    public function keepsQuery(): bool
+    {
+        return $this->keepQuery;
+    }
+
+    public function setKeepQuery(bool $keepQuery): Redirect
+    {
+        $this->keepQuery = $keepQuery;
+
+        return $this;
+    }
+
     /**
      * @return array
      */
@@ -240,6 +258,7 @@ class Redirect implements Arrayable
             'wp_id' => $this->getWpID(),
             'code' => $this->getCode(),
             'paramless_from_hash' => $this->getParamlessFromHash(),
+            'keep_query' => $this->keepsQuery() ? 1 : 0,
         ];
     }
 
@@ -260,6 +279,7 @@ class Redirect implements Arrayable
         $this->wpID = intval(array_get($data, 'wp_id', 0));
         $this->setCode(intval(array_get($data, 'code')));
         $this->paramlessFromHash = array_get($data, 'paramless_from_hash');
+        $this->keepQuery = boolval(array_get($data, 'keep_query'));
 
         return $this;
     }

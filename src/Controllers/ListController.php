@@ -2,7 +2,6 @@
 
 namespace Bonnier\WP\Redirect\Controllers;
 
-use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +16,8 @@ class ListController extends \WP_List_Table
 {
     /** @var ListController */
     protected static $redirectsTable;
-    private $notices;
+    /** @var array */
+    private $notices = [];
 
     /** @var RedirectRepository */
     private $redirects;
@@ -26,7 +26,10 @@ class ListController extends \WP_List_Table
 
     public function __construct(RedirectRepository $redirects, Request $request)
     {
-        parent::__construct();
+        parent::__construct([
+            'singular' => 'redirect',
+            'plural' => 'redirects',
+        ]);
         $this->redirects = $redirects;
         $this->request = $request;
     }
@@ -56,11 +59,7 @@ class ListController extends \WP_List_Table
 
     public function getNotices()
     {
-        if ($this->notices) {
-            return $this->notices;
-        }
-
-        return [];
+        return $this->notices;
     }
 
     public function get_columns()
@@ -167,6 +166,24 @@ class ListController extends \WP_List_Table
         ];
     }
 
+    public function current_action()
+    {
+        $params = $this->request->query;
+        if ($params->get('filter_action')) {
+            return false;
+        }
+
+        if (($action = $params->get('action')) && $action != -1) {
+            return $action;
+        }
+
+        if (($action = $params->get('action2')) && $action != -1) {
+            return $action;
+        }
+
+        return false;
+    }
+
     protected function column_cb($item)
     {
         return sprintf(
@@ -204,43 +221,43 @@ class ListController extends \WP_List_Table
         $tableAction = $this->current_action();
 
         if ('delete_redirect' === $tableAction) {
-            $nonce = wp_unslash($this->request->query->get('_wpnonce'));
-            if (!wp_verify_nonce($nonce, 'delete_redirect_nonce')) {
-                $this->invalidNonceRedirect();
-            } else {
-                // TODO: Delete single redirect
-                $this->addNotice(function () {
-                    ?>
-                    <div id="message" class="updated notice is-dismissible">
-                        <p>
-                            <strong>Success:</strong>
-                            The redirect was deleted!
-                        </p>
-                    </div>
-                    <?php
-                });
-            }
+            $this->deleteRedirect();
         }
 
-        if ($this->request->query->get('action') === 'bulk-delete' ||
-            $this->request->query->get('action2') === 'bulk-delete'
-        ) {
-            $nonce = wp_unslash($this->request->query->get('_wpnonce'));
-            if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural'])) {
-                $this->invalidNonceRedirect();
-            } elseif ($redirects = $this->redirects->query->get('redirects')) {
-                $this->redirects->deleteByID($redirects);
-                $this->addNotice(function () use ($redirects) {
-                    ?>
-                    <div class="notice notice-success is-dismissible">
-                        <p>
-                            <strong>Success:</strong>
-                            <?php echo count($redirects); ?> redirect(s) was deleted!
-                        </p>
-                    </div>
-                    <?php
-                });
+        if ($tableAction === 'bulk-delete') {
+            $this->bulkDeleteRedirects();
+        }
+    }
+
+    private function deleteRedirect()
+    {
+        $nonce = wp_unslash($this->request->query->get('_wpnonce'));
+        if (!wp_verify_nonce($nonce, 'delete_redirect_nonce')) {
+            $this->invalidNonceRedirect();
+        } else {
+            if (($redirectID = $this->request->query->get('redirect_id')) &&
+                $redirect = $this->redirects->getRedirectById($redirectID)
+            ) {
+                try {
+                    $this->redirects->delete($redirect);
+                    $this->addNotice('The redirect was deleted!', 'success');
+                } catch (\Exception $exception) {
+                    $this->addNotice(
+                        sprintf('An error occured while deleting redirect (%s)', $exception->getMessage())
+                    );
+                }
             }
+        }
+    }
+
+    private function bulkDeleteRedirects()
+    {
+        $nonce = wp_unslash($this->request->query->get('_wpnonce'));
+        if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural'])) {
+            $this->invalidNonceRedirect();
+        } elseif ($redirects = $this->request->query->get('redirects')) {
+            $this->redirects->deleteMultipleByIDs($redirects);
+            $this->addNotice(sprintf('%s redirect(s) was deleted!', count($redirects)), 'success');
         }
     }
 
@@ -250,17 +267,14 @@ class ListController extends \WP_List_Table
             'response' => 403,
             'back_link' => esc_url(
                 add_query_arg([
-                        'page' => wp_unslash($this->redirects->query->get('page'))
+                        'page' => wp_unslash($this->request->query->get('page'))
                 ], admin_url('admin.php'))
             ),
         ]);
     }
 
-    private function addNotice(callable $notice)
+    private function addNotice(string $notice, string $type = 'error')
     {
-        if (!$this->notices) {
-            $this->notices = [];
-        }
-        $this->notices[] = $notice;
+        $this->notices[] = [$type => $notice];
     }
 }

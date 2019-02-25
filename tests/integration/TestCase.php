@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Tests\integration;
 
+use Bonnier\WP\Redirect\Models\Redirect;
 use Codeception\TestCase\WPTestCase;
 
 class TestCase extends WPTestCase
@@ -64,6 +65,35 @@ class TestCase extends WPTestCase
     protected function assertArraysAreEqual(array $expectedArray, array $actualArray)
     {
         $this->assertEmpty(array_diff($expectedArray, $actualArray));
+    }
+
+    protected function assertRedirect(
+        int $wpID,
+        Redirect $redirect,
+        string $fromSlug,
+        string $toSlug,
+        string $type,
+        int $status = 301
+    ) {
+        $this->assertSame($fromSlug, $redirect->getFrom());
+        $this->assertSame($toSlug, $redirect->getTo());
+        $this->assertSame($status, $redirect->getCode());
+        $this->assertSame($wpID, $redirect->getWpID());
+        $this->assertSame($type, $redirect->getType());
+    }
+
+    protected function assertSameRedirects(Redirect $expectedRedirect, Redirect $actualRedirect)
+    {
+        $this->assertSame($expectedRedirect->getID(), $actualRedirect->getID());
+        $this->assertSame($expectedRedirect->getFrom(), $actualRedirect->getFrom());
+        $this->assertSame($expectedRedirect->getFromHash(), $actualRedirect->getFromHash());
+        $this->assertSame($expectedRedirect->getTo(), $actualRedirect->getTo());
+        $this->assertSame($expectedRedirect->getToHash(), $actualRedirect->getToHash());
+        $this->assertSame($expectedRedirect->getType(), $actualRedirect->getType());
+        $this->assertSame($expectedRedirect->getWpID(), $actualRedirect->getWpID());
+        $this->assertSame($expectedRedirect->getLocale(), $actualRedirect->getLocale());
+        $this->assertSame($expectedRedirect->getCode(), $actualRedirect->getCode());
+        $this->assertSame($expectedRedirect->getParamlessFromHash(), $actualRedirect->getParamlessFromHash());
     }
 
     private function trimUrl(string $url)

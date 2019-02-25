@@ -107,9 +107,19 @@ class DB
             self::getDataFormat($data),
             ['%d']
         ) === false) {
-            throw new \Exception(
-                sprintf('Unable to update row with ID:%s (%s)', $rowId, $this->wpdb->last_error)
-            );
+            $error = $this->wpdb->last_error;
+            if (starts_with($error, 'Duplicate entry ')) {
+                $uniqueKey = str_after($error, ' for key ');
+                $exception = new DuplicateEntryException(
+                    sprintf('Cannot update row with ID: %s, due to key constraint %s', $rowId, $uniqueKey)
+                );
+                $exception->setData($data);
+                throw $exception;
+            } else {
+                throw new \Exception(
+                    sprintf('Unable to update row in `%s` with ID: %s! (%s)', $this->table, $rowId, $error)
+                );
+            }
         }
 
         return true;

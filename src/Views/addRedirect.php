@@ -1,11 +1,11 @@
 <?php
+
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Symfony\Component\HttpFoundation\Response;
-/**
- * @var \Bonnier\WP\Redirect\Controllers\CrudController $this
- * @var \Bonnier\WP\Redirect\Models\Redirect $redirect
- * @var array $languages
- *
- */
+
+/** @var \Bonnier\WP\Redirect\Controllers\CrudController $this */
+/** @var \Bonnier\WP\Redirect\Models\Redirect $redirect */
+$redirect = $this->getRedirect();
 ?>
 <div class="wrap">
     <?php
@@ -26,13 +26,31 @@ use Symfony\Component\HttpFoundation\Response;
     <hr class="wp-header-end">
     <?php
     foreach ($this->getNotices() as $notice) {
-        $notice();
+        if ($message = $notice['error'] ?? null) {
+            ?>
+            <div id="message" class="notice notice-error is-dismissible">
+                <p>
+                    <strong>Error:</strong>
+                    <?php echo $message; ?>
+                </p>
+            </div>
+            <?php
+        } elseif ($message = $notice['success'] ?? null) {
+            ?>
+            <div id="message" class="notice notice-success is-dismissible">
+                <p>
+                    <strong>Success:</strong>
+                    <?php echo $message; ?>
+                </p>
+            </div>
+            <?php
+        }
     }
     ?>
     <form id="bonnier-redirect-add-form" method="post">
         <input type="hidden" name="redirect_id" value="<?php echo $redirect->getID(); ?>" />
         <table class="form-table">
-            <tr>
+            <tr <?php echo $this->getError('redirect_from') ? "class='error'": null; ?>>
                 <th scope="row">
                     <label for="from_url">From this</label>
                 </th>
@@ -45,12 +63,18 @@ use Symfony\Component\HttpFoundation\Response;
                         placeholder="/old/page/slug"
                         value="<?php echo $redirect->getFrom(); ?>" />
                     <p class="description">
-                        The origin URL must be relative. We can only redirect URLs on the site.
-                        This means the domain part should be left out (<?php echo home_url(); ?>)
+                        <?php
+                        if ($redirectFromError = $this->getError('redirect_from')) {
+                            echo '<strong>' . $redirectFromError . '</strong>';
+                        } else {
+                            echo 'The origin URL must be relative. We can only redirect URLs on the site.
+                                This means the domain part should be left out (' . home_url()  . ')';
+                        }
+                        ?>
                     </p>
                 </td>
             </tr>
-            <tr>
+            <tr <?php echo $this->getError('redirect_to') ? "class='error'": null; ?>>
                 <th scope="row">
                     <label for="to_url">To this</label>
                 </th>
@@ -63,8 +87,15 @@ use Symfony\Component\HttpFoundation\Response;
                         placeholder="/new/page/slug"
                         value="<?php echo $redirect->getTo(); ?>" />
                     <p class="description">
-                        The destination URL can be a relative path (on the same site)
-                        or an absolute path, if it needs to redirect externally (e.g. https://bonniershop.com/product)
+                        <?php
+                        if ($redirectToError = $this->getError('redirect_to')) {
+                            echo '<strong>' . $redirectToError . '</strong>';
+                        } else {
+                            echo 'The destination URL can be a relative path (on the same site)
+                            or an absolute path, if it needs to redirect externally
+                            (e.g. https://bonniershop.com/product)';
+                        }
+                        ?>
                     </p>
                 </td>
             </tr>
@@ -76,9 +107,8 @@ use Symfony\Component\HttpFoundation\Response;
                     <select id="redirect_code" name="redirect_code">
                         <option
                             value="<?php echo Response::HTTP_MOVED_PERMANENTLY; ?>"
-                            <?php echo $redirect->getCode() === Response::HTTP_MOVED_PERMANENTLY ? 'selected' : null; ?>>
-                            Permanent Redirect (301) - Recommended
-                        </option>
+                            <?php echo $redirect->getCode() === Response::HTTP_MOVED_PERMANENTLY ? 'selected' : null; ?>
+                        >Permanent Redirect (301) - Recommended</option>
                         <option
                             <?php echo $redirect->getCode() === Response::HTTP_FOUND ? 'selected' : null; ?>
                             value="<?php echo Response::HTTP_FOUND; ?>">
@@ -87,16 +117,15 @@ use Symfony\Component\HttpFoundation\Response;
                     </select>
                 </td>
             </tr>
-            <?php
-            if (count($languages) > 1) {
-                ?>
-                <tr>
-                    <th scope="row">
-                        <label for="redirect_locale">Locale</label>
-                    </th>
-                    <td>
-                        <select id="redirect_locale" name="redirect_locale">
-                            <?php
+            <tr>
+                <th scope="row">
+                    <label for="redirect_locale">Locale</label>
+                </th>
+                <td>
+                    <select id="redirect_locale" name="redirect_locale">
+                        <?php
+                        $languages = LocaleHelper::getLanguages();
+                        if (count($languages) > 1) {
                             foreach ($languages as $language) {
                                 $selected = null;
                                 if ($language === $redirect->getLocale()) {
@@ -108,24 +137,34 @@ use Symfony\Component\HttpFoundation\Response;
                                 </option>
                                 <?php
                             }
+                        } else {
                             ?>
-                        </select>
-                        <p class="description">
-                            Specify the language for which the redirect shall work.
-                        </p>
-                    </td>
-                </tr>
-                <?php
-            }
-            ?>
+                            <option value="<?php echo $redirect->getLocale(); ?>">
+                                <?php echo $redirect->getLocale(); ?>
+                            </option>
+                            <?php
+                        }
+                        ?>
+                    </select>
+                    <p class="description">
+                        Specify the language for which the redirect shall work.
+                    </p>
+                </td>
+            </tr>
             <tr>
                 <th scope="row">Query params</th>
                 <td>
                     <fieldset>
                         <legend class="screen-reader-text">Query params</legend>
                     </fieldset>
-                    <label for="query_params">
-                        <input id="query_params" name="query_params" type="checkbox" value="1" />
+                    <label for="redirect_keep_query">
+                        <input
+                            id="redirect_keep_query"
+                            name="redirect_keep_query"
+                            type="checkbox"
+                            value="1"
+                            <?php echo $redirect->keepsQuery() ? 'checked' : null; ?>
+                        />
                         Keep query params when redirecting ('off' is recommended)
                     </label>
                     <p class="description">

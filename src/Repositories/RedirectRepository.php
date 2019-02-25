@@ -88,6 +88,7 @@ class RedirectRepository extends BaseRepository
      * @param bool $updateOnDuplicate
      * @return Redirect
      * @throws DuplicateEntryException
+     * @throws \Exception
      */
     public function save(Redirect &$redirect, bool $updateOnDuplicate = false): Redirect
     {
@@ -103,6 +104,8 @@ class RedirectRepository extends BaseRepository
                 $redirect->setID($this->database->insert($data));
             }
         }
+
+        $this->removeChainsByRedirect($redirect);
 
         return $redirect;
     }
@@ -127,6 +130,34 @@ class RedirectRepository extends BaseRepository
         return $this->database->deleteMultiple($redirects->map(function (Redirect $redirect) {
             return $redirect->getID();
         })->toArray());
+    }
+
+    public function deleteMultipleByIDs(array $redirectIDs)
+    {
+        return $this->database->deleteMultiple($redirectIDs);
+    }
+
+    /**
+     * Finds all redirects that with to_hash that matches the specified redirects from hash.
+     * I.e the redirect in the database that redirects from '/a/b' to /c/d'
+     * will be updated according to the newly created redirect from '/c/d/' to '/e/f'
+     * so both redirects will redirect to '/e/f'.
+     *
+     * @param Redirect $redirect
+     */
+    public function removeChainsByRedirect(Redirect $redirect)
+    {
+        if ($redirects = $this->findAllBy('to_hash', $redirect->getFromHash())) {
+            $redirects->each(function (Redirect $dbRedirect) use ($redirect) {
+                if ($dbRedirect->getID() === $redirect->getID()) {
+                    return;
+                }
+                $dbRedirect->setTo($redirect->getTo());
+                $data = $dbRedirect->toArray();
+                unset($data['id']);
+                $this->database->update($dbRedirect->getID(), $data);
+            });
+        }
     }
 
     private function mapRedirects(array $redirects): Collection

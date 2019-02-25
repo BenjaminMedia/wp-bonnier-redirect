@@ -4,7 +4,6 @@ namespace Bonnier\WP\Redirect\Tests\integration\Observers;
 
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Models\Log;
-use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -38,20 +37,5 @@ class ObserverTestCase extends TestCase
         }
         $this->assertSame($post->ID, $log->getWpID());
         $this->assertSame($post->post_type, $log->getType());
-    }
-
-    protected function assertRedirect(
-        int $wpID,
-        Redirect $redirect,
-        string $fromSlug,
-        string $toSlug,
-        string $type,
-        int $status = 301
-    ) {
-        $this->assertSame($fromSlug, $redirect->getFrom());
-        $this->assertSame($toSlug, $redirect->getTo());
-        $this->assertSame($status, $redirect->getCode());
-        $this->assertSame($wpID, $redirect->getWpID());
-        $this->assertSame($type, $redirect->getType());
     }
 }
