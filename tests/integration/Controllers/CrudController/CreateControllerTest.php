@@ -349,6 +349,34 @@ class CreateControllerTest extends ControllerTestCase
         );
     }
 
+    public function testCanCreateWildcardRedirect()
+    {
+        $request = $this->createPostRequest([
+            'redirect_from' => '/polopoly.jsp*',
+            'redirect_to' => '/',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301,
+        ]);
+
+        $crudController = new CrudController($this->redirectRepository, $request);
+        $crudController->handlePost();
+
+        $notices = $crudController->getNotices();
+        $this->assertCount(1, $notices);
+        $this->assertArrayHasKey('success', $notices[0]);
+        $this->assertContains('The redirect was saved!', $notices[0]['success']);
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/polopoly.jsp*',
+            '/',
+            'manual'
+        );
+    }
+
     public function destructiveRedirectsProvider()
     {
         return [
