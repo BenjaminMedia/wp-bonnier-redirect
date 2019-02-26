@@ -44,13 +44,15 @@ class UrlHelperTest extends Unit
         $this->assertSame('/path/to/article', $path);
     }
 
-    public function testNormalizeSortsQueryParams()
+    /**
+     * @dataProvider normalizePathProvider
+     * @param string $url
+     * @param string $expected
+     */
+    public function testNormalizePath(string $url, string $expected)
     {
-        $url = 'https://willow.test/path/to/article/?second=second_param&first=first_param';
-
         $path = UrlHelper::normalizePath($url);
-
-        $this->assertSame('/path/to/article?first=first_param&second=second_param', $path);
+        $this->assertSame($expected, $path);
     }
 
     public function testParseQueryParamsConvertsToKeySortedAssociatedArray()
@@ -105,6 +107,23 @@ class UrlHelperTest extends Unit
                 '/2 nr.   gör det själv-bok',
                 '%2F2%2Bnr.%2B%2B%2Bg%25C3%25B6r%2Bdet%2Bsj%25C3%25A4lv-bok'
             ]
+        ];
+    }
+
+    public function normalizePathProvider()
+    {
+        return [
+            'Removes host' => ['https://willow.test/path/test', '/path/test'],
+            'Fixes improper slashes' => ['path/test/', '/path/test'],
+            'Decodes url' => ['%2Fpath%2Fwith%2F%3Fquery%3Dparams', '/path/with?query=params'],
+            'Double decodes url' => [
+                '%2Fpath%2Fwith%2F%3Fparam%3Dhttps%253A%252F%252Fexample.com',
+                '/path/with?param=https://example.com'
+            ],
+            'Sorting params' => [
+                'https://willow.test/path/to/article/?second=second_param&first=first_param',
+                '/path/to/article?first=first_param&second=second_param'
+            ],
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Controllers;
 
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
+use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -13,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 class CrudController
 {
     /** @var RedirectRepository */
-    private $redirects;
+    private $redirectRepository;
     /** @var Request */
     private $request;
 
@@ -25,10 +26,10 @@ class CrudController
 
     public function __construct(RedirectRepository $redirectRepository, Request $request)
     {
-        $this->redirects = $redirectRepository;
+        $this->redirectRepository = $redirectRepository;
         $this->request = $request;
         if ($redirectID = $this->request->query->get('redirect_id')) {
-            if ($redirect = $this->redirects->getRedirectById($redirectID)) {
+            if ($redirect = $this->redirectRepository->getRedirectById($redirectID)) {
                 $this->redirect = $redirect;
             }
         } else {
@@ -101,7 +102,7 @@ class CrudController
             return;
         }
         if (($redirectID = $this->request->request->get('redirect_id')) &&
-            $redirect = $this->redirects->getRedirectById($redirectID)
+            $redirect = $this->redirectRepository->getRedirectById($redirectID)
         ) {
             $redirectFrom = $this->request->request->get('redirect_from');
             $redirectTo = $this->request->request->get('redirect_to');
@@ -117,22 +118,15 @@ class CrudController
             $redirect->setLocale($redirectLocale);
             $redirect->setCode($redirectCode);
             $redirect->setKeepQuery($redirectKeepQuery);
-
-            try {
-                $this->redirects->save($redirect);
-                $this->addNotice('Redirect updated!', 'success');
-            } catch (DuplicateEntryException $exception) {
-                $this->addNotice('A redirect with the same \'from\' and \'locale\' already exists!');
-            } catch (\Exception $exception) {
-                $this->addNotice(sprintf('Unable to update redirect! (%s)', $exception->getMessage()));
-            }
+            $this->redirect = $redirect;
+            $this->saveRedirect($redirect);
         }
     }
 
     private function createRedirect()
     {
-        $this->redirect = new Redirect();
-        $this->redirect->fromArray([
+        $redirect = new Redirect();
+        $redirect->fromArray([
             'from' => $this->request->request->get('redirect_from'),
             'to' => $this->request->request->get('redirect_to'),
             'locale' => $this->request->request->get('redirect_locale'),
@@ -144,9 +138,46 @@ class CrudController
             $this->addNotice('Invalid data was submitted - fix fields marked with red.');
             return;
         }
+        $this->redirect = $redirect;
+        $this->saveRedirect($redirect);
+    }
+
+    private function saveRedirect(Redirect $redirect)
+    {
         try {
-            $this->redirects->save($this->redirect);
-            $this->addNotice('The redirect was saved!', 'success');
+            $toHash = $redirect->getToHash();
+            $redirect = $this->redirectRepository->save($redirect);
+            $editRedirectLink = esc_url(add_query_arg([
+                'page' => 'add-redirect',
+                'action' => 'edit',
+                'redirect_id' => $redirect->getID(),
+            ], admin_url('admin.php')));
+            $this->addNotice(
+                sprintf('The redirect was saved! <a href="%s">View redirect</a>', $editRedirectLink),
+                'success'
+            );
+            if ($redirects = $this->redirectRepository->findAllBy('from_hash', $toHash)) {
+                $redirects->each(function (Redirect $existingRedirect) use ($redirect) {
+                    if ($existingRedirect->getLocale() === $redirect->getLocale()) {
+                        $editRedirectLink = esc_url(add_query_arg([
+                            'page' => 'add-redirect',
+                            'action' => 'edit',
+                            'redirect_id' => $existingRedirect->getID(),
+                        ], admin_url('admin.php')));
+                        $this->addNotice(
+                            sprintf(
+                                'The redirect was chaining, and its \'to\'-url has been updated!
+                                        <a href="%s">View the other redirect</a>',
+                                $editRedirectLink
+                            ),
+                            'warning'
+                        );
+                    }
+                });
+            }
+            $this->redirect = new Redirect();
+        } catch (IdenticalFromToException $exception) {
+            $this->addNotice('From and to urls seems identical!');
         } catch (DuplicateEntryException $exception) {
             $this->addNotice('A redirect with the same \'from\' and \'locale\' already exists!');
         } catch (\Exception $exception) {

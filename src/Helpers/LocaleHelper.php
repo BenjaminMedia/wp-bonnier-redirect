@@ -38,6 +38,15 @@ class LocaleHelper
         return self::getDefaultLanguage();
     }
 
+    public static function getLocalizedUrls(): array
+    {
+        if (($settings = get_option('polylang')) && $domains = $settings['domains']) {
+            return $domains;
+        }
+
+        return [self::getDefaultLanguage() => home_url()];
+    }
+
     private static function getDefaultLanguage()
     {
         return substr(get_locale(), 0, 2);

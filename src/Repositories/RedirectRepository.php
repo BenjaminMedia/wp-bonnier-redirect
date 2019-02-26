@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect\Repositories;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
+use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Illuminate\Support\Collection;
 
@@ -87,11 +88,15 @@ class RedirectRepository extends BaseRepository
      * @param Redirect $redirect
      * @param bool $updateOnDuplicate
      * @return Redirect
+     * @throws IdenticalFromToException
      * @throws DuplicateEntryException
      * @throws \Exception
      */
     public function save(Redirect &$redirect, bool $updateOnDuplicate = false): Redirect
     {
+        if ($redirect->getFrom() === $redirect->getTo()) {
+            throw new IdenticalFromToException('A redirect with the same from and to, cannot be created!');
+        }
         $data = $redirect->toArray();
         unset($data['id']);
 
@@ -147,15 +152,23 @@ class RedirectRepository extends BaseRepository
      */
     public function removeChainsByRedirect(Redirect $redirect)
     {
+        if ($dbRedirects = $this->findAllBy('from_hash', $redirect->getToHash())) {
+            $dbRedirects->each(function (Redirect $dbRedirect) use ($redirect) {
+                if ($dbRedirect->getLocale() === $redirect->getLocale()) {
+                    $redirect->setTo($dbRedirect->getTo());
+                    $this->updateRedirect($redirect);
+                }
+            });
+        }
         if ($redirects = $this->findAllBy('to_hash', $redirect->getFromHash())) {
             $redirects->each(function (Redirect $dbRedirect) use ($redirect) {
-                if ($dbRedirect->getID() === $redirect->getID()) {
+                if ($dbRedirect->getID() === $redirect->getID() ||
+                    $dbRedirect->getLocale() !== $redirect->getLocale()
+                ) {
                     return;
                 }
                 $dbRedirect->setTo($redirect->getTo());
-                $data = $dbRedirect->toArray();
-                unset($data['id']);
-                $this->database->update($dbRedirect->getID(), $data);
+                $this->updateRedirect($dbRedirect);
             });
         }
     }
@@ -166,5 +179,12 @@ class RedirectRepository extends BaseRepository
             $redirect = new Redirect();
             return $redirect->fromArray($data);
         });
+    }
+
+    private function updateRedirect(Redirect $redirect)
+    {
+        $data = $redirect->toArray();
+        unset($data['id']);
+        $this->database->update($redirect->getID(), $data);
     }
 }

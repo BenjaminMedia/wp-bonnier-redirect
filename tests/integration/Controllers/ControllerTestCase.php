@@ -51,6 +51,7 @@ class ControllerTestCase extends TestCase
         string $fromSlug,
         string $toSlug,
         string $type = 'manual',
+        int $wpID = 0,
         string $locale = 'da',
         int $code = 301
     ): ?Redirect {
@@ -58,6 +59,7 @@ class ControllerTestCase extends TestCase
         $redirect->setFrom($fromSlug)
             ->setTo($toSlug)
             ->setType($type)
+            ->setWpID($wpID)
             ->setLocale($locale)
             ->setCode($code);
 
@@ -68,5 +70,12 @@ class ControllerTestCase extends TestCase
         }
 
         return null;
+    }
+
+    protected function assertRedirectCreated(Redirect $redirect, int $count = 1)
+    {
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount($count, $redirects);
+        $this->assertSameRedirects($redirect, $redirects->last());
     }
 }

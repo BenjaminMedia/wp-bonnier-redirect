@@ -44,6 +44,15 @@ $redirect = $this->getRedirect();
                 </p>
             </div>
             <?php
+        } elseif ($message = $notice['warning'] ?? null) {
+            ?>
+            <div id="message" class="notice notice-warning is-dismissible">
+                <p>
+                    <strong>Warning:</strong>
+                    <?php echo $message; ?>
+                </p>
+            </div>
+            <?php
         }
     }
     ?>
