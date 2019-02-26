@@ -26,34 +26,16 @@ $redirect = $this->getRedirect();
     <hr class="wp-header-end">
     <?php
     foreach ($this->getNotices() as $notice) {
-        if ($message = $notice['error'] ?? null) {
-            ?>
-            <div id="message" class="notice notice-error is-dismissible">
-                <p>
-                    <strong>Error:</strong>
-                    <?php echo $message; ?>
-                </p>
-            </div>
-            <?php
-        } elseif ($message = $notice['success'] ?? null) {
-            ?>
-            <div id="message" class="notice notice-success is-dismissible">
-                <p>
-                    <strong>Success:</strong>
-                    <?php echo $message; ?>
-                </p>
-            </div>
-            <?php
-        } elseif ($message = $notice['warning'] ?? null) {
-            ?>
-            <div id="message" class="notice notice-warning is-dismissible">
-                <p>
-                    <strong>Warning:</strong>
-                    <?php echo $message; ?>
-                </p>
-            </div>
-            <?php
-        }
+        $type = array_keys($notice)[0];
+        $message = $notice[$type];
+        ?>
+        <div id="message" class="notice notice-<?php echo $type; ?> is-dismissible">
+            <p>
+                <strong><?php echo ucfirst($type); ?>:</strong>
+                <?php echo $message; ?>
+            </p>
+        </div>
+        <?php
     }
     ?>
     <form id="bonnier-redirect-add-form" method="post">
