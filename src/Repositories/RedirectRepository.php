@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect\Repositories;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
+use Bonnier\WP\Redirect\Database\Query;
 use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
@@ -53,7 +54,36 @@ class RedirectRepository extends BaseRepository
             return $redirect->fromArray($results[0]);
         }
 
-        return null;
+        return $this->findWildcardRedirectsByPath($path, $locale);
+    }
+
+    public function findWildcardRedirectsByPath(string $path, string $locale = null): ?Redirect
+    {
+        if (is_null($locale)) {
+            $locale = LocaleHelper::getLanguage();
+        }
+
+        $normalizedPath = UrlHelper::normalizePath($path);
+
+        $query = $this->database->query()->select('*')
+            ->where(['is_wildcard', 1], Query::FORMAT_INT)
+            ->andWhere(['locale', $locale]);
+
+        $results = $this->database->getResults($query);
+
+        if (!$results) {
+            return null;
+        }
+
+        $redirects = $this->mapRedirects($results);
+        return $redirects->first(function (Redirect $redirect) use ($normalizedPath) {
+            $regex = str_replace(
+                ['.', '?', '$', '^', '*', '+', '|', '-', '(', ')', '[', ']'],
+                ['\\.', '\\?', '\\$', '\\^', '\\*', '\\+', '\\|', '\\-', '\\(', '\\)', '\\[', '\\]'],
+                substr($redirect->getFrom(), 0, -1)
+            );
+            return preg_match(sprintf('`^%s.*$`', $regex), $normalizedPath);
+        });
     }
 
     public function findAll(): ?Collection

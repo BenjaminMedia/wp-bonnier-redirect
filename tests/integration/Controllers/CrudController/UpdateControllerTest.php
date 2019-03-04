@@ -23,10 +23,8 @@ class UpdateControllerTest extends ControllerTestCase
 
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved! <a href="', $notices[0]['success']);
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $updatedRedirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $updatedRedirects);
@@ -54,10 +52,8 @@ class UpdateControllerTest extends ControllerTestCase
 
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved! <a href="', $notices[0]['success']);
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $updatedRedirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $updatedRedirects);
@@ -88,10 +84,11 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('error', $notices[0]);
-        $this->assertSame('A redirect with the same \'from\' and \'locale\' already exists!', $notices[0]['error']);
+        $this->assertNoticeIs(
+            $crudController->getNotices(),
+            'error',
+            'A redirect with the same \'from\' and \'locale\' already exists!'
+        );
 
         $redirectsAfter = $this->redirectRepository->findAll();
         $this->assertCount(2, $redirectsAfter);
@@ -133,10 +130,7 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('error', $notices[0]);
-        $this->assertSame('From and to urls seems identical!', $notices[0]['error']);
+        $this->assertNoticeIs($crudController->getNotices(), 'error', 'From and to urls seems identical!');
 
         $redirectsAfter = $this->redirectRepository->findAll();
 
@@ -162,15 +156,12 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(2, $notices, 'Not all notices was registered!');
-        $this->assertArrayHasKey('success', $notices[0], 'A success notice was missing!');
-        $this->assertArrayHasKey('warning', $notices[1], 'A warning notice was missing!');
-        $this->assertContains('The redirect was saved!', $notices[0]['success']);
-        $this->assertContains(
-            'The redirect was chaining, and its \'to\'-url has been updated!',
-            $notices[1]['warning']
-        );
+        $expectedNotices = [
+            ['type' => 'success', 'message' => 'The redirect was saved!'],
+            ['type' => 'warning', 'message' => 'The redirect was chaining, and its \'to\'-url has been updated!'],
+        ];
+
+        $this->assertNotices($expectedNotices, $crudController->getNotices());
 
         $redirectsAfter = $this->redirectRepository->findAll();
         $this->assertCount(2, $redirectsAfter);
@@ -201,10 +192,7 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved!', $notices[0]['success']);
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $redirectsAfter = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirectsAfter);
@@ -239,10 +227,7 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved!', $notices[0]['success']);
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $redirectsAfter = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirectsAfter);
@@ -273,10 +258,7 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved!', $notices[0]['success']);
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(2, $redirects);
@@ -313,6 +295,8 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+
         $newRedirects = $this->redirectRepository->findAll();
 
         $this->assertCount(2, $newRedirects);
@@ -348,10 +332,7 @@ class UpdateControllerTest extends ControllerTestCase
         $crudController = new CrudController($this->redirectRepository, $request);
         $crudController->handlePost();
 
-        $notices = $crudController->getNotices();
-        $this->assertCount(1, $notices);
-        $this->assertArrayHasKey('success', $notices[0]);
-        $this->assertContains('The redirect was saved!', $notices[0]['success']);
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
         $redirects = $this->redirectRepository->findAll();
         $this->assertCount(1, $redirects);
@@ -362,6 +343,39 @@ class UpdateControllerTest extends ControllerTestCase
             '/',
             'manual'
         );
+        $this->assertTrue($redirects->first()->isWildcard());
+    }
+
+    public function testCanUpdateRedirectThatKeepsQueryParams()
+    {
+        $redirect = $this->createRedirect('/from/slug', '/to/slug');
+        $this->assertRedirectCreated($redirect);
+        $this->assertFalse($redirect->keepsQuery());
+
+        $request = $this->createPostRequest([
+            'redirect_id' => $redirect->getID(),
+            'redirect_from' => '/from/slug',
+            'redirect_to' => '/to/slug',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301,
+            'redirect_keep_query' => '1'
+        ]);
+
+        $crudController = new CrudController($this->redirectRepository, $request);
+        $crudController->handlePost();
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+
+        $redirects = $this->redirectRepository->findAll();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/from/slug',
+            '/to/slug',
+            'manual'
+        );
+        $this->assertTrue($redirects->first()->keepsQuery());
     }
 
     public function sameFromToProvider()

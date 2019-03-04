@@ -30,6 +30,8 @@ class Redirect implements Arrayable
     private $paramlessFromHash;
     /** @var boolean */
     private $keepQuery;
+    /** @var boolean */
+    private $wildcard;
 
     public function __construct()
     {
@@ -38,6 +40,7 @@ class Redirect implements Arrayable
         $this->wpID = 0;
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
         $this->keepQuery = false;
+        $this->wildcard = false;
     }
 
     /**
@@ -75,6 +78,7 @@ class Redirect implements Arrayable
         $this->from = UrlHelper::normalizePath($from);
         $this->fromHash = hash('md5', $this->from);
         $this->paramlessFromHash = hash('md5', parse_url($this->from, PHP_URL_PATH));
+        $this->wildcard = boolval(ends_with($this->from, '*'));
         return $this;
     }
 
@@ -243,6 +247,11 @@ class Redirect implements Arrayable
         return $this;
     }
 
+    public function isWildcard(): bool
+    {
+        return $this->wildcard;
+    }
+
     /**
      * @return array
      */
@@ -260,6 +269,7 @@ class Redirect implements Arrayable
             'code' => $this->getCode(),
             'paramless_from_hash' => $this->getParamlessFromHash(),
             'keep_query' => $this->keepsQuery() ? 1 : 0,
+            'is_wildcard' => $this->isWildcard() ? 1 : 0,
         ];
     }
 

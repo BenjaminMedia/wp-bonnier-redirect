@@ -17,6 +17,7 @@ class Migrate
             CreateRedirectTable::class,
             AlterRedirectTableAddIgnoreQuery::class,
             CreateLogTable::class,
+            AlterRedirectTableAddWildcardColumn::class,
         ]);
 
         if ($dbVersion >= count($migrations)) {

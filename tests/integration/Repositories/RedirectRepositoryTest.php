@@ -20,11 +20,11 @@ class RedirectRepositoryTest extends TestCase
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed instantiating RedirectRepository (%s)', $exception->getMessage()));
         }
+        $this->bootstrapRedirects();
     }
 
     public function testCanFindSimpleRedirect()
     {
-        $this->bootstrapRedirects();
         $redirect = $this->createRedirect('/path/to/old/article', '/path/to/new/article');
 
         $foundRedirect = $this->repository->findRedirectByPath('/path/to/old/article', 'da');
@@ -41,7 +41,6 @@ class RedirectRepositoryTest extends TestCase
      */
     public function testCanFindRedirectWithMalformedPath(string $path, string $from)
     {
-        $this->bootstrapRedirects();
         $redirect = $this->createRedirect($from, '/destination');
 
         $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
@@ -52,6 +51,63 @@ class RedirectRepositoryTest extends TestCase
             sprintf('Could not find redirect where path was \'%s\'', $path)
         );
         $this->assertSameRedirects($redirect, $foundRedirect);
+    }
+
+    /**
+     * @dataProvider wildcardRedirectProvider
+     *
+     * @param string $path
+     * @param string $from
+     */
+    public function testCanFindWildcardRedirect(string $path, string $from)
+    {
+        $redirect = $this->createRedirect($from, '/destination');
+
+        $this->assertTrue($redirect->isWildcard(), 'The created redirect wasn\'t a wildcard redirect!');
+
+        $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
+
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+
+        $this->assertSameRedirects($redirect, $foundRedirect);
+    }
+
+    public function testPrefersExactRedirectMatchInsteadOfWildcardRedirect()
+    {
+        $wildcard = $this->createRedirect('/from/wildcard/*', '/destination');
+        $notWildcard = $this->createRedirect('/from/wildcard/exact', '/destination');
+
+        $createdRedirects = $this->repository->findAll()->take(-2);
+
+        $this->assertSameRedirects($wildcard, $createdRedirects->first());
+        $this->assertSameRedirects($notWildcard, $createdRedirects->last());
+
+        $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/', 'da');
+
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+
+        $this->assertSameRedirects($notWildcard, $foundRedirect);
+    }
+
+    public function testPrefersWildcardIfNoExactMatchExists()
+    {
+        $wildcard = $this->createRedirect('/from/wildcard/*', '/destination');
+        $notWildcard = $this->createRedirect('/from/wildcard/exact', '/destination');
+
+        $createdRedirects = $this->repository->findAll()->take(-2);
+
+        $this->assertSameRedirects($wildcard, $createdRedirects->first());
+        $this->assertSameRedirects($notWildcard, $createdRedirects->last());
+
+        $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/path/', 'da');
+
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+
+        $this->assertSameRedirects($wildcard, $foundRedirect);
     }
 
     private function bootstrapRedirects()
@@ -173,6 +229,18 @@ class RedirectRepositoryTest extends TestCase
                 'from' => '/app/uploads/2018/06/leader-285orfkvjytszzblxxjr-q.psd?auto=compress&fit=crop&min-w=600',
                 'to' => '/'
             ],
+            [
+                'from' => '/app/uploads/2020*',
+                'to' => '/'
+            ],
+            [
+                'from' => '/old-sitemap/*',
+                'to' => '/sitemap'
+            ],
+            [
+                'from' => '/archive/2020/*',
+                'to' => '/'
+            ],
         ]);
 
         $redirects->each(function (array $url) {
@@ -217,6 +285,15 @@ class RedirectRepositoryTest extends TestCase
             'Mixed case path' => ['/Path/With/Mixed/Case', '/path/with/mixed/case'],
             'Inproper slash use' => ['path/with/invalid/slashes///', '/path/with/invalid/slashes'],
             'URL with domain' => ['https://wp.test/path/to/article', '/path/to/article'],
+        ];
+    }
+
+    public function wildcardRedirectProvider()
+    {
+        return [
+            'Polopoly redirects' => ['/polopoly.jsp?id=1234&gcid=abc123', '/polopoly.jsp*'],
+            'Archive redirects' => ['/archive/my-article', '/archive*'],
+            'Archive redirects with slash' => ['/archive/my-article', '/archive/*'],
         ];
     }
 }

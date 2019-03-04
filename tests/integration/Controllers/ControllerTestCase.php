@@ -78,4 +78,31 @@ class ControllerTestCase extends TestCase
         $this->assertCount($count, $redirects);
         $this->assertSameRedirects($redirect, $redirects->last());
     }
+
+    protected function assertNoticeWasSaveRedirectMessage(array $notices)
+    {
+        $this->assertNoticeIs($notices, 'success', 'The redirect was saved!');
+    }
+
+    protected function assertNoticeWasInvalidInputMessage(array $notices)
+    {
+        $this->assertNoticeIs($notices, 'error', 'Invalid data was submitted - fix fields marked with red.');
+    }
+
+    protected function assertNoticeIs(array $notices, string $type, string $message)
+    {
+        $expected = [
+            ['type' => $type, 'message' => $message],
+        ];
+        $this->assertNotices($expected, $notices);
+    }
+
+    protected function assertNotices(array $expected, array $actual)
+    {
+        $this->assertCount(count($expected), $actual);
+        foreach ($expected as $index => $notice) {
+            $this->assertArrayHasKey($notice['type'], $actual[$index]);
+            $this->assertContains($notice['message'], $actual[$index][$notice['type']]);
+        }
+    }
 }
