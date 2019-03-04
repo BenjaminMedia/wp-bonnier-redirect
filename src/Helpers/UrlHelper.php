@@ -23,9 +23,10 @@ class UrlHelper
      * Normalize a path, sorting query params, ensuring formatting of path etc.
      *
      * @param string $url
+     * @param bool $disallowWildcard
      * @return string
      */
-    public static function normalizePath(string $url): string
+    public static function normalizePath(string $url, bool $disallowWildcard = false): string
     {
         $decoded = self::decode($url);
         $path = self::sanitizePath($decoded);
@@ -35,22 +36,33 @@ class UrlHelper
                 $params .= sprintf('%s=%s&', $key, $value);
             }
             $params = substr($params, 0, -1);
-            return sprintf('%s%s', $path, $params);
+            $path = sprintf('%s%s', $path, $params);
+        }
+
+        if ($disallowWildcard) {
+            $path = rtrim(rtrim($path, '*'), '/');
+        }
+
+        if (substr($path, 0, 1) === '?') {
+            $path = str_start($path, '/');
         }
 
         return $path ?: '/';
     }
 
-    public static function normalizeUrl(string $url): string
+    public static function normalizeUrl(string $url, bool $disallowWildcard = false): string
     {
         $parsedUrl = parse_url(self::decode($url));
         $scheme = isset($parsedUrl['scheme']) ? strtolower($parsedUrl['scheme']) . '://' : '';
         $host = strtolower($parsedUrl['host'] ?? '');
-        $normalizedUrl = rtrim($scheme . $host . self::normalizePath($url), '/');
+        $normalizedUrl = rtrim($scheme . $host . self::normalizePath($url, $disallowWildcard), '/');
         foreach (LocaleHelper::getLocalizedUrls() as $domain) {
             if (starts_with($normalizedUrl, $domain)) {
                 return str_after($normalizedUrl, $domain) ?: '/';
             }
+        }
+        if (substr($normalizedUrl, 0, 1) === '?') {
+            $normalizedUrl = str_start($normalizedUrl, '/');
         }
         return $normalizedUrl ?: '/';
     }

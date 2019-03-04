@@ -45,7 +45,7 @@ class DB
         return new Query($this->table);
     }
 
-    public function getResults(Query $query)
+    public function getResults(Query $query): array
     {
         return $this->wpdb->get_results($query->getQuery(), ARRAY_A);
     }

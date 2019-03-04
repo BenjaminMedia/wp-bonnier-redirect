@@ -6,11 +6,18 @@ use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
+use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Illuminate\Support\Collection;
 
 class RedirectRepository extends BaseRepository
 {
+    /**
+     * RedirectRepository constructor.
+     * @param DB $database
+     * @throws \Exception
+     */
     public function __construct(DB $database)
     {
         $this->tableName = Migrate::REDIRECTS_TABLE;
@@ -23,6 +30,27 @@ class RedirectRepository extends BaseRepository
         if ($data) {
             $redirect = new Redirect();
             return $redirect->fromArray($data);
+        }
+
+        return null;
+    }
+
+    public function findRedirectByPath(string $path, string $locale = null): ?Redirect
+    {
+        if (is_null($locale)) {
+            $locale = LocaleHelper::getLanguage();
+        }
+
+        $normalizedPath = UrlHelper::normalizePath($path);
+
+        $query = $this->database->query()->select('*')
+            ->where(['from_hash', hash('md5', $normalizedPath)])
+            ->andWhere(['locale', $locale]);
+        $results = $this->database->getResults($query);
+
+        if ($results) {
+            $redirect = new Redirect();
+            return $redirect->fromArray($results[0]);
         }
 
         return null;

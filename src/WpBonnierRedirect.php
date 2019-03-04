@@ -174,4 +174,9 @@ class WpBonnierRedirect
 
         return filemtime($filename);
     }
+
+    public function getRedirectRepository(): RedirectRepository
+    {
+        return $this->redirectRepository;
+    }
 }

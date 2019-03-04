@@ -382,6 +382,15 @@ class UpdateControllerTest extends ControllerTestCase
             'Url with different case' => ['https://Example.com', '/'],
             'Url with query params' => ['https://example.com/slug/?c=d&a=b', '/slug?a=b&c=d'],
             'Url with www' => ['https://www.example.com/', '/'],
+            'Url with ÆØÅ' => [
+                'https://www.example.com/hætte/østers/påske',
+                '/hætte/østers/påske'
+            ],
+            'Url with encoded ÆØÅ' => [
+                'https://www.example.com/h%C3%A6tte/%C3%B8sters/p%C3%A5ske',
+                '/hætte/østers/påske'
+            ],
+            'Url with wildcard' => ['https://example.com/path/to/*', '/path/to/*'],
             'Urlencoded' => ['%2Fpath%2Fwith%2F%3Fquery%3Dparams', '/path/with?query=params'],
             'Internal url' => [home_url(), '/'],
             'Internal url with slug' => [home_url('/slug/path/'), '/slug/path'],
@@ -390,6 +399,15 @@ class UpdateControllerTest extends ControllerTestCase
             'Relative path' => ['/example/slug/', '/example/slug'],
             'Relative path without starting slash' => ['example/slug', '/example/slug'],
             'Relative path with query params' => ['/example/?c=d&a=b', '/example?a=b&c=d'],
+            'Relative path with ÆØÅ' => [
+                '/hætte/østers/påske',
+                '/hætte/østers/påske'
+            ],
+            'Relative path with encoded ÆØÅ' => [
+                '/h%C3%A6tte/%C3%B8sters/p%C3%A5ske',
+                '/hætte/østers/påske'
+            ],
+            'Relative path with wildcard' => ['/path/to/*', '/path/to/*'],
         ];
     }
 
@@ -401,6 +419,15 @@ class UpdateControllerTest extends ControllerTestCase
             'Url with different case' => ['https://Example.com', 'https://example.com'],
             'Url with query params' => ['https://example.com/slug/?c=d&a=b', 'https://example.com/slug?a=b&c=d'],
             'Url with www' => ['https://www.example.com/', 'https://www.example.com'],
+            'Url with ÆØÅ' => [
+                'https://www.example.com/hætte/østers/påske',
+                'https://www.example.com/hætte/østers/påske'
+            ],
+            'Url with encoded ÆØÅ' => [
+                'https://www.example.com/h%C3%A6tte/%C3%B8sters/p%C3%A5ske',
+                'https://www.example.com/hætte/østers/påske'
+            ],
+            'Url with wildcard' => ['https://example.com/path/to/*', 'https://example.com/path/to'],
             'Urlencoded' => ['%2Fpath%2Fwith%2F%3Fquery%3Dparams', '/path/with?query=params'],
             'Internal url' => [home_url(), '/'],
             'Internal url with slug' => [home_url('/slug/path/'), '/slug/path'],
@@ -409,6 +436,15 @@ class UpdateControllerTest extends ControllerTestCase
             'Relative path' => ['/example/slug/', '/example/slug'],
             'Relative path without starting slash' => ['example/slug', '/example/slug'],
             'Relative path with query params' => ['/example/?c=d&a=b', '/example?a=b&c=d'],
+            'Relative path with ÆØÅ' => [
+                '/hætte/østers/påske',
+                '/hætte/østers/påske'
+            ],
+            'Relative path with encoded ÆØÅ' => [
+                '/h%C3%A6tte/%C3%B8sters/p%C3%A5ske',
+                '/hætte/østers/påske'
+            ],
+            'Relative path with wildcard' => ['/path/to/*', '/path/to'],
         ];
     }
 }

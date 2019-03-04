@@ -109,7 +109,7 @@ class Redirect implements Arrayable
      */
     public function setTo(string $destination): Redirect
     {
-        $this->destination = UrlHelper::normalizeUrl($destination);
+        $this->destination = UrlHelper::normalizeUrl($destination, true);
         $this->toHash = hash('md5', $this->destination);
         return $this;
     }
