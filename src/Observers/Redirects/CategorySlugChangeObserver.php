@@ -25,6 +25,7 @@ class CategorySlugChangeObserver extends AbstractObserver
 
     /**
      * @param SubjectInterface|CategorySubject $subject
+     * @throws \Exception
      */
     public function update(SubjectInterface $subject)
     {

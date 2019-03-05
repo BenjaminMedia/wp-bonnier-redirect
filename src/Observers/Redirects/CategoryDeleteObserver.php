@@ -8,7 +8,6 @@ use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\AbstractObserver;
 use Bonnier\WP\Redirect\Observers\CategorySubject;
 use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
-use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +24,7 @@ class CategoryDeleteObserver extends AbstractObserver
 
     /**
      * @param SubjectInterface|CategorySubject $subject
+     * @throws \Exception
      */
     public function update(SubjectInterface $subject)
     {

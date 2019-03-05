@@ -8,7 +8,6 @@ use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
-use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 
 class CrudController
@@ -75,21 +74,34 @@ class CrudController
         });
     }
 
+    /**
+     * @return array
+     */
     public function getNotices(): array
     {
         return $this->notices;
     }
 
+    /**
+     * @return Redirect
+     */
     public function getRedirect(): Redirect
     {
         return $this->redirect;
     }
 
+    /**
+     * @return array
+     */
     public function getValidationErrors(): array
     {
         return $this->validationErrors;
     }
 
+    /**
+     * @param string $field
+     * @return string|null
+     */
     public function getError(string $field): ?string
     {
         return $this->validationErrors[$field] ?? null;
@@ -142,6 +154,9 @@ class CrudController
         $this->saveRedirect($redirect);
     }
 
+    /**
+     * @param Redirect $redirect
+     */
     private function saveRedirect(Redirect $redirect)
     {
         try {
@@ -185,6 +200,9 @@ class CrudController
         }
     }
 
+    /**
+     * @return bool
+     */
     private function validateRequest(): bool
     {
         $validRequest = true;
@@ -207,6 +225,10 @@ class CrudController
         return $validRequest;
     }
 
+    /**
+     * @param string $message
+     * @param string $type
+     */
     private function addNotice(string $message, string $type = 'error')
     {
         $this->notices[] = [$type => $message];

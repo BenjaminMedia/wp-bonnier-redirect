@@ -40,16 +40,29 @@ class DB
         );
     }
 
+    /**
+     * @return Query
+     */
     public function query(): Query
     {
         return new Query($this->table);
     }
 
+    /**
+     * @param Query $query
+     * @return array
+     * @throws \Exception
+     */
     public function getResults(Query $query): array
     {
         return $this->wpdb->get_results($query->getQuery(), ARRAY_A);
     }
 
+    /**
+     * @param Query $query
+     * @return string|null
+     * @throws \Exception
+     */
     public function getVar(Query $query)
     {
         return $this->wpdb->get_var($query->getQuery());
@@ -59,6 +72,7 @@ class DB
      * @param array $data
      * @return int
      * @throws DuplicateEntryException
+     * @throws \Exception
     */
     public function insert(array $data)
     {
@@ -78,6 +92,11 @@ class DB
         return $this->wpdb->insert_id;
     }
 
+    /**
+     * @param array $data
+     * @return int
+     * @throws \Exception
+     */
     public function insertOrUpdate(array $data)
     {
         try {
@@ -146,6 +165,11 @@ class DB
         return true;
     }
 
+    /**
+     * @param array $rowIDs
+     * @return bool
+     * @throws \Exception
+     */
     public function deleteMultiple(array $rowIDs)
     {
         $placeholder = implode(',', array_fill(0, count($rowIDs), '%d'));

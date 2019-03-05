@@ -21,16 +21,25 @@ class TagSubject extends AbstractSubject
         add_action('delete_post_tag', [$this, 'deleteTag'], 10, 3);
     }
 
+    /**
+     * @return \WP_Term|null
+     */
     public function getTag(): ?\WP_Term
     {
         return $this->tag;
     }
 
+    /**
+     * @return string|null
+     */
     public function getType(): ?string
     {
         return $this->type;
     }
 
+    /**
+     * @param int $termID
+     */
     public function updateTag(int $termID)
     {
         if ((($tag = get_term($termID)) && $tag instanceof \WP_Term) && $tag->taxonomy === 'post_tag') {
@@ -40,6 +49,11 @@ class TagSubject extends AbstractSubject
         }
     }
 
+    /**
+     * @param int $termID
+     * @param string $taxonomy
+     * @param \WP_Term $tag
+     */
     public function deleteTag(int $termID, string $taxonomy, \WP_Term $tag)
     {
         $this->tag = $tag;

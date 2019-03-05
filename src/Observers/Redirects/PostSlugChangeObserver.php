@@ -2,7 +2,6 @@
 
 namespace Bonnier\WP\Redirect\Observers\Redirects;
 
-use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Log;
 use Bonnier\WP\Redirect\Models\Redirect;

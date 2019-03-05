@@ -24,6 +24,7 @@ class TagSlugChangeObserver extends AbstractObserver
 
     /**
      * @param SubjectInterface|TagSubject $subject
+     * @throws \Exception
      */
     public function update(SubjectInterface $subject)
     {

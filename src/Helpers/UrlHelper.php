@@ -53,6 +53,11 @@ class UrlHelper
         return $path ?: '/';
     }
 
+    /**
+     * @param string $url
+     * @param bool $disallowWildcard
+     * @return string
+     */
     public static function normalizeUrl(string $url, bool $disallowWildcard = false): string
     {
         if (starts_with($url, 'www.')) {

@@ -34,6 +34,9 @@ class ListController extends \WP_List_Table
         $this->request = $request;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function displayRedirectsTable()
     {
         $this->prepare_items();
@@ -57,11 +60,17 @@ class ListController extends \WP_List_Table
         $this->search_box('Find redirect', 'bonnier-redirect-find');
     }
 
+    /**
+     * @return array
+     */
     public function getNotices()
     {
         return $this->notices;
     }
 
+    /**
+     * @return array
+     */
     public function get_columns()
     {
         return [
@@ -80,6 +89,9 @@ class ListController extends \WP_List_Table
         echo 'No redirects found.';
     }
 
+    /**
+     * @throws \Exception
+     */
     public function prepare_items()
     {
         // Check if a search was performed
@@ -100,8 +112,12 @@ class ListController extends \WP_List_Table
         // Fetch table data
         $this->items = $this->fetchTableData($redirectSearchKey, $offset, $redirectsPerPage);
 
-        // Set pagination arguments
-        $totalRedirects = $this->redirects->countRows($redirectSearchKey);
+        try {
+            // Set pagination arguments
+            $totalRedirects = $this->redirects->countRows($redirectSearchKey);
+        } catch (\Exception $exception) {
+            $totalRedirects = 0;
+        }
         $this->set_pagination_args([
             'total_items' => $totalRedirects,
             'per_page' => $redirectsPerPage,
@@ -109,6 +125,11 @@ class ListController extends \WP_List_Table
         ]);
     }
 
+    /**
+     * @param object $item
+     * @param string $column_name
+     * @return mixed
+     */
     public function column_default($item, $column_name)
     {
         if (starts_with($column_name, 'redirect_')) {
@@ -117,6 +138,10 @@ class ListController extends \WP_List_Table
         return $item[$column_name];
     }
 
+    /**
+     * @param $item
+     * @return string
+     */
     public function column_redirect_from($item)
     {
         $pageUrl = admin_url('admin.php');
@@ -159,6 +184,9 @@ class ListController extends \WP_List_Table
         );
     }
 
+    /**
+     * @return array
+     */
     public function get_bulk_actions()
     {
         return [
@@ -166,6 +194,9 @@ class ListController extends \WP_List_Table
         ];
     }
 
+    /**
+     * @return bool|false|mixed|string
+     */
     public function current_action()
     {
         $params = $this->request->query;
@@ -184,6 +215,10 @@ class ListController extends \WP_List_Table
         return false;
     }
 
+    /**
+     * @param object $item
+     * @return string
+     */
     protected function column_cb($item)
     {
         return sprintf(
@@ -196,6 +231,9 @@ class ListController extends \WP_List_Table
         );
     }
 
+    /**
+     * @return array
+     */
     protected function get_sortable_columns()
     {
         return [
@@ -208,6 +246,13 @@ class ListController extends \WP_List_Table
         ];
     }
 
+    /**
+     * @param string|null $searchKey
+     * @param int $offset
+     * @param int $perPage
+     * @return array
+     * @throws \Exception
+     */
     private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20)
     {
         $orderby = esc_sql($this->request->query->get('orderby', 'id'));
@@ -216,6 +261,9 @@ class ListController extends \WP_List_Table
         return $this->redirects->find($searchKey, $orderby, $order, $perPage, $offset);
     }
 
+    /**
+     * @throws \Exception
+     */
     private function handleTableActions()
     {
         $tableAction = $this->current_action();
@@ -250,6 +298,9 @@ class ListController extends \WP_List_Table
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     private function bulkDeleteRedirects()
     {
         $nonce = wp_unslash($this->request->query->get('_wpnonce'));
@@ -273,6 +324,10 @@ class ListController extends \WP_List_Table
         ]);
     }
 
+    /**
+     * @param string $notice
+     * @param string $type
+     */
     private function addNotice(string $notice, string $type = 'error')
     {
         $this->notices[] = [$type => $notice];

@@ -78,8 +78,16 @@ class WpBonnierRedirect
         $this->assetsDir = sprintf('%s/assets', rtrim($this->pluginDir, '/'));
         $this->assetsUrl = sprintf('%s/assets', rtrim($this->pluginUrl, '/'));
 
-        $this->redirectRepository = new RedirectRepository(new DB);
-        $this->logRepository = new LogRepository(new DB);
+        try {
+            $this->redirectRepository = new RedirectRepository(new DB);
+        } catch (\Exception $exception) {
+            wp_die($exception->getMessage());
+        }
+        try {
+            $this->logRepository = new LogRepository(new DB);
+        } catch (\Exception $exception) {
+            wp_die($exception->getMessage());
+        }
         $this->request = Request::createFromGlobals();
         Observers::bootstrap($this->logRepository, $this->redirectRepository);
 

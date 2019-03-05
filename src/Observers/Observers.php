@@ -18,6 +18,10 @@ class Observers
     private static $logRepo;
     private static $redirectRepo;
 
+    /**
+     * @param LogRepository $logRepo
+     * @param RedirectRepository $redirectRepo
+     */
     public static function bootstrap(LogRepository $logRepo, RedirectRepository $redirectRepo)
     {
         self::$logRepo = $logRepo;

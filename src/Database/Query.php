@@ -46,6 +46,11 @@ class Query
         return $this;
     }
 
+    /**
+     * @param array $clause
+     * @param int $format
+     * @return Query
+     */
     public function where(array $clause, $format = self::FORMAT_STRING): Query
     {
         if (count($clause) === 3) {
@@ -61,6 +66,11 @@ class Query
         return $this;
     }
 
+    /**
+     * @param array $clause
+     * @param int $format
+     * @return Query
+     */
     public function orWhere(array $clause, $format = self::FORMAT_STRING): Query
     {
         if (count($clause) === 3) {
@@ -77,6 +87,11 @@ class Query
         return $this;
     }
 
+    /**
+     * @param array $clause
+     * @param int $format
+     * @return Query
+     */
     public function andWhere(array $clause, $format = self::FORMAT_STRING): Query
     {
         if (count($clause) === 3) {
@@ -94,6 +109,11 @@ class Query
         return $this;
     }
 
+    /**
+     * @param string $orderBy
+     * @param string|null $order
+     * @return Query
+     */
     public function orderBy(string $orderBy, ?string $order = null): Query
     {
         $this->query .= " ORDER BY `$orderBy`";
@@ -104,6 +124,10 @@ class Query
         return $this;
     }
 
+    /**
+     * @param int $limit
+     * @return Query
+     */
     public function limit(int $limit): Query
     {
         $this->query .= " LIMIT $limit";
@@ -111,6 +135,10 @@ class Query
         return $this;
     }
 
+    /**
+     * @param int $offset
+     * @return Query
+     */
     public function offset(int $offset): Query
     {
         $this->query .= " OFFSET $offset";
@@ -118,6 +146,10 @@ class Query
         return $this;
     }
 
+    /**
+     * @return string
+     * @throws \Exception
+     */
     public function getQuery(): string
     {
         if (!$this->selection) {
@@ -126,6 +158,10 @@ class Query
         return $this->query;
     }
 
+    /**
+     * @param $column
+     * @return string
+     */
     private function formatSelectColumn($column): string
     {
         if (preg_match('/^(\*)|[A-Z]+\([\w]+\)/', $column)) {

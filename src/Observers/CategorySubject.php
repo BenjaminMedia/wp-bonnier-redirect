@@ -23,11 +23,18 @@ class CategorySubject extends AbstractSubject
         add_action('delete_category', [$this, 'deletedCategory'], 10, 4);
     }
 
+    /**
+     * @return \WP_Term|null
+     */
     public function getCategory(): ?\WP_Term
     {
         return $this->category;
     }
 
+    /**
+     * @param \WP_Term $category
+     * @return CategorySubject
+     */
     public function setCategory(\WP_Term $category): CategorySubject
     {
         $this->category = $category;
@@ -35,16 +42,25 @@ class CategorySubject extends AbstractSubject
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getAffectedPosts(): array
     {
         return $this->affectedPosts;
     }
 
+    /**
+     * @return string|null
+     */
     public function getType(): ?string
     {
         return $this->type;
     }
 
+    /**
+     * @param int $termID
+     */
     public function updateCategory(int $termID)
     {
         if (($category = get_term($termID)) && $category instanceof \WP_Term && $category->taxonomy === 'category') {
@@ -53,7 +69,13 @@ class CategorySubject extends AbstractSubject
             $this->notify();
         }
     }
-    
+
+    /**
+     * @param int $termID
+     * @param string $taxonomy
+     * @param \WP_Term $category
+     * @param array $objectIds
+     */
     public function deletedCategory(int $termID, string $taxonomy, \WP_Term $category, array $objectIds)
     {
         $this->affectedPosts = $objectIds;
