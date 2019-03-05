@@ -19,15 +19,16 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-            $this->assertInstanceOf(
-                Redirect::class,
-                $foundRedirect,
-                sprintf('Could not find redirect where path was \'%s\'', $path)
-            );
-            $this->assertSameRedirects($redirect, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+        $this->assertSameRedirects($redirect, $foundRedirect);
     }
 
     /**
@@ -48,17 +49,18 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-            $this->assertInstanceOf(
-                Redirect::class,
-                $foundRedirect,
-                sprintf('Could not find redirect where path was \'%s\'', $path)
-            );
-            $this->assertSame($redirect->getID(), $foundRedirect->getID());
-            $this->assertSame($from, $foundRedirect->getFrom());
-            $this->assertSame($expectedTo, $foundRedirect->getTo());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+        $this->assertSame($redirect->getID(), $foundRedirect->getID());
+        $this->assertSame($from, $foundRedirect->getFrom());
+        $this->assertSame($expectedTo, $foundRedirect->getTo());
     }
 
     public function ignoreQueryParamProvider()

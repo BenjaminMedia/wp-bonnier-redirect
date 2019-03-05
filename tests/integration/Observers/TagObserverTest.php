@@ -18,11 +18,12 @@ class TagObserverTest extends ObserverTestCase
             $observer = $this->makeEmpty(TagObserver::class, [
                 'update' => Expected::once(),
             ]);
-            $subject = new TagSubject();
-            $subject->attach($observer);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed instantiating a mocked TagObserver (%s)', $exception->getMessage()));
+            return;
         }
+        $subject = new TagSubject();
+        $subject->attach($observer);
 
         wp_update_term($tag->term_id, $tag->taxonomy, [
             'slug' => 'updated-tag',

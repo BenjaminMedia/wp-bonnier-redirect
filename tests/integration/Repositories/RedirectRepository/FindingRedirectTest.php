@@ -13,11 +13,12 @@ class FindingRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath('/path/to/old/article', 'da');
-            $this->assertInstanceOf(Redirect::class, $foundRedirect);
-            $this->assertSameRedirects($redirect, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+        $this->assertSameRedirects($redirect, $foundRedirect);
     }
 
     /**
@@ -32,15 +33,16 @@ class FindingRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-            $this->assertInstanceOf(
-                Redirect::class,
-                $foundRedirect,
-                sprintf('Could not find redirect where path was \'%s\'', $path)
-            );
-            $this->assertSameRedirects($redirect, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+        $this->assertSameRedirects($redirect, $foundRedirect);
     }
 
     public function malformedPathProvider()

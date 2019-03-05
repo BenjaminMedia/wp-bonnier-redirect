@@ -162,14 +162,15 @@ class RedirectRepositoryTestCase extends TestCase
 
         try {
             $createdRedirects = $this->repository->findAll();
-            $this->assertCount(count($redirects), $createdRedirects);
-            $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
-                $this->assertSame($redirects[$index]['from'], $redirect->getFrom());
-                $this->assertSame($redirects[$index]['to'], $redirect->getTo());
-            });
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding bootstrapped redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(count($redirects), $createdRedirects);
+        $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
+            $this->assertSame($redirects[$index]['from'], $redirect->getFrom());
+            $this->assertSame($redirects[$index]['to'], $redirect->getTo());
+        });
     }
 
     protected function createRedirect(

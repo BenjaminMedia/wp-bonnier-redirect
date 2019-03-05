@@ -13,6 +13,10 @@ class BaseRepositoryTest extends Unit
         try {
             /** @var DB $database */
             $database = $this->makeEmpty(DB::class);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed mocking DB (%s)', $exception->getMessage()));
+        }
+        try {
             new BaseRepository($database);
         } catch (\Exception $exception) {
             $this->assertSame('Missing required property \'$tableName\'', $exception->getMessage());

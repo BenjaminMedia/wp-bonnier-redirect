@@ -27,17 +27,18 @@ class CategoryChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                $post->ID,
-                $redirects->first(),
-                sprintf('/%s/%s', $category->slug, $post->post_name),
-                sprintf('/%s/%s', $newCategory->slug, $post->post_name),
-                'post-slug-change'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post->ID,
+            $redirects->first(),
+            sprintf('/%s/%s', $category->slug, $post->post_name),
+            sprintf('/%s/%s', $newCategory->slug, $post->post_name),
+            'post-slug-change'
+        );
     }
 
     public function testChangingCategoryMultipleTimesDoesNotCreateRedirectChains()
@@ -67,19 +68,20 @@ class CategoryChangeTest extends ObserverTestCase
 
             try {
                 $redirects = $this->redirectRepository->findAll();
-                $this->assertCount($index + 1, $redirects);
-                $redirects->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
-                    $this->assertRedirect(
-                        $post->ID,
-                        $redirect,
-                        $slugs[$index],
-                        $newSlug,
-                        'post-slug-change'
-                    );
-                });
             } catch (\Exception $exception) {
                 $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+                return;
             }
+            $this->assertCount($index + 1, $redirects);
+            $redirects->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
+                $this->assertRedirect(
+                    $post->ID,
+                    $redirect,
+                    $slugs[$index],
+                    $newSlug,
+                    'post-slug-change'
+                );
+            });
         }
     }
 
@@ -112,16 +114,17 @@ class CategoryChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                $post->ID,
-                $redirects->first(),
-                '/dinosaur/t-rex',
-                '/fossils/t-rex-is-awesome',
-                'post-slug-change'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post->ID,
+            $redirects->first(),
+            '/dinosaur/t-rex',
+            '/fossils/t-rex-is-awesome',
+            'post-slug-change'
+        );
     }
 }

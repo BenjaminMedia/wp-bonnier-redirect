@@ -151,18 +151,21 @@ class RedirectTest extends TestCase
                 ->setCode(301);
             try {
                 $savedRedirect = $this->redirectRepository->save($redirect);
-                $this->assertInstanceOf(Redirect::class, $savedRedirect);
-                $this->assertGreaterThan(0, $savedRedirect->getID());
             } catch (\Exception $exception) {
                 $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
+                return;
             }
+            $this->assertInstanceOf(Redirect::class, $savedRedirect);
+            $this->assertGreaterThan(0, $savedRedirect->getID());
         }
 
         try {
-            $this->assertEquals(10, $this->redirectRepository->countRows());
+            $rowCount = $this->redirectRepository->countRows();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed counting rows (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertEquals(10, $rowCount);
     }
 
     /**

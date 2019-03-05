@@ -47,31 +47,32 @@ class CategoryChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(5, $redirects);
-
-            $categoryRedirect = $redirects->shift();
-            $this->assertRedirect(
-                $childCategory->term_id,
-                $categoryRedirect,
-                '/dinosaur/carnivorous',
-                '/animals/carnivorous',
-                'category-slug-change'
-            );
-
-            foreach ($posts as $post) {
-                $redirect = $redirects->first(function (Redirect $redirect) use ($post) {
-                    return $redirect->getWpID() === $post->ID;
-                });
-                $this->assertRedirect(
-                    $post->ID,
-                    $redirect,
-                    '/dinosaur/carnivorous/' . $post->post_name,
-                    '/animals/carnivorous/' . $post->post_name,
-                    'post-slug-change'
-                );
-            }
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
+        }
+        $this->assertCount(5, $redirects);
+
+        $categoryRedirect = $redirects->shift();
+        $this->assertRedirect(
+            $childCategory->term_id,
+            $categoryRedirect,
+            '/dinosaur/carnivorous',
+            '/animals/carnivorous',
+            'category-slug-change'
+        );
+
+        foreach ($posts as $post) {
+            $redirect = $redirects->first(function (Redirect $redirect) use ($post) {
+                return $redirect->getWpID() === $post->ID;
+            });
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/carnivorous/' . $post->post_name,
+                '/animals/carnivorous/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 
@@ -255,24 +256,25 @@ class CategoryChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(12, $redirects);
-
-            foreach ($expectedFroms as $index => $expectedFrom) {
-                $expectedTo = $expectedTos[$index];
-                $redirect = $redirects->first(function (Redirect $redirect) use ($expectedFrom) {
-                    return $redirect->getType() === $expectedFrom['type'] &&
-                        $redirect->getWpID() === $expectedFrom['id'];
-                });
-                $this->assertRedirect(
-                    $expectedFrom['id'],
-                    $redirect,
-                    $expectedFrom['slug'],
-                    $expectedTo,
-                    $expectedFrom['type']
-                );
-            }
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
+        }
+        $this->assertCount(12, $redirects);
+
+        foreach ($expectedFroms as $index => $expectedFrom) {
+            $expectedTo = $expectedTos[$index];
+            $redirect = $redirects->first(function (Redirect $redirect) use ($expectedFrom) {
+                return $redirect->getType() === $expectedFrom['type'] &&
+                    $redirect->getWpID() === $expectedFrom['id'];
+            });
+            $this->assertRedirect(
+                $expectedFrom['id'],
+                $redirect,
+                $expectedFrom['slug'],
+                $expectedTo,
+                $expectedFrom['type']
+            );
         }
     }
 }

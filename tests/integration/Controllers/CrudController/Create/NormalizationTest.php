@@ -29,17 +29,18 @@ class NormalizationTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                0,
-                $redirects->first(),
-                $expectedResult,
-                '/expected/destination',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            $expectedResult,
+            '/expected/destination',
+            'manual'
+        );
     }
 
     /**
@@ -64,17 +65,18 @@ class NormalizationTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                0,
-                $redirects->first(),
-                '/expected/from',
-                $expectedResult,
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/expected/from',
+            $expectedResult,
+            'manual'
+        );
     }
 
     public function normalizeFromUrlProvider()

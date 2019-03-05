@@ -49,24 +49,25 @@ class SlugChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            // One redirect per post (30) and one redirect for the category - 31 in total.
-            $this->assertCount(31, $redirects);
-
-            foreach ($expectedFroms as $index => $expectedFrom) {
-                $expectedTo = $expectedTos[$index];
-                $redirect = $redirects->first(function (Redirect $redirect) use ($expectedTo) {
-                    return $redirect->getType() === $expectedTo['type'] && $redirect->getWpID() === $expectedTo['id'];
-                });
-                $this->assertRedirect(
-                    $expectedTo['id'],
-                    $redirect,
-                    $expectedFrom,
-                    $expectedTo['slug'],
-                    $expectedTo['type']
-                );
-            }
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
+        }
+        // One redirect per post (30) and one redirect for the category - 31 in total.
+        $this->assertCount(31, $redirects);
+
+        foreach ($expectedFroms as $index => $expectedFrom) {
+            $expectedTo = $expectedTos[$index];
+            $redirect = $redirects->first(function (Redirect $redirect) use ($expectedTo) {
+                return $redirect->getType() === $expectedTo['type'] && $redirect->getWpID() === $expectedTo['id'];
+            });
+            $this->assertRedirect(
+                $expectedTo['id'],
+                $redirect,
+                $expectedFrom,
+                $expectedTo['slug'],
+                $expectedTo['type']
+            );
         }
     }
 
@@ -121,18 +122,19 @@ class SlugChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            // One redirect per post (30) and one redirect for the top category and sub category - 32 in total.
-            $this->assertCount(32, $redirects);
-
-            $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
-                return [$redirect->getFrom() => $redirect->getTo()];
-            })->toArray();
-
-            $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
-            $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        // One redirect per post (30) and one redirect for the top category and sub category - 32 in total.
+        $this->assertCount(32, $redirects);
+
+        $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
+            return [$redirect->getFrom() => $redirect->getTo()];
+        })->toArray();
+
+        $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
+        $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
     }
 
     public function testCanHandleRedirectsForMultipleChildCategoriesOnSlugChange()
@@ -195,17 +197,18 @@ class SlugChangeTest extends ObserverTestCase
         // That should give a total of 31 redirects.
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(31, $redirects);
-            $this->assertCount(31, $expectedFroms);
-
-            $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
-                return [$redirect->getFrom() => $redirect->getTo()];
-            })->toArray();
-
-            $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
-            $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(31, $redirects);
+        $this->assertCount(31, $expectedFroms);
+
+        $redirectFromAndTos = $redirects->mapWithKeys(function (Redirect $redirect) {
+            return [$redirect->getFrom() => $redirect->getTo()];
+        })->toArray();
+
+        $this->assertArraysAreEqual($expectedFroms, array_keys($redirectFromAndTos));
+        $this->assertArraysAreEqual($expectedTos, array_values($redirectFromAndTos));
     }
 }

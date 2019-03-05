@@ -22,6 +22,7 @@ class ControllerTestCase extends TestCase
             $this->fail('Failed setting up RedirectRepository for tests');
         }
     }
+
     protected function assertManualRedirect(
         Redirect $redirect,
         string $fromUrl,
@@ -76,11 +77,12 @@ class ControllerTestCase extends TestCase
     {
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount($count, $redirects);
-            $this->assertSameRedirects($redirect, $redirects->last());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount($count, $redirects);
+        $this->assertSameRedirects($redirect, $redirects->last());
     }
 
     protected function assertNoticeWasSaveRedirectMessage(array $notices)

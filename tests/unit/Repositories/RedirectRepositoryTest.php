@@ -13,11 +13,15 @@ class RedirectRepositoryTest extends Unit
         try {
             /** @var DB $database */
             $database = $this->makeEmpty(DB::class);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed mocking DB (%s)', $exception->getMessage()));
+        }
+        try {
             $repo = new RedirectRepository($database);
-
-            $this->assertInstanceOf(RedirectRepository::class, $repo);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed instatiating repository (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(RedirectRepository::class, $repo);
     }
 }

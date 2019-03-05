@@ -19,16 +19,17 @@ class StatusChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                $tag->term_id,
-                $redirects->first(),
-                '/lizards',
-                '/',
-                'tag-deleted'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $tag->term_id,
+            $redirects->first(),
+            '/lizards',
+            '/',
+            'tag-deleted'
+        );
     }
 }

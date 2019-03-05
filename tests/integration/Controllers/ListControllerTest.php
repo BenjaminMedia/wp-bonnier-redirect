@@ -24,18 +24,19 @@ class ListControllerTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-
-            $this->assertRedirect(
-                0,
-                $redirects->first(),
-                '/example/slug',
-                '/new/slug',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/example/slug',
+            '/new/slug',
+            'manual'
+        );
 
 
         $request = $this->createGetRequest([
@@ -74,21 +75,22 @@ class ListControllerTest extends ControllerTestCase
 
         try {
             $createdRedirects = $this->redirectRepository->findAll();
-            $this->assertCount(3, $createdRedirects);
-            $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
-                /** @var Redirect $expectedRedirect */
-                $expectedRedirect = $redirects->get($index);
-                $this->assertRedirect(
-                    $expectedRedirect->getWpID(),
-                    $redirect,
-                    $expectedRedirect->getFrom(),
-                    $expectedRedirect->getTo(),
-                    $expectedRedirect->getType()
-                );
-            });
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(3, $createdRedirects);
+        $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
+            /** @var Redirect $expectedRedirect */
+            $expectedRedirect = $redirects->get($index);
+            $this->assertRedirect(
+                $expectedRedirect->getWpID(),
+                $redirect,
+                $expectedRedirect->getFrom(),
+                $expectedRedirect->getTo(),
+                $expectedRedirect->getType()
+            );
+        });
 
         $request = $this->createGetRequest([
             'page' => 'bonnier-redirects',

@@ -19,18 +19,19 @@ class StatusChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-
-            $this->assertRedirect(
-                $category->term_id,
-                $redirects->first(),
-                '/dinosaur',
-                '/',
-                'category-deleted'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+
+        $this->assertRedirect(
+            $category->term_id,
+            $redirects->first(),
+            '/dinosaur',
+            '/',
+            'category-deleted'
+        );
     }
 
     public function testSubcategoryDeletionCreatesRedirects()
@@ -66,29 +67,31 @@ class StatusChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(5, $redirects);
-
-            $firstRedirect = $redirects->shift();
-
-            $this->assertRedirect(
-                $subCategory->term_id,
-                $firstRedirect,
-                '/dinosaur/carnivorous',
-                '/dinosaur',
-                'category-deleted'
-            );
-            foreach ($posts as $index => $post) {
-                $redirect = $redirects->get($index);
-                $this->assertRedirect(
-                    $post->ID,
-                    $redirect,
-                    '/dinosaur/carnivorous/' . $post->post_name,
-                    '/dinosaur/' . $post->post_name,
-                    'post-slug-change'
-                );
-            }
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
+        }
+
+        $this->assertCount(5, $redirects);
+
+        $firstRedirect = $redirects->shift();
+
+        $this->assertRedirect(
+            $subCategory->term_id,
+            $firstRedirect,
+            '/dinosaur/carnivorous',
+            '/dinosaur',
+            'category-deleted'
+        );
+        foreach ($posts as $index => $post) {
+            $redirect = $redirects->get($index);
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/carnivorous/' . $post->post_name,
+                '/dinosaur/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 
@@ -120,29 +123,30 @@ class StatusChangeTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(5, $redirects);
-
-            $categoryRedirect = $redirects->shift();
-            $this->assertRedirect(
-                $category->term_id,
-                $categoryRedirect,
-                '/dinosaur',
-                '/',
-                'category-deleted'
-            );
-
-            foreach ($posts as $index => $post) {
-                $redirect = $redirects->get($index);
-                $this->assertRedirect(
-                    $post->ID,
-                    $redirect,
-                    '/dinosaur/' . $post->post_name,
-                    '/uncategorized/' . $post->post_name,
-                    'post-slug-change'
-                );
-            }
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
+        }
+        $this->assertCount(5, $redirects);
+
+        $categoryRedirect = $redirects->shift();
+        $this->assertRedirect(
+            $category->term_id,
+            $categoryRedirect,
+            '/dinosaur',
+            '/',
+            'category-deleted'
+        );
+
+        foreach ($posts as $index => $post) {
+            $redirect = $redirects->get($index);
+            $this->assertRedirect(
+                $post->ID,
+                $redirect,
+                '/dinosaur/' . $post->post_name,
+                '/uncategorized/' . $post->post_name,
+                'post-slug-change'
+            );
         }
     }
 }

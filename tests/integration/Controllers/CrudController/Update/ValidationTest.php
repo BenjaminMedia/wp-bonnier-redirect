@@ -33,18 +33,19 @@ class ValidationTest extends ControllerTestCase
 
         try {
             $redirectsAfter = $this->redirectRepository->findAll();
-            $this->assertCount(2, $redirectsAfter);
-            $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
-            $this->assertRedirect(
-                0,
-                $redirectsAfter->last(),
-                '/redirect/to/be/updated',
-                '/to/somewhere',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(2, $redirectsAfter);
+        $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
+        $this->assertRedirect(
+            0,
+            $redirectsAfter->last(),
+            '/redirect/to/be/updated',
+            '/to/somewhere',
+            'manual'
+        );
     }
 
     /**
@@ -79,12 +80,12 @@ class ValidationTest extends ControllerTestCase
 
         try {
             $redirectsAfter = $this->redirectRepository->findAll();
-
-            $this->assertCount(1, $redirectsAfter);
-            $this->assertSameRedirects($redirect, $redirectsAfter->first());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirectsAfter);
+        $this->assertSameRedirects($redirect, $redirectsAfter->first());
     }
 
     public function sameFromToProvider()

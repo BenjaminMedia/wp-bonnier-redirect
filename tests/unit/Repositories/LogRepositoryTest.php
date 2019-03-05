@@ -15,12 +15,16 @@ class LogRepositoryTest extends Unit
         try {
             /** @var DB $database */
             $database = $this->makeEmpty(DB::class);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed mocking DB (%s)', $exception->getMessage()));
+        }
+        try {
             $repo = new LogRepository($database);
-
-            $this->assertInstanceOf(LogRepository::class, $repo);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed instatiating repository (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(LogRepository::class, $repo);
     }
 
     public function testCanInsertLog()
@@ -48,13 +52,19 @@ class LogRepositoryTest extends Unit
                 'insert' => Expected::once(10),
                 'update' => Expected::never(),
             ]);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed mocking DB (%s)', $exception->getMessage()));
+            return;
+        }
+        try {
             $repo = new LogRepository($database);
-            $this->assertSame(0, $log->getID());
-            $savedLog = $repo->save($log);
-
-            $this->assertSame(10, $savedLog->getID());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed inserting log (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertSame(0, $log->getID());
+        $savedLog = $repo->save($log);
+
+        $this->assertSame(10, $savedLog->getID());
     }
 }

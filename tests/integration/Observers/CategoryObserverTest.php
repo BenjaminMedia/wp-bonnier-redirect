@@ -18,11 +18,12 @@ class CategoryObserverTest extends ObserverTestCase
             $observer = $this->makeEmpty(CategoryObserver::class, [
                 'update' => Expected::once(),
             ]);
-            $subject = new CategorySubject();
-            $subject->attach($observer);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed creating a mocked CategoryObserver (%s)', $exception->getMessage()));
+            return;
         }
+        $subject = new CategorySubject();
+        $subject->attach($observer);
 
         wp_update_term($category->term_id, $category->taxonomy, [
             'slug' => 'updated-category',

@@ -21,16 +21,17 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-            $this->assertInstanceOf(
-                Redirect::class,
-                $foundRedirect,
-                sprintf('Could not find redirect where path was \'%s\'', $path)
-            );
-
-            $this->assertSameRedirects($redirect, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+
+        $this->assertSameRedirects($redirect, $foundRedirect);
     }
 
     public function testPrefersExactRedirectMatchInsteadOfWildcardRedirect()
@@ -40,19 +41,21 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $createdRedirects = $this->repository->findAll()->take(-2);
-            $this->assertSameRedirects($wildcard, $createdRedirects->first());
-            $this->assertSameRedirects($notWildcard, $createdRedirects->last());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed creating redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertSameRedirects($wildcard, $createdRedirects->first());
+        $this->assertSameRedirects($notWildcard, $createdRedirects->last());
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/', 'da');
-            $this->assertInstanceOf(Redirect::class, $foundRedirect);
-            $this->assertSameRedirects($notWildcard, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+        $this->assertSameRedirects($notWildcard, $foundRedirect);
     }
 
     public function testPrefersWildcardIfNoExactMatchExists()
@@ -62,19 +65,21 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
 
         try {
             $createdRedirects = $this->repository->findAll()->take(-2);
-            $this->assertSameRedirects($wildcard, $createdRedirects->first());
-            $this->assertSameRedirects($notWildcard, $createdRedirects->last());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed creating redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertSameRedirects($wildcard, $createdRedirects->first());
+        $this->assertSameRedirects($notWildcard, $createdRedirects->last());
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/path/', 'da');
-            $this->assertInstanceOf(Redirect::class, $foundRedirect);
-            $this->assertSameRedirects($wildcard, $foundRedirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+        $this->assertSameRedirects($wildcard, $foundRedirect);
     }
 
     public function wildcardRedirectProvider()

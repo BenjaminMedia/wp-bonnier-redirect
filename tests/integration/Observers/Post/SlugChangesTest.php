@@ -27,17 +27,18 @@ class SlugChangesTest extends ObserverTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                $post->ID,
-                $redirects->first(),
-                $initialSlug,
-                '/uncategorized/new-post-slug',
-                'post-slug-change'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            $post->ID,
+            $redirects->first(),
+            $initialSlug,
+            '/uncategorized/new-post-slug',
+            'post-slug-change'
+        );
     }
 
     public function testSlugChangesDoesntCreateRedirectChains()
@@ -63,15 +64,16 @@ class SlugChangesTest extends ObserverTestCase
         foreach ($postNames as $index => $postName) {
             try {
                 $redirectsBefore = $this->redirectRepository->findAll();
-                if ($index === 0) {
-                    $this->assertNull($redirectsBefore);
-                } else {
-                    $this->assertCount($index, $redirectsBefore);
-                }
             } catch (\Exception $exception) {
                 $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+                return;
             }
-            
+            if ($index === 0) {
+                $this->assertNull($redirectsBefore);
+            } else {
+                $this->assertCount($index, $redirectsBefore);
+            }
+
             $this->updatePost($post->ID, [
                 'post_name' => $postName,
             ]);
@@ -79,19 +81,20 @@ class SlugChangesTest extends ObserverTestCase
 
             try {
                 $redirectsAfter = $this->redirectRepository->findAll();
-                $this->assertCount($index + 1, $redirectsAfter);
-                $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
-                    $this->assertRedirect(
-                        $post->ID,
-                        $redirect,
-                        $slugs[$index],
-                        $newSlug,
-                        'post-slug-change'
-                    );
-                });
             } catch (\Exception $exception) {
                 $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+                return;
             }
+            $this->assertCount($index + 1, $redirectsAfter);
+            $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
+                $this->assertRedirect(
+                    $post->ID,
+                    $redirect,
+                    $slugs[$index],
+                    $newSlug,
+                    'post-slug-change'
+                );
+            });
         }
     }
 }

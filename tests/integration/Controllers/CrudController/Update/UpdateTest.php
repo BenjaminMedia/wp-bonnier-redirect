@@ -28,17 +28,18 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $updatedRedirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $updatedRedirects);
-            $this->assertRedirect(
-                0,
-                $updatedRedirects->first(),
-                '/from/this/path',
-                '/to/new/path',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $updatedRedirects);
+        $this->assertRedirect(
+            0,
+            $updatedRedirects->first(),
+            '/from/this/path',
+            '/to/new/path',
+            'manual'
+        );
     }
 
     public function testCanUpdateFromRedirect()
@@ -61,17 +62,18 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $updatedRedirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $updatedRedirects);
-            $this->assertRedirect(
-                0,
-                $updatedRedirects->first(),
-                '/from/new/path',
-                '/to/this/path',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $updatedRedirects);
+        $this->assertRedirect(
+            0,
+            $updatedRedirects->first(),
+            '/from/new/path',
+            '/to/this/path',
+            'manual'
+        );
     }
 
     public function testUpdatingRedirectWithToWhichAlreadyExistsInFromAvoidsMakingChains()
@@ -101,13 +103,14 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $redirectsAfter = $this->redirectRepository->findAll();
-            $this->assertCount(2, $redirectsAfter);
-            $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
-            $updatingRedirect->setTo('/final/destination');
-            $this->assertSameRedirects($updatingRedirect, $redirectsAfter->last());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(2, $redirectsAfter);
+        $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
+        $updatingRedirect->setTo('/final/destination');
+        $this->assertSameRedirects($updatingRedirect, $redirectsAfter->last());
     }
 
     public function testCanUpdateRedirectWithToWhichAlreadyExists()
@@ -132,18 +135,19 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(2, $redirects);
-            $this->assertSameRedirects($existingRedirect, $redirects->first());
-            $this->assertRedirect(
-                0,
-                $redirects->last(),
-                '/from/another/slug',
-                '/to/destination',
-                'manual'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(2, $redirects);
+        $this->assertSameRedirects($existingRedirect, $redirects->first());
+        $this->assertRedirect(
+            0,
+            $redirects->last(),
+            '/from/another/slug',
+            '/to/destination',
+            'manual'
+        );
     }
 
     public function testUpdatingManualRedirectUpdatesOlderToAvoidChains()
@@ -173,25 +177,25 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $newRedirects = $this->redirectRepository->findAll();
-
-            $this->assertCount(2, $newRedirects);
-
-            $this->assertRedirect(
-                101,
-                $newRedirects->first(),
-                '/this/example/path',
-                '/final/destination',
-                'post-slug-change'
-            );
-            $this->assertManualRedirect(
-                $newRedirects->last(),
-                '/new/page/slug',
-                '/final/destination',
-                'da'
-            );
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(2, $newRedirects);
+
+        $this->assertRedirect(
+            101,
+            $newRedirects->first(),
+            '/this/example/path',
+            '/final/destination',
+            'post-slug-change'
+        );
+        $this->assertManualRedirect(
+            $newRedirects->last(),
+            '/new/page/slug',
+            '/final/destination',
+            'da'
+        );
     }
 
     public function testCanUpdateWildcardRedirect()
@@ -214,18 +218,19 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                0,
-                $redirects->first(),
-                '/polopoly.jsp*',
-                '/',
-                'manual'
-            );
-            $this->assertTrue($redirects->first()->isWildcard());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/polopoly.jsp*',
+            '/',
+            'manual'
+        );
+        $this->assertTrue($redirects->first()->isWildcard());
     }
 
     public function testCanUpdateRedirectThatKeepsQueryParams()
@@ -250,17 +255,18 @@ class UpdateTest extends ControllerTestCase
 
         try {
             $redirects = $this->redirectRepository->findAll();
-            $this->assertCount(1, $redirects);
-            $this->assertRedirect(
-                0,
-                $redirects->first(),
-                '/from/slug',
-                '/to/slug',
-                'manual'
-            );
-            $this->assertTrue($redirects->first()->keepsQuery());
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return;
         }
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/from/slug',
+            '/to/slug',
+            'manual'
+        );
+        $this->assertTrue($redirects->first()->keepsQuery());
     }
 }
