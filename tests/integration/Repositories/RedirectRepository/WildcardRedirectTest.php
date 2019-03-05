@@ -82,6 +82,38 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
         $this->assertSameRedirects($wildcard, $foundRedirect);
     }
 
+    public function testWildcardRedirectsKeepsQueryParams()
+    {
+        $redirect = $this->createRedirect('/from/*', '/destination', true);
+
+        try {
+            $foundRedirect = $this->repository->findRedirectByPath('/from/this/slug?c=d&a=b', 'da');
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
+        }
+
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+        $this->assertSame($redirect->getID(), $foundRedirect->getID());
+        $this->assertSame('/from/*', $foundRedirect->getFrom());
+        $this->assertSame('/destination?a=b&c=d', $foundRedirect->getTo());
+    }
+
+    public function testWildcardRedirectsIgnoresQueryParams()
+    {
+        $redirect = $this->createRedirect('/from/*', '/destination');
+
+        try {
+            $foundRedirect = $this->repository->findRedirectByPath('/from/this/slug?c=d&a=b', 'da');
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return;
+        }
+
+        $this->assertInstanceOf(Redirect::class, $foundRedirect);
+        $this->assertSameRedirects($redirect, $foundRedirect);
+    }
+
     public function wildcardRedirectProvider()
     {
         return [
