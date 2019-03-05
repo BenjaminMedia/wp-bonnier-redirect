@@ -12,10 +12,11 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
      *
      * @param string $path
      * @param string $from
+     * @param string $destination
      */
-    public function testIgnoringQueryParamsActuallyIgnoresAllQueryParams(string $path, string $from)
+    public function testIgnoringQueryParamsIgnoresAllQueryParams(string $path, string $from, string $destination)
     {
-        $redirect = $this->createRedirect($from, '/destination');
+        $redirect = $this->createRedirect($from, $destination);
 
         try {
             $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
@@ -29,6 +30,7 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
             sprintf('Could not find redirect where path was \'%s\'', $path)
         );
         $this->assertSameRedirects($redirect, $foundRedirect);
+        $this->assertSame($destination, $foundRedirect->getTo());
     }
 
     /**
@@ -66,8 +68,9 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
     public function ignoreQueryParamProvider()
     {
         return [
-            'With pagination' => ['/category?page=1', '/category'],
-            'With multiple params' => ['/page/?a=b&c=d&e=f', '/page'],
+            'With pagination' => ['/category?page=1', '/category', '/destination/page'],
+            'With multiple params' => ['/page/?a=b&c=d&e=f', '/page', '/destination/page'],
+            'Exact match' => ['/page/slug?a=b&c=d', '/page/slug?a=b&c=d', '/destination/page'],
         ];
     }
 
@@ -76,6 +79,12 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
         return [
             'Pagination' => ['/category?page=1', '/category', '/destination', '/destination?page=1'],
             'Merges params' => ['/category?c=d&a=b', '/category', '/destination?a=q', '/destination?a=q&c=d'],
+            'Exact match' => [
+                '/category/?c=d&a=b&e=f',
+                '/category?a=b&c=d&e=f',
+                '/destination',
+                '/destination?a=b&c=d&e=f'
+            ]
         ];
     }
 }
