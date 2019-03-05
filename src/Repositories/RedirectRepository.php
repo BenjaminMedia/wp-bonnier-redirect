@@ -38,6 +38,19 @@ class RedirectRepository extends BaseRepository
 
     public function findRedirectByPath(string $path, string $locale = null): ?Redirect
     {
+        if ($redirect = $this->findExactRedirectByPath($path, $locale)) {
+            return $redirect;
+        }
+
+        if ($redirect = $this->findRedirectByIgnoringQueryParams($path, $locale)) {
+            return $redirect;
+        }
+
+        return $this->findWildcardRedirectsByPath($path, $locale);
+    }
+
+    public function findExactRedirectByPath(string $path, string $locale = null): ?Redirect
+    {
         if (is_null($locale)) {
             $locale = LocaleHelper::getLanguage();
         }
@@ -54,7 +67,27 @@ class RedirectRepository extends BaseRepository
             return $redirect->fromArray($results[0]);
         }
 
-        return $this->findWildcardRedirectsByPath($path, $locale);
+        return null;
+    }
+
+    public function findRedirectByIgnoringQueryParams(string $path, string $locale = null): ?Redirect
+    {
+        if (is_null($locale)) {
+            $locale = LocaleHelper::getLanguage();
+        }
+
+        $normalizedPath = UrlHelper::normalizePath($path);
+
+        if ($query = parse_url($normalizedPath, PHP_URL_QUERY)) {
+            if ($redirect = $this->findRedirectByPath(parse_url($normalizedPath, PHP_URL_PATH), $locale)) {
+                if ($redirect->keepsQuery()) {
+                    return $redirect->addQuery($query);
+                }
+                return $redirect;
+            }
+        }
+
+        return null;
     }
 
     public function findWildcardRedirectsByPath(string $path, string $locale = null): ?Redirect

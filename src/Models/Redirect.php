@@ -300,4 +300,43 @@ class Redirect implements Arrayable
 
         return $this;
     }
+
+    /**
+     *
+     *
+     * @param string $query Format: 'a=b&c=d&e=f'
+     * @return Redirect
+     */
+    public function addQuery(string $query): Redirect
+    {
+        if (!$this->keepsQuery()) {
+            return $this;
+        }
+        if ($parsedQuery = parse_url($query, PHP_URL_QUERY)) {
+            $query = $parsedQuery;
+        }
+        $parsedTo = parse_url($this->getTo());
+        if ($originalQuery = $parsedTo['query'] ?? null) {
+            parse_str($originalQuery, $originalParams);
+            parse_str($query, $params);
+            $merged = array_merge($params, $originalParams);
+            $result = '';
+            foreach ($merged as $key => $value) {
+                $result .= sprintf('%s=%s&', $key, $value);
+            }
+            $destination = '';
+            if (isset($parsedTo['scheme'])) {
+                $destination = sprintf('%s://%s', $parsedTo['scheme'], $parsedTo['host']);
+            }
+            if (isset($parsedTo['path'])) {
+                $destination .= $parsedTo['path'];
+            }
+            $destination .= '?' . $result;
+            $this->setTo($destination);
+        } else {
+            $this->setTo(sprintf('%s?%s', $this->getTo(), $query));
+        }
+
+        return $this;
+    }
 }

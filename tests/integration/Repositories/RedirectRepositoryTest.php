@@ -110,6 +110,56 @@ class RedirectRepositoryTest extends TestCase
         $this->assertSameRedirects($wildcard, $foundRedirect);
     }
 
+    /**
+     * @dataProvider ignoreQueryParamProvider
+     *
+     * @param string $path
+     * @param string $from
+     */
+    public function testIgnoringQueryParamsActuallyIgnoresAllQueryParams(string $path, string $from)
+    {
+        $redirect = $this->createRedirect($from, '/destination');
+
+        $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
+
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+
+        $this->assertSameRedirects($redirect, $foundRedirect);
+    }
+
+    /**
+     * @dataProvider keepQueryParamProvider
+     *
+     * @param string $path
+     * @param string $from
+     * @param string $destination
+     * @param string $expectedTo
+     */
+    public function testKeepingQueryParamsActuallyKeepsAllQueryParams(
+        string $path,
+        string $from,
+        string $destination,
+        string $expectedTo
+    ) {
+        $redirect = $this->createRedirect($from, $destination, true);
+
+        $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
+
+        $this->assertInstanceOf(
+            Redirect::class,
+            $foundRedirect,
+            sprintf('Could not find redirect where path was \'%s\'', $path)
+        );
+
+        $this->assertSame($redirect->getID(), $foundRedirect->getID());
+        $this->assertSame($from, $foundRedirect->getFrom());
+        $this->assertSame($expectedTo, $foundRedirect->getTo());
+    }
+
     private function bootstrapRedirects()
     {
         $redirects = collect([
@@ -258,6 +308,7 @@ class RedirectRepositoryTest extends TestCase
     private function createRedirect(
         string $source,
         string $destination,
+        bool $keepQuery = false,
         string $locale = 'da',
         string $type = 'manual',
         int $code = 301
@@ -265,6 +316,7 @@ class RedirectRepositoryTest extends TestCase
         $redirect = new Redirect();
         $redirect->setFrom($source)
             ->setTo($destination)
+            ->setKeepQuery($keepQuery)
             ->setType($type)
             ->setCode($code)
             ->setLocale($locale);
@@ -294,6 +346,22 @@ class RedirectRepositoryTest extends TestCase
             'Polopoly redirects' => ['/polopoly.jsp?id=1234&gcid=abc123', '/polopoly.jsp*'],
             'Archive redirects' => ['/archive/my-article', '/archive*'],
             'Archive redirects with slash' => ['/archive/my-article', '/archive/*'],
+        ];
+    }
+
+    public function ignoreQueryParamProvider()
+    {
+        return [
+            'With pagination' => ['/category?page=1', '/category'],
+            'With multiple params' => ['/page/?a=b&c=d&e=f', '/page'],
+        ];
+    }
+
+    public function keepQueryParamProvider()
+    {
+        return [
+            'Pagination' => ['/category?page=1', '/category', '/destination', '/destination?page=1'],
+            'Merges params' => ['/category?c=d&a=b', '/category', '/destination?a=q', '/destination?a=q&c=d'],
         ];
     }
 }

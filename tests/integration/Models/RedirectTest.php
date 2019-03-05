@@ -17,9 +17,11 @@ class RedirectTest extends TestCase
     {
         parent::setUp();
 
-        global $wpdb;
-        $database = new DB($wpdb);
-        $this->redirectRepository = new RedirectRepository($database);
+        try {
+            $this->redirectRepository = new RedirectRepository(new DB());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed instantiating RedirectRepository (%s)', $exception->getMessage()));
+        }
     }
 
     public function testPrefersHashesFromDB()
@@ -112,7 +114,11 @@ class RedirectTest extends TestCase
             ->setLocale('da')
             ->setCode(301);
 
-        $this->redirectRepository->save($firstRedirect);
+        try {
+            $this->redirectRepository->save($firstRedirect);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
+        }
 
         $secondRedirect = new Redirect();
         $secondRedirect->setFrom('/my/old/slug')
@@ -128,6 +134,8 @@ class RedirectTest extends TestCase
                 $exception->getMessage()
             );
             return;
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Saving redirect threw unexpected exception (%s)', $exception->getMessage()));
         }
 
         $this->fail('Failed catching DupicateEntryException');
@@ -141,11 +149,60 @@ class RedirectTest extends TestCase
                 ->setTo('/same/destination/slug')
                 ->setLocale('da')
                 ->setCode(301);
-            $savedRedirect = $this->redirectRepository->save($redirect);
-            $this->assertInstanceOf(Redirect::class, $savedRedirect);
-            $this->assertGreaterThan(0, $savedRedirect->getID());
+            try {
+                $savedRedirect = $this->redirectRepository->save($redirect);
+                $this->assertInstanceOf(Redirect::class, $savedRedirect);
+                $this->assertGreaterThan(0, $savedRedirect->getID());
+            } catch (\Exception $exception) {
+                $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
+            }
         }
 
         $this->assertEquals(10, $this->redirectRepository->countRows());
+    }
+
+    /**
+     * @dataProvider addingQueryParamsProvider
+     *
+     * @param string $destination
+     * @param string $query
+     * @param string $expected
+     */
+    public function testCanAddQueryParamsCorrectly(string $destination, string $query, string $expected)
+    {
+        $redirect = new Redirect();
+        $redirect->setTo($destination)
+            ->setKeepQuery(true)
+            ->addQuery($query);
+
+        $this->assertSame($expected, $redirect->getTo());
+    }
+
+    public function testCannotAddQueryParamsWhenKeepQueryIsFalse()
+    {
+        $redirect = new Redirect();
+        $redirect->setTo('/path/to/destination')
+            ->setKeepQuery(false)
+            ->addQuery('a=b&c=d&e=f');
+
+        $this->assertSame('/path/to/destination', $redirect->getTo());
+    }
+
+    public function addingQueryParamsProvider()
+    {
+        return [
+            'Simple query' => ['/destination', 'a=b', '/destination?a=b'],
+            'Sorts query' => ['/destination', 'c=d&a=b', '/destination?a=b&c=d'],
+            'Merges query' => ['/destination?a=b', 'c=d', '/destination?a=b&c=d'],
+            'Prefers query from original' => ['/destination?a=b', 'a=c', '/destination?a=b'],
+            'Works with full url' => ['/destination', 'http://example.com/slug/?a=b', '/destination?a=b'],
+            'Works with path url' => ['/destination', '/slug/?a=b', '/destination?a=b'],
+            'Works with query containing ?' => ['/destination', '?a=b', '/destination?a=b'],
+            'Works with destination being a full url' => [
+                'https://example.com/path/to/slug',
+                'a=b&c=d',
+                'https://example.com/path/to/slug?a=b&c=d'
+            ]
+        ];
     }
 }
