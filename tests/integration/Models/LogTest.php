@@ -16,9 +16,11 @@ class LogTest extends TestCase
     {
         parent::setUp();
 
-        global $wpdb;
-        $database = new DB($wpdb);
-        $this->logRepository = new LogRepository($database);
+        try {
+            $this->logRepository = new LogRepository(new DB());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed instantiating LogRepository (%s)', $exception->getMessage()));
+        }
     }
 
     public function testCanSaveLog()
@@ -37,7 +39,7 @@ class LogTest extends TestCase
 
     public function testCanSaveLogsWithSameSlug()
     {
-        foreach (range(1, 10) as $index) {
+        for ($i = 0; $i < 10; $i++) {
             $log = new Log();
             $log->setSlug('/path/to/post')
                 ->setType('post')

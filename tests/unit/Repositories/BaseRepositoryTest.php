@@ -11,6 +11,7 @@ class BaseRepositoryTest extends Unit
     public function testThrowsErrorWhenInstantiatedWithoutTable()
     {
         try {
+            /** @var DB $database */
             $database = $this->makeEmpty(DB::class);
             new BaseRepository($database);
         } catch (\Exception $exception) {

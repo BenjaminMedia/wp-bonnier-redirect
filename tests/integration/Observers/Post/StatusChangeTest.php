@@ -29,16 +29,20 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'trash',
         ]);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
 
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->last(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous',
-            'post-trash'
-        );
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->last(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous',
+                'post-trash'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 
     public function testUnpublishPostCreatesRedirectToParentCategory()
@@ -63,17 +67,20 @@ class StatusChangeTest extends ObserverTestCase
         $this->updatePost($post->ID, [
             'post_status' => 'draft',
         ]);
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->last(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous',
-            'post-draft'
-        );
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->last(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous',
+                'post-draft'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 
     public function testCanUnpublishAndRepublishPostWithNewSlug()
@@ -98,15 +105,19 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'draft'
         ]);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->last(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous',
-            'post-draft'
-        );
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->last(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous',
+                'post-draft'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
 
         $this->updatePost($post->ID, [
             'post_name' => 't-rex-is-awesome',
@@ -115,15 +126,19 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex-is-awesome', $this->getPostSlug($post));
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->first(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous/t-rex-is-awesome',
-            'post-slug-change'
-        );
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->first(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous/t-rex-is-awesome',
+                'post-slug-change'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 
     public function testCanUnpublishAndRepublishPostWithSameSlug()
@@ -148,15 +163,19 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'draft'
         ]);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->last(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous',
-            'post-draft'
-        );
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->last(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous',
+                'post-draft'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
 
         $this->updatePost($post->ID, [
             'post_status' => 'publish'
@@ -164,7 +183,11 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
 
-        $this->assertNull($this->redirectRepository->findAll());
+        try {
+            $this->assertNull($this->redirectRepository->findAll());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 
     public function testCanDeletePostAndCreateNewPostWithSameSlug()
@@ -189,15 +212,19 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'trash'
         ]);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            $post->ID,
-            $redirects->last(),
-            '/dinosaur/carnivorous/t-rex',
-            '/dinosaur/carnivorous',
-            'post-trash'
-        );
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                $post->ID,
+                $redirects->last(),
+                '/dinosaur/carnivorous/t-rex',
+                '/dinosaur/carnivorous',
+                'post-trash'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
 
         $newPost = $this->getPost([
             'post_title' => 'New T-rex',
@@ -207,6 +234,10 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($newPost));
 
-        $this->assertNull($this->redirectRepository->findAll());
+        try {
+            $this->assertNull($this->redirectRepository->findAll());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 }

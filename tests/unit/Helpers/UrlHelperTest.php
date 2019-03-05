@@ -9,6 +9,8 @@ class UrlHelperTest extends Unit
 {
     /**
      * @dataProvider urlSanitizeProvider
+     * @param string $expected
+     * @param string $url
      */
     public function testCanProperlySanitizeUrl(string $expected, string $url)
     {

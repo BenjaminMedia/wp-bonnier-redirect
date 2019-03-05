@@ -17,14 +17,18 @@ class StatusChangeTest extends ObserverTestCase
 
         wp_delete_term($tag->term_id, $tag->taxonomy);
 
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            $tag->term_id,
-            $redirects->first(),
-            '/lizards',
-            '/',
-            'tag-deleted'
-        );
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                $tag->term_id,
+                $redirects->first(),
+                '/lizards',
+                '/',
+                'tag-deleted'
+            );
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 }

@@ -19,8 +19,16 @@ class ObserverTestCase extends TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->logRepository = new LogRepository(new DB);
-        $this->redirectRepository = new RedirectRepository(new DB);
+        try {
+            $this->logRepository = new LogRepository(new DB);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed instantiating a LogRepository (%s)', $exception->getMessage()));
+        }
+        try {
+            $this->redirectRepository = new RedirectRepository(new DB);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed instantiating a RedirectRepository (%s)', $exception->getMessage()));
+        }
         // Make sure we are admin so we may call edit_post();
         $userID = self::factory()->user->create(['role' => 'administrator']);
         wp_set_current_user($userID);

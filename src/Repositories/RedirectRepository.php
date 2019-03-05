@@ -25,6 +25,10 @@ class RedirectRepository extends BaseRepository
         parent::__construct($database);
     }
 
+    /**
+     * @param int $redirectID
+     * @return Redirect|null
+     */
     public function getRedirectById(int $redirectID): ?Redirect
     {
         $data = $this->database->findById($redirectID);
@@ -36,19 +40,35 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    /**
+     * @param string $path
+     * @param string|null $locale
+     * @return Redirect|null
+     * @throws \Exception
+     */
     public function findRedirectByPath(string $path, string $locale = null): ?Redirect
     {
         if ($redirect = $this->findExactRedirectByPath($path, $locale)) {
-            return $redirect;
+            return $this->handleQueryParams($redirect, $path);
         }
 
         if ($redirect = $this->findRedirectByIgnoringQueryParams($path, $locale)) {
-            return $redirect;
+            return $this->handleQueryParams($redirect, $path);
         }
 
-        return $this->findWildcardRedirectsByPath($path, $locale);
+        if ($redirect = $this->findWildcardRedirectsByPath($path, $locale)) {
+            return $this->handleQueryParams($redirect, $path);
+        }
+
+        return null;
     }
 
+    /**
+     * @param string $path
+     * @param string|null $locale
+     * @return Redirect|null
+     * @throws \Exception
+     */
     public function findExactRedirectByPath(string $path, string $locale = null): ?Redirect
     {
         if (is_null($locale)) {
@@ -70,19 +90,20 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    /**
+     * @param string $path
+     * @param string|null $locale
+     * @return Redirect|null
+     * @throws \Exception
+     */
     public function findRedirectByIgnoringQueryParams(string $path, string $locale = null): ?Redirect
     {
         if (is_null($locale)) {
             $locale = LocaleHelper::getLanguage();
         }
 
-        $normalizedPath = UrlHelper::normalizePath($path);
-
-        if ($query = parse_url($normalizedPath, PHP_URL_QUERY)) {
-            if ($redirect = $this->findRedirectByPath(parse_url($normalizedPath, PHP_URL_PATH), $locale)) {
-                if ($redirect->keepsQuery()) {
-                    return $redirect->addQuery($query);
-                }
+        if (parse_url($path, PHP_URL_QUERY)) {
+            if ($redirect = $this->findRedirectByPath(parse_url($path, PHP_URL_PATH), $locale)) {
                 return $redirect;
             }
         }
@@ -90,6 +111,12 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    /**
+     * @param string $path
+     * @param string|null $locale
+     * @return Redirect|null
+     * @throws \Exception
+     */
     public function findWildcardRedirectsByPath(string $path, string $locale = null): ?Redirect
     {
         if (is_null($locale)) {
@@ -119,6 +146,10 @@ class RedirectRepository extends BaseRepository
         });
     }
 
+    /**
+     * @return Collection|null
+     * @throws \Exception
+     */
     public function findAll(): ?Collection
     {
         $query = $this->database->query()->select('*');
@@ -128,6 +159,12 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    /**
+     * @param $key
+     * @param $value
+     * @return Collection|null
+     * @throws \Exception
+     */
     public function findAllBy($key, $value): ?Collection
     {
         $query = $this->database->query()->select('*')
@@ -139,6 +176,15 @@ class RedirectRepository extends BaseRepository
         return null;
     }
 
+    /**
+     * @param string|null $searchQuery
+     * @param string|null $orderBy
+     * @param string|null $order
+     * @param int|null $perPage
+     * @param int|null $offset
+     * @return array
+     * @throws \Exception
+     */
     public function find(
         ?string $searchQuery = null,
         ?string $orderBy = null,
@@ -164,6 +210,11 @@ class RedirectRepository extends BaseRepository
         return $this->database->getResults($query);
     }
 
+    /**
+     * @param string|null $searchKey
+     * @return int
+     * @throws \Exception
+     */
     public function countRows(?string $searchKey = null): int
     {
         $query = $this->database->query()->select('COUNT(id)');
@@ -228,6 +279,11 @@ class RedirectRepository extends BaseRepository
         })->toArray());
     }
 
+    /**
+     * @param array $redirectIDs
+     * @return bool
+     * @throws \Exception
+     */
     public function deleteMultipleByIDs(array $redirectIDs)
     {
         return $this->database->deleteMultiple($redirectIDs);
@@ -240,6 +296,7 @@ class RedirectRepository extends BaseRepository
      * so both redirects will redirect to '/e/f'.
      *
      * @param Redirect $redirect
+     * @throws \Exception
      */
     public function removeChainsByRedirect(Redirect $redirect)
     {
@@ -264,6 +321,10 @@ class RedirectRepository extends BaseRepository
         }
     }
 
+    /**
+     * @param array $redirects
+     * @return Collection
+     */
     private function mapRedirects(array $redirects): Collection
     {
         return collect($redirects)->map(function (array $data) {
@@ -272,10 +333,31 @@ class RedirectRepository extends BaseRepository
         });
     }
 
+    /**
+     * @param Redirect $redirect
+     * @throws \Exception
+     */
     private function updateRedirect(Redirect $redirect)
     {
         $data = $redirect->toArray();
         unset($data['id']);
         $this->database->update($redirect->getID(), $data);
+    }
+
+    /**
+     * @param Redirect $redirect
+     * @param string $path
+     * @return Redirect
+     */
+    private function handleQueryParams(Redirect $redirect, string $path): Redirect
+    {
+        if (!$redirect->keepsQuery()) {
+            return $redirect;
+        }
+        if ($query = parse_url($path, PHP_URL_QUERY)) {
+            return $redirect->addQuery($query);
+        }
+
+        return $redirect;
     }
 }

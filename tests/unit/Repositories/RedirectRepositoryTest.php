@@ -10,9 +10,14 @@ class RedirectRepositoryTest extends Unit
 {
     public function testCanInstantiateRepository()
     {
-        $database = $this->makeEmpty(DB::class);
-        $repo = new RedirectRepository($database);
+        try {
+            /** @var DB $database */
+            $database = $this->makeEmpty(DB::class);
+            $repo = new RedirectRepository($database);
 
-        $this->assertInstanceOf(RedirectRepository::class, $repo);
+            $this->assertInstanceOf(RedirectRepository::class, $repo);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed instatiating repository (%s)', $exception->getMessage()));
+        }
     }
 }

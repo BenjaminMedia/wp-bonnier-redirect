@@ -158,7 +158,11 @@ class RedirectTest extends TestCase
             }
         }
 
-        $this->assertEquals(10, $this->redirectRepository->countRows());
+        try {
+            $this->assertEquals(10, $this->redirectRepository->countRows());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed counting rows (%s)', $exception->getMessage()));
+        }
     }
 
     /**

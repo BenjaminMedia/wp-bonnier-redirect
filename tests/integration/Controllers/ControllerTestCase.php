@@ -74,9 +74,13 @@ class ControllerTestCase extends TestCase
 
     protected function assertRedirectCreated(Redirect $redirect, int $count = 1)
     {
-        $redirects = $this->redirectRepository->findAll();
-        $this->assertCount($count, $redirects);
-        $this->assertSameRedirects($redirect, $redirects->last());
+        try {
+            $redirects = $this->redirectRepository->findAll();
+            $this->assertCount($count, $redirects);
+            $this->assertSameRedirects($redirect, $redirects->last());
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+        }
     }
 
     protected function assertNoticeWasSaveRedirectMessage(array $notices)
