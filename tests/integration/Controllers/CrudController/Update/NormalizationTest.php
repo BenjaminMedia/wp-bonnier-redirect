@@ -95,6 +95,7 @@ class NormalizationTest extends ControllerTestCase
             'Url with different case' => ['https://Example.com', '/'],
             'Url with query params' => ['https://example.com/slug/?c=d&a=b', '/slug?a=b&c=d'],
             'Url with www' => ['https://www.example.com/', '/'],
+            'Url without scheme' => ['www.example.com/slug', '/slug'],
             'Url with ÆØÅ' => [
                 'https://www.example.com/hætte/østers/påske',
                 '/hætte/østers/påske'
@@ -132,6 +133,7 @@ class NormalizationTest extends ControllerTestCase
             'Url with different case' => ['https://Example.com', 'https://example.com'],
             'Url with query params' => ['https://example.com/slug/?c=d&a=b', 'https://example.com/slug?a=b&c=d'],
             'Url with www' => ['https://www.example.com/', 'https://www.example.com'],
+            'Url without scheme' => ['www.example.com/slug', 'http://www.example.com/slug'],
             'Url with ÆØÅ' => [
                 'https://www.example.com/hætte/østers/påske',
                 'https://www.example.com/hætte/østers/påske'

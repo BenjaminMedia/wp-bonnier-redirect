@@ -28,6 +28,9 @@ class UrlHelper
      */
     public static function normalizePath(string $url, bool $disallowWildcard = false): string
     {
+        if (starts_with($url, 'www.')) {
+            $url = 'http://' . $url;
+        }
         $decoded = self::decode($url);
         $path = self::sanitizePath($decoded);
         if ($queryParams = self::parseQueryParams($decoded)) {
@@ -52,6 +55,9 @@ class UrlHelper
 
     public static function normalizeUrl(string $url, bool $disallowWildcard = false): string
     {
+        if (starts_with($url, 'www.')) {
+            $url = 'http://' . $url;
+        }
         $parsedUrl = parse_url(self::decode($url));
         $scheme = isset($parsedUrl['scheme']) ? strtolower($parsedUrl['scheme']) . '://' : '';
         $host = strtolower($parsedUrl['host'] ?? '');
