@@ -29,6 +29,12 @@ class TagSubject extends AbstractSubject
         return $this->tag;
     }
 
+    public function setTag(\WP_Term $tag): TagSubject
+    {
+        $this->tag = $tag;
+        return $this;
+    }
+
     /**
      * @return string|null
      */

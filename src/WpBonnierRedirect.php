@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect;
 
+use Bonnier\WP\Redirect\Commands\Commands;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
 use Bonnier\WP\Redirect\Database\DB;
@@ -90,6 +91,8 @@ class WpBonnierRedirect
         }
         $this->request = Request::createFromGlobals();
         Observers::bootstrap($this->logRepository, $this->redirectRepository);
+
+        Commands::register();
 
         // Load admin menu
         add_action('admin_menu', [$this, 'loadAdminMenus']);
@@ -186,5 +189,10 @@ class WpBonnierRedirect
     public function getRedirectRepository(): RedirectRepository
     {
         return $this->redirectRepository;
+    }
+
+    public function getLogRepository(): LogRepository
+    {
+        return $this->logRepository;
     }
 }
