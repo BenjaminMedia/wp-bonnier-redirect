@@ -61,10 +61,17 @@ class CategorySlugChangeObserver extends AbstractObserver
             }
         }
 
-        if ($posts = get_posts(['category' => $category->term_id, 'posts_per_page' => -1])) {
-            foreach ($posts as $post) {
-                do_action('save_post', $post->ID, $post, true);
+        $postTypes = collect(get_post_types(['public' => true]))->reject('attachment');
+        $postTypes->each(function (string $postType) use ($category) {
+            if ($posts = get_posts([
+                'post_type' => $postType,
+                'category' => $category->term_id,
+                'posts_per_page' => -1
+            ])) {
+                foreach ($posts as $post) {
+                    do_action('save_post', $post->ID, $post, true);
+                }
             }
-        }
+        });
     }
 }

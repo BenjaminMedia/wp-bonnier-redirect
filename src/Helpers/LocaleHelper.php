@@ -11,7 +11,7 @@ class LocaleHelper
     public static function getPostLocale(int $postID)
     {
         if (function_exists('pll_get_post_language')) {
-            return pll_get_post_language($postID);
+            return pll_get_post_language($postID) ?: self::getDefaultLanguage();
         }
         return self::getDefaultLanguage();
     }
@@ -23,7 +23,7 @@ class LocaleHelper
     public static function getTermLocale(int $termID)
     {
         if (function_exists('pll_get_term_language')) {
-            return pll_get_term_language($termID);
+            return pll_get_term_language($termID) ?: self::getDefaultLanguage();
         }
         return self::getDefaultLanguage();
     }

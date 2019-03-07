@@ -2,6 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Helpers;
 
+use Illuminate\Support\Str;
+
 class UrlHelper
 {
     /**
@@ -14,7 +16,7 @@ class UrlHelper
     {
         $decoded = self::decode($url);
         $path = parse_url($decoded, PHP_URL_PATH);
-        $beginsWithSlash = str_start($path, '/');
+        $beginsWithSlash = Str::start($path, '/');
         $endsWithoutSlash = rtrim($beginsWithSlash, '/');
         return strtolower($endsWithoutSlash);
     }
@@ -28,7 +30,7 @@ class UrlHelper
      */
     public static function normalizePath(string $url, bool $disallowWildcard = false): string
     {
-        if (starts_with($url, 'www.')) {
+        if (Str::startsWith($url, 'www.')) {
             $url = 'http://' . $url;
         }
         $decoded = self::decode($url);
@@ -47,7 +49,7 @@ class UrlHelper
         }
 
         if (substr($path, 0, 1) === '?') {
-            $path = str_start($path, '/');
+            $path = Str::start($path, '/');
         }
 
         return $path ?: '/';
@@ -60,7 +62,7 @@ class UrlHelper
      */
     public static function normalizeUrl(string $url, bool $disallowWildcard = false): string
     {
-        if (starts_with($url, 'www.')) {
+        if (Str::startsWith($url, 'www.')) {
             $url = 'http://' . $url;
         }
         $parsedUrl = parse_url(self::decode($url));
@@ -68,12 +70,12 @@ class UrlHelper
         $host = strtolower($parsedUrl['host'] ?? '');
         $normalizedUrl = rtrim($scheme . $host . self::normalizePath($url, $disallowWildcard), '/');
         foreach (LocaleHelper::getLocalizedUrls() as $domain) {
-            if (starts_with($normalizedUrl, $domain)) {
-                return str_after($normalizedUrl, $domain) ?: '/';
+            if (Str::startsWith($normalizedUrl, $domain)) {
+                return Str::after($normalizedUrl, $domain) ?: '/';
             }
         }
         if (substr($normalizedUrl, 0, 1) === '?') {
-            $normalizedUrl = str_start($normalizedUrl, '/');
+            $normalizedUrl = Str::start($normalizedUrl, '/');
         }
         return $normalizedUrl ?: '/';
     }

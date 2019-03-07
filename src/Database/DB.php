@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Database;
 
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
+use Illuminate\Support\Str;
 
 class DB
 {
@@ -25,7 +26,7 @@ class DB
      */
     public function setTable(string $tableName)
     {
-        return $this->table = str_start($tableName, $this->wpdb->prefix);
+        return $this->table = Str::start($tableName, $this->wpdb->prefix);
     }
 
     /**
@@ -76,10 +77,12 @@ class DB
     */
     public function insert(array $data)
     {
+        $this->wpdb->show_errors(false);
+        $this->wpdb->suppress_errors(true);
         if (!$this->wpdb->insert($this->table, $data, $this->getDataFormat($data))) {
             $error = $this->wpdb->last_error;
-            if (starts_with($error, 'Duplicate entry ')) {
-                $uniqueKey = str_after($error, ' for key ');
+            if (Str::startsWith($error, 'Duplicate entry ')) {
+                $uniqueKey = Str::after($error, ' for key ');
                 $exception = new DuplicateEntryException(
                     sprintf('Cannot create entry, due to key constraint %s', $uniqueKey)
                 );
@@ -99,6 +102,8 @@ class DB
      */
     public function insertOrUpdate(array $data)
     {
+        $this->wpdb->show_errors(false);
+        $this->wpdb->suppress_errors(true);
         try {
             return $this->insert($data);
         } catch (DuplicateEntryException $exception) {
@@ -127,8 +132,8 @@ class DB
             ['%d']
         ) === false) {
             $error = $this->wpdb->last_error;
-            if (starts_with($error, 'Duplicate entry ')) {
-                $uniqueKey = str_after($error, ' for key ');
+            if (Str::startsWith($error, 'Duplicate entry ')) {
+                $uniqueKey = Str::after($error, ' for key ');
                 $exception = new DuplicateEntryException(
                     sprintf('Cannot update row with ID: %s, due to key constraint %s', $rowId, $uniqueKey)
                 );

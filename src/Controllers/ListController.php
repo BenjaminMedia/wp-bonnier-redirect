@@ -4,6 +4,7 @@ namespace Bonnier\WP\Redirect\Controllers;
 
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -132,8 +133,8 @@ class ListController extends \WP_List_Table
      */
     public function column_default($item, $column_name)
     {
-        if (starts_with($column_name, 'redirect_')) {
-            $column_name = str_after($column_name, 'redirect_');
+        if (Str::startsWith($column_name, 'redirect_')) {
+            $column_name = Str::after($column_name, 'redirect_');
         }
         return $item[$column_name];
     }

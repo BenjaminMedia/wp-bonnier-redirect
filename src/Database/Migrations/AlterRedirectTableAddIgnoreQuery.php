@@ -2,6 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Database\Migrations;
 
+use Illuminate\Support\Str;
+
 class AlterRedirectTableAddIgnoreQuery implements Migration
 {
     public static function migrate()
@@ -31,6 +33,6 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
         global $wpdb;
         $table = $wpdb->prefix . Migrate::REDIRECTS_TABLE;
         $result = $wpdb->get_row("SHOW CREATE TABLE $table", ARRAY_A);
-        return isset($result['Create Table']) && str_contains($result['Create Table'], 'keep_query');
+        return isset($result['Create Table']) && Str::contains($result['Create Table'], 'keep_query');
     }
 }

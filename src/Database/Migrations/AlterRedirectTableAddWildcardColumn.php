@@ -2,6 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Database\Migrations;
 
+use Illuminate\Support\Str;
+
 class AlterRedirectTableAddWildcardColumn implements Migration
 {
     /**
@@ -33,6 +35,6 @@ class AlterRedirectTableAddWildcardColumn implements Migration
         global $wpdb;
         $table = $wpdb->prefix . Migrate::REDIRECTS_TABLE;
         $result = $wpdb->get_row("SHOW CREATE TABLE $table", ARRAY_A);
-        return isset($result['Create Table']) && str_contains($result['Create Table'], 'is_wildcard');
+        return isset($result['Create Table']) && Str::contains($result['Create Table'], 'is_wildcard');
     }
 }

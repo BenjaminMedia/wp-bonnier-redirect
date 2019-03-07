@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Models;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
 
 class Log implements Arrayable
 {
@@ -157,12 +158,12 @@ class Log implements Arrayable
 
     public function fromArray(array $data): Log
     {
-        $this->logID = array_get($data, 'id', 0);
-        $this->slug = array_get($data, 'slug');
-        $this->hash = array_get($data, 'hash');
-        $this->type = array_get($data, 'type');
-        $this->wpID = intval(array_get($data, 'wp_id'));
-        if ($createdAt = array_get($data, 'created_at')) {
+        $this->logID = Arr::get($data, 'id', 0);
+        $this->slug = Arr::get($data, 'slug');
+        $this->hash = Arr::get($data, 'hash');
+        $this->type = Arr::get($data, 'type');
+        $this->wpID = intval(Arr::get($data, 'wp_id'));
+        if ($createdAt = Arr::get($data, 'created_at')) {
             $this->createdAt = new \DateTime($createdAt);
         }
 

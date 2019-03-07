@@ -4,6 +4,8 @@ namespace Bonnier\WP\Redirect\Models;
 
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class Redirect implements Arrayable
@@ -78,7 +80,7 @@ class Redirect implements Arrayable
         $this->from = UrlHelper::normalizePath($from);
         $this->fromHash = hash('md5', $this->from);
         $this->paramlessFromHash = hash('md5', parse_url($this->from, PHP_URL_PATH));
-        $this->wildcard = boolval(ends_with($this->from, '*'));
+        $this->wildcard = boolval(Str::endsWith($this->from, '*'));
         return $this;
     }
 
@@ -280,23 +282,23 @@ class Redirect implements Arrayable
      */
     public function fromArray(array $data): Redirect
     {
-        $this->redirectID = intval(array_get($data, 'id', 0));
-        $this->setFrom(array_get($data, 'from'));
-        if ($fromHash = array_get($data, 'from_hash')) {
+        $this->redirectID = intval(Arr::get($data, 'id', 0));
+        $this->setFrom(Arr::get($data, 'from'));
+        if ($fromHash = Arr::get($data, 'from_hash')) {
             $this->fromHash = $fromHash;
         }
-        $this->setTo(array_get($data, 'to'));
-        if ($toHash = array_get($data, 'to_hash')) {
+        $this->setTo(Arr::get($data, 'to'));
+        if ($toHash = Arr::get($data, 'to_hash')) {
             $this->toHash = $toHash;
         }
-        $this->setLocale(array_get($data, 'locale'));
-        $this->setType(array_get($data, 'type', ''));
-        $this->setWpID(intval(array_get($data, 'wp_id', 0)));
-        $this->setCode(intval(array_get($data, 'code')));
-        if ($paramlessFromHash = array_get($data, 'paramless_from_hash')) {
+        $this->setLocale(Arr::get($data, 'locale'));
+        $this->setType(Arr::get($data, 'type', ''));
+        $this->setWpID(intval(Arr::get($data, 'wp_id', 0)));
+        $this->setCode(intval(Arr::get($data, 'code')));
+        if ($paramlessFromHash = Arr::get($data, 'paramless_from_hash')) {
             $this->paramlessFromHash = $paramlessFromHash;
         }
-        $this->setKeepQuery(boolval(array_get($data, 'keep_query')));
+        $this->setKeepQuery(boolval(Arr::get($data, 'keep_query')));
 
         return $this;
     }
