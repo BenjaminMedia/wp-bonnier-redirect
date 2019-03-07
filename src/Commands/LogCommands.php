@@ -21,6 +21,7 @@ class LogCommands extends \WP_CLI_Command
     private $categorySubject;
     /** @var TagSubject */
     private $tagSubject;
+
     /**
      * Seeds the log table
      *

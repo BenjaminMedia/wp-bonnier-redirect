@@ -5,7 +5,8 @@ namespace Bonnier\WP\Redirect\Commands;
 class Commands
 {
     private static $commands = [
-        'logs' => LogCommands::class
+        'logs' => LogCommands::class,
+        'redirects' => RedirectCommands::class,
     ];
 
     public static function register()
