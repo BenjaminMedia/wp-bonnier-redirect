@@ -3,6 +3,9 @@ version: 2
 jobs:
   build:
     branches:
+      ignore:
+        - legacy
+        - IVD
       only:
         - Version-4
     docker:
