@@ -146,6 +146,13 @@ class Query
         return $this;
     }
 
+    public function groupBy(string $column): Query
+    {
+        $this->query .= " GROUP BY `$column`";
+
+        return $this;
+    }
+
     /**
      * @return string
      * @throws \Exception

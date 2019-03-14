@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Database\Migrations;
 
 use Illuminate\Support\Str;
+use League\Csv\Writer;
 
 class AlterRedirectTableAddIgnoreQuery implements Migration
 {
@@ -14,6 +15,8 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
 
         global $wpdb;
         $table = $wpdb->prefix . Migrate::REDIRECTS_TABLE;
+
+        self::deduplicate($wpdb, $table);
 
         $sql = "
         ALTER TABLE `$table`
@@ -34,5 +37,26 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
         $table = $wpdb->prefix . Migrate::REDIRECTS_TABLE;
         $result = $wpdb->get_row("SHOW CREATE TABLE $table", ARRAY_A);
         return isset($result['Create Table']) && Str::contains($result['Create Table'], 'keep_query');
+    }
+
+    private static function deduplicate(\wpdb $wpdb, string $table)
+    {
+        $csv = Writer::createFromPath(sprintf('%s_deleted_duplicates.csv', strtotime('now')), 'w+');
+        $csv->insertOne(['id', 'from', 'to', 'locale']);
+        $wpdb->update($table, ['locale' => 'nb'], ['locale' => 'no']);
+        $wpdb->delete($table, ['locale' => '']);
+        $sql = "SELECT `locale` FROM `$table` GROUP BY `locale`";
+        $locales = $wpdb->get_results($sql);
+        foreach ($locales as $locale) {
+            $results = $wpdb->get_results("SELECT `from_hash`, count(id) AS cnt FROM `$table` WHERE `locale` = '$locale->locale' GROUP BY `from` HAVING cnt > 1");
+            foreach ($results as $result) {
+                $redirects = $wpdb->get_results("SELECT * FROM `$table` WHERE `from_hash` = '$result->from_hash' AND `locale` = '$locale->locale' ORDER BY id DESC");
+                array_shift($redirects); // Keep the newest redirect
+                foreach ($redirects as $redirect) {
+                    $csv->insertOne([$redirect->id, $redirect->from, $redirect->to, $redirect->locale]);
+                    $wpdb->delete($table, ['id' => $redirect->id]);
+                }
+            }
+        }
     }
 }

@@ -122,6 +122,41 @@ class CreateTest extends ControllerTestCase
         );
     }
 
+    public function testCreatingReverseRedirectOfExistingRedirectDeletesOldRedirect()
+    {
+        $oldRedirect = $this->createRedirect('/slug/alfa', '/slug/bravo');
+        $this->assertRedirectCreated($oldRedirect);
+
+        $request = $this->createPostRequest([
+            'redirect_from' => '/slug/bravo',
+            'redirect_to' => '/slug/alfa',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301
+        ]);
+
+        $crudController = new CrudController($this->redirectRepository, $request);
+        $crudController->handlePost();
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+
+        try {
+            $redirects = $this->redirectRepository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
+            return;
+        }
+        
+        $this->assertCount(1, $redirects);
+
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/slug/bravo',
+            '/slug/alfa',
+            'manual'
+        );
+    }
+
     public function testCanCreateRedirectWithToWhichAlreadyExists()
     {
         $existingRedirect = $this->createRedirect('/from/something', '/to/destination');

@@ -252,6 +252,7 @@ class RedirectRepository extends BaseRepository
             }
         }
 
+        $this->removeReverseRedirects($redirect);
         $this->removeChainsByRedirect($redirect);
 
         return $redirect;
@@ -289,6 +290,28 @@ class RedirectRepository extends BaseRepository
         return $this->database->deleteMultiple($redirectIDs);
     }
 
+    public function removeReverseRedirects(Redirect $redirect)
+    {
+        $query = $this->database->query()
+            ->select('*')
+            ->where(['from_hash', $redirect->getToHash()])
+            ->andWhere(['to_hash', $redirect->getFromHash()])
+            ->andWhere(['locale', $redirect->getLocale()]);
+        try {
+            $dbRedirects = collect($this->database->getResults($query));
+        } catch (\Exception $exception) {
+            return;
+        }
+        if ($dbRedirects->isNotEmpty()) {
+            try {
+                $this->deleteMultipleByIDs($dbRedirects->map(function (array $redirect) {
+                    return $redirect['id'];
+                })->toArray());
+            } catch (\Exception $exception) {
+            }
+        }
+    }
+
     /**
      * Finds all redirects that with to_hash that matches the specified redirects from hash.
      * I.e the redirect in the database that redirects from '/a/b' to /c/d'
@@ -300,14 +323,6 @@ class RedirectRepository extends BaseRepository
      */
     public function removeChainsByRedirect(Redirect $redirect)
     {
-        if ($dbRedirects = $this->findAllBy('from_hash', $redirect->getToHash())) {
-            $dbRedirects->each(function (Redirect $dbRedirect) use ($redirect) {
-                if ($dbRedirect->getLocale() === $redirect->getLocale()) {
-                    $redirect->setTo($dbRedirect->getTo());
-                    $this->updateRedirect($redirect);
-                }
-            });
-        }
         if ($redirects = $this->findAllBy('to_hash', $redirect->getFromHash())) {
             $redirects->each(function (Redirect $dbRedirect) use ($redirect) {
                 if ($dbRedirect->getID() === $redirect->getID() ||
@@ -317,6 +332,14 @@ class RedirectRepository extends BaseRepository
                 }
                 $dbRedirect->setTo($redirect->getTo());
                 $this->updateRedirect($dbRedirect);
+            });
+        }
+        if ($dbRedirects = $this->findAllBy('from_hash', $redirect->getToHash())) {
+            $dbRedirects->each(function (Redirect $dbRedirect) use ($redirect) {
+                if ($dbRedirect->getLocale() === $redirect->getLocale()) {
+                    $redirect->setTo($dbRedirect->getTo());
+                    $this->updateRedirect($redirect);
+                }
             });
         }
     }
@@ -339,9 +362,13 @@ class RedirectRepository extends BaseRepository
      */
     private function updateRedirect(Redirect $redirect)
     {
-        $data = $redirect->toArray();
-        unset($data['id']);
-        $this->database->update($redirect->getID(), $data);
+        if ($redirect->getFrom() === $redirect->getTo()) {
+            $this->delete($redirect);
+        } else {
+            $data = $redirect->toArray();
+            unset($data['id']);
+            $this->database->update($redirect->getID(), $data);
+        }
     }
 
     /**
