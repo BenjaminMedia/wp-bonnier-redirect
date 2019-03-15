@@ -29,7 +29,8 @@ class LogTest extends TestCase
         $log->setSlug('/path/to/post')
             ->setType('post')
             ->setWpID(1);
-        $log = $this->logRepository->save($log);
+
+        $log = $this->save($log);
 
         $savedLog = $this->logRepository->findById($log->getID());
 
@@ -44,9 +45,29 @@ class LogTest extends TestCase
             $log->setSlug('/path/to/post')
                 ->setType('post')
                 ->setWpID(1);
-            $this->logRepository->save($log);
+            $this->save($log);
         }
 
-        $this->assertCount(10, $this->logRepository->findAll());
+        $this->assertCount(10, $this->findAll());
+    }
+
+    private function save(Log &$log)
+    {
+        try {
+            return $this->logRepository->save($log);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed saving log (%s)', $exception->getMessage()));
+            return null;
+        }
+    }
+
+    private function findAll()
+    {
+        try {
+            return $this->logRepository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed getting logs (%s)', $exception->getMessage()));
+            return null;
+        }
     }
 }

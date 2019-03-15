@@ -91,13 +91,7 @@ class RedirectTest extends TestCase
             ->setTo('/my/new/slug')
             ->setLocale('da')
             ->setCode(301);
-        try {
-            $redirect = $this->redirectRepository->save($redirect);
-        } catch (DuplicateEntryException $e) {
-            $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
-        }
+        $redirect = $this->save($redirect);
         $this->assertNotEquals(0, $redirect->getID());
 
         $savedRedirect = $this->redirectRepository->getRedirectById($redirect->getID());
@@ -114,11 +108,7 @@ class RedirectTest extends TestCase
             ->setLocale('da')
             ->setCode(301);
 
-        try {
-            $this->redirectRepository->save($firstRedirect);
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
-        }
+        $this->save($firstRedirect);
 
         $secondRedirect = new Redirect();
         $secondRedirect->setFrom('/my/old/slug')
@@ -149,12 +139,7 @@ class RedirectTest extends TestCase
                 ->setTo('/same/destination/slug')
                 ->setLocale('da')
                 ->setCode(301);
-            try {
-                $savedRedirect = $this->redirectRepository->save($redirect);
-            } catch (\Exception $exception) {
-                $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
-                return;
-            }
+            $savedRedirect = $this->save($redirect);
             $this->assertInstanceOf(Redirect::class, $savedRedirect);
             $this->assertGreaterThan(0, $savedRedirect->getID());
         }
@@ -211,5 +196,15 @@ class RedirectTest extends TestCase
                 'https://example.com/path/to/slug?a=b&c=d'
             ]
         ];
+    }
+
+    private function save(Redirect &$redirect)
+    {
+        try {
+            return $this->redirectRepository->save($redirect);
+        } catch (\Exception $e) {
+            $this->fail(sprintf('Failed saving the redirect (%s)', $e->getMessage()));
+            return null;
+        }
     }
 }

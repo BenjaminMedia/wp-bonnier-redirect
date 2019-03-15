@@ -47,12 +47,7 @@ class SlugChangeTest extends ObserverTestCase
             $this->assertSame('/dinosaur-fossils/' . $post->post_name, $this->getPostSlug($post));
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         // One redirect per post (30) and one redirect for the category - 31 in total.
         $this->assertCount(31, $redirects);
 
@@ -120,12 +115,7 @@ class SlugChangeTest extends ObserverTestCase
             $expectedTos[] = '/dinosaur-fossils/carnivorous/post-' . $index;
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         // One redirect per post (30) and one redirect for the top category and sub category - 32 in total.
         $this->assertCount(32, $redirects);
 
@@ -195,12 +185,8 @@ class SlugChangeTest extends ObserverTestCase
         // Now we should see 6 redirects for the parent category page and the 4 subcategories and the subsubcategory.
         // Every subcategory has 5 articles, which should also be redirected - 20 additional redirects
         // That should give a total of 31 redirects.
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
+
         $this->assertCount(31, $redirects);
         $this->assertCount(31, $expectedFroms);
 

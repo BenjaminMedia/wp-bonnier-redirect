@@ -22,12 +22,7 @@ class ListControllerTest extends ControllerTestCase
             '/new/slug'
         );
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
@@ -47,13 +42,14 @@ class ListControllerTest extends ControllerTestCase
         ]);
 
         $listController = new ListController($this->redirectRepository, $request);
-        $listController->prepare_items();
-
         try {
-            $this->assertNull($this->redirectRepository->findAll());
+            $listController->prepare_items();
         } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            $this->fail(sprintf('Failed preparing items for ListController (%s)', $exception->getMessage()));
+            return;
         }
+
+        $this->assertNull($this->findAllRedirects());
     }
 
     public function testCanBulkDeleteRedirects()
@@ -73,12 +69,7 @@ class ListControllerTest extends ControllerTestCase
             ),
         ]);
 
-        try {
-            $createdRedirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $createdRedirects = $this->findAllRedirects();
         $this->assertCount(3, $createdRedirects);
         $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
             /** @var Redirect $expectedRedirect */
@@ -103,12 +94,13 @@ class ListControllerTest extends ControllerTestCase
         ]);
 
         $listController = new ListController($this->redirectRepository, $request);
-        $listController->prepare_items();
-
         try {
-            $this->assertNull($this->redirectRepository->findAll());
+            $listController->prepare_items();
         } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            $this->fail(sprintf('Failed preparing items for ListController (%s)', $exception->getMessage()));
+            return;
         }
+
+        $this->assertNull($this->findAllRedirects());
     }
 }

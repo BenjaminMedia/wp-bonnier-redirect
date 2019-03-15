@@ -17,12 +17,7 @@ class StatusChangeTest extends ObserverTestCase
 
         wp_delete_category($category->term_id);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
@@ -65,12 +60,7 @@ class StatusChangeTest extends ObserverTestCase
             $this->assertSame('/dinosaur/' . $post->post_name, $this->getPostSlug($post));
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
 
         $this->assertCount(5, $redirects);
 
@@ -121,12 +111,7 @@ class StatusChangeTest extends ObserverTestCase
             $this->assertSame('/uncategorized/' . $post->post_name, $this->getPostSlug($post));
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(5, $redirects);
 
         $categoryRedirect = $redirects->shift();

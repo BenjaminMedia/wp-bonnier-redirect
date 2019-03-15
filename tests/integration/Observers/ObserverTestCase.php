@@ -46,4 +46,24 @@ class ObserverTestCase extends TestCase
         $this->assertSame($post->ID, $log->getWpID());
         $this->assertSame($post->post_type, $log->getType());
     }
+
+    protected function findAllRedirects()
+    {
+        try {
+            return $this->redirectRepository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
+            return null;
+        }
+    }
+
+    protected function findAllLogs()
+    {
+        try {
+            return $this->logRepository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding logs (%s)', $exception->getMessage()));
+            return null;
+        }
+    }
 }

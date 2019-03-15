@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Database\Migrations;
 
 use Illuminate\Support\Str;
+use League\Csv\CannotInsertRecord;
 use League\Csv\Writer;
 
 class AlterRedirectTableAddIgnoreQuery implements Migration
@@ -41,20 +42,41 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
 
     private static function deduplicate(\wpdb $wpdb, string $table)
     {
+        if (defined('WP_ENV') && WP_ENV === 'testing') {
+            return;
+        }
         $csv = Writer::createFromPath(sprintf('%s_deleted_duplicates.csv', strtotime('now')), 'w+');
-        $csv->insertOne(['id', 'from', 'to', 'locale']);
+        try {
+            $csv->insertOne(['id', 'from', 'to', 'locale']);
+        } catch (CannotInsertRecord $exception) {
+            return;
+        }
         $wpdb->update($table, ['locale' => 'nb'], ['locale' => 'no']);
         $wpdb->delete($table, ['locale' => '']);
         $sql = "SELECT `locale` FROM `$table` GROUP BY `locale`";
         $locales = $wpdb->get_results($sql);
         foreach ($locales as $locale) {
-            $results = $wpdb->get_results("SELECT `from_hash`, count(id) AS cnt FROM `$table` WHERE `locale` = '$locale->locale' GROUP BY `from` HAVING cnt > 1");
+            $results = $wpdb->get_results("
+              SELECT `from_hash`, count(id) AS cnt
+              FROM `$table`
+              WHERE `locale` = '$locale->locale'
+              GROUP BY `from` HAVING cnt > 1
+            ");
             foreach ($results as $result) {
-                $redirects = $wpdb->get_results("SELECT * FROM `$table` WHERE `from_hash` = '$result->from_hash' AND `locale` = '$locale->locale' ORDER BY id DESC");
+                $redirects = $wpdb->get_results("
+                  SELECT * FROM `$table`
+                  WHERE `from_hash` = '$result->from_hash'
+                  AND `locale` = '$locale->locale'
+                  ORDER BY id DESC
+                ");
                 array_shift($redirects); // Keep the newest redirect
                 foreach ($redirects as $redirect) {
-                    $csv->insertOne([$redirect->id, $redirect->from, $redirect->to, $redirect->locale]);
                     $wpdb->delete($table, ['id' => $redirect->id]);
+                    try {
+                        $csv->insertOne([$redirect->id, $redirect->from, $redirect->to, $redirect->locale]);
+                    } catch (CannotInsertRecord $exception) {
+                        continue;
+                    }
                 }
             }
         }

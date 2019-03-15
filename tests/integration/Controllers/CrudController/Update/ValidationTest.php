@@ -31,12 +31,7 @@ class ValidationTest extends ControllerTestCase
             'A redirect with the same \'from\' and \'locale\' already exists!'
         );
 
-        try {
-            $redirectsAfter = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirectsAfter = $this->findAllRedirects();
         $this->assertCount(2, $redirectsAfter);
         $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
         $this->assertRedirect(
@@ -78,12 +73,7 @@ class ValidationTest extends ControllerTestCase
 
         $this->assertNoticeIs($crudController->getNotices(), 'error', 'From and to urls seems identical!');
 
-        try {
-            $redirectsAfter = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirectsAfter = $this->findAllRedirects();
         $this->assertCount(1, $redirectsAfter);
         $this->assertSameRedirects($redirect, $redirectsAfter->first());
     }

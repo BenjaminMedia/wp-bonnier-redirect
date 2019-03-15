@@ -29,12 +29,7 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'trash',
         ]);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
@@ -68,12 +63,7 @@ class StatusChangeTest extends ObserverTestCase
         $this->updatePost($post->ID, [
             'post_status' => 'draft',
         ]);
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
 
         $this->assertRedirect(
@@ -107,12 +97,7 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'draft'
         ]);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -129,12 +114,7 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex-is-awesome', $this->getPostSlug($post));
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -167,12 +147,7 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'draft'
         ]);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -188,11 +163,7 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 
     public function testCanDeletePostAndCreateNewPostWithSameSlug()
@@ -217,12 +188,7 @@ class StatusChangeTest extends ObserverTestCase
             'post_status' => 'trash'
         ]);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -240,10 +206,6 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($newPost));
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 }

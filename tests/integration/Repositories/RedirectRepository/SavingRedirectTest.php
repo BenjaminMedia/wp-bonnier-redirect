@@ -25,19 +25,10 @@ class SavingRedirectTest extends RedirectRepositoryTestCase
             ->setCode(301)
             ->setLocale('da');
 
-        try {
-            $this->repository->save($redirect);
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed saving the redirect (%s)', $exception->getMessage()));
-            return;
-        }
-        $this->assertGreaterThan(0,$redirect->getID());
-        try {
-            $redirects = $this->repository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $this->saveRedirect($redirect);
+
+        $this->assertGreaterThan(0, $redirect->getID());
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertSameRedirects($redirect, $redirects->first());
     }
@@ -56,14 +47,10 @@ class SavingRedirectTest extends RedirectRepositoryTestCase
             $this->repository->save($redirect);
         } catch (IdenticalFromToException $exception) {
             $this->assertSame('A redirect with the same from and to, cannot be created!', $exception->getMessage());
-            try {
-                $redirects = $this->repository->findAll();
-            } catch (\Exception $exception) {
-                $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-                return;
-            }
-            $this->assertEmpty($redirects);
+            $this->assertEmpty($this->findAllRedirects());
             return;
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Saving redirect threw unexpected exception (%s)', $exception->getMessage()));
         }
         $this->fail('Failed throwing IdenticalFromToException!');
     }
@@ -71,12 +58,7 @@ class SavingRedirectTest extends RedirectRepositoryTestCase
     public function testRemovingChainsDoesNotCreateLoops()
     {
         $oldRedirect = $this->createRedirect('/from/a', '/to/b');
-        try {
-            $createdRedirects = $this->repository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $createdRedirects = $this->findAllRedirects();
         $this->assertCount(1, $createdRedirects);
         $this->assertSameRedirects($oldRedirect, $createdRedirects->first());
 
@@ -106,12 +88,7 @@ class SavingRedirectTest extends RedirectRepositoryTestCase
             return;
         }
 
-        try {
-            $redirects = $this->repository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
 
         $this->assertCount(1, $redirects);
         $this->assertSameRedirects($newRedirect, $redirects->first());

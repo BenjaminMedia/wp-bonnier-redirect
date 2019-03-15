@@ -27,12 +27,7 @@ class NormalizationTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             0,
@@ -63,12 +58,7 @@ class NormalizationTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             0,

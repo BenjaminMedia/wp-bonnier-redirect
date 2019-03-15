@@ -13,7 +13,7 @@ class SlugChangesTest extends ObserverTestCase
 
         $initialSlug = '/uncategorized/' . $post->post_name;
 
-        $createdLogs = $this->logRepository->findAll();
+        $createdLogs = $this->findAllLogs();
         $this->assertCount(1, $createdLogs);
         $this->assertLog($post, $createdLogs->first(), $initialSlug);
 
@@ -21,16 +21,11 @@ class SlugChangesTest extends ObserverTestCase
             'post_name' => 'new-post-slug'
         ]);
 
-        $logs = $this->logRepository->findAll();
+        $logs = $this->findAllLogs();
         $this->assertCount(2, $logs);
         $this->assertLog($post, $logs->last(), '/uncategorized/new-post-slug');
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -62,12 +57,7 @@ class SlugChangesTest extends ObserverTestCase
         }, array_merge([$initialPostName], $postNames));
 
         foreach ($postNames as $index => $postName) {
-            try {
-                $redirectsBefore = $this->redirectRepository->findAll();
-            } catch (\Exception $exception) {
-                $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-                return;
-            }
+            $redirectsBefore = $this->findAllRedirects();
             if ($index === 0) {
                 $this->assertNull($redirectsBefore);
             } else {
@@ -79,12 +69,7 @@ class SlugChangesTest extends ObserverTestCase
             ]);
             $newSlug = '/uncategorized/' . $postName;
 
-            try {
-                $redirectsAfter = $this->redirectRepository->findAll();
-            } catch (\Exception $exception) {
-                $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-                return;
-            }
+            $redirectsAfter = $this->findAllRedirects();
             $this->assertCount($index + 1, $redirectsAfter);
             $redirectsAfter->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
                 $this->assertRedirect(

@@ -26,12 +26,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $updatedRedirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $updatedRedirects = $this->findAllRedirects();
         $this->assertCount(1, $updatedRedirects);
         $this->assertRedirect(
             0,
@@ -60,12 +55,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $updatedRedirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $updatedRedirects = $this->findAllRedirects();
         $this->assertCount(1, $updatedRedirects);
         $this->assertRedirect(
             0,
@@ -101,12 +91,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNotices($expectedNotices, $crudController->getNotices());
 
-        try {
-            $redirectsAfter = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirectsAfter = $this->findAllRedirects();
         $this->assertCount(2, $redirectsAfter);
         $this->assertSameRedirects($existingRedirect, $redirectsAfter->first());
         $updatingRedirect->setTo('/final/destination');
@@ -133,12 +118,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
 
         $this->assertCount(1, $redirects);
 
@@ -171,12 +151,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(2, $redirects);
         $this->assertSameRedirects($existingRedirect, $redirects->first());
         $this->assertRedirect(
@@ -213,12 +188,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $newRedirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $newRedirects = $this->findAllRedirects();
         $this->assertCount(2, $newRedirects);
 
         $this->assertRedirect(
@@ -254,12 +224,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             0,
@@ -291,12 +256,7 @@ class UpdateTest extends ControllerTestCase
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             0,

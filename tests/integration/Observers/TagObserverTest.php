@@ -34,7 +34,7 @@ class TagObserverTest extends ObserverTestCase
     {
         $tag = $this->factory()->tag->create_and_get();
 
-        $logs = $this->logRepository->findAll();
+        $logs = $this->findAllLogs();
         $this->assertCount(1, $logs);
         $this->assertSame('post_tag', $logs->first()->getType());
         $this->assertSame($tag->term_id, $logs->first()->getWpID());
@@ -43,7 +43,7 @@ class TagObserverTest extends ObserverTestCase
             'slug' => 'updated-tag',
         ]);
 
-        $logs = $this->logRepository->findAll();
+        $logs = $this->findAllLogs();
         $this->assertCount(2, $logs);
         /** @var Log $log */
         $log = $logs->last();

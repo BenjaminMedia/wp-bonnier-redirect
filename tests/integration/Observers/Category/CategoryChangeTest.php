@@ -45,12 +45,7 @@ class CategoryChangeTest extends ObserverTestCase
             $this->assertSame('/animals/carnivorous/' . $post->post_name, $this->getPostSlug($post));
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(5, $redirects);
 
         $categoryRedirect = $redirects->shift();
@@ -254,12 +249,7 @@ class CategoryChangeTest extends ObserverTestCase
             );
         }
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(12, $redirects);
 
         foreach ($expectedFroms as $index => $expectedFrom) {
