@@ -12,7 +12,7 @@ class RedirectRepositoryTestCase extends TestCase
     /** @var RedirectRepository */
     protected $repository;
 
-    public function setUp()
+    public function setUp(bool $bootstrapRedirects = true)
     {
         parent::setUp();
         try {
@@ -20,7 +20,10 @@ class RedirectRepositoryTestCase extends TestCase
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed instantiating RedirectRepository (%s)', $exception->getMessage()));
         }
-        $this->bootstrapRedirects();
+
+        if ($bootstrapRedirects) {
+            $this->bootstrapRedirects();
+        }
     }
 
     protected function bootstrapRedirects()
@@ -160,12 +163,7 @@ class RedirectRepositoryTestCase extends TestCase
             $this->createRedirect($url['from'], $url['to']);
         });
 
-        try {
-            $createdRedirects = $this->repository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding bootstrapped redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $createdRedirects = $this->findAllRedirects();
         $this->assertCount(count($redirects), $createdRedirects);
         $createdRedirects->each(function (Redirect $redirect, int $index) use ($redirects) {
             $this->assertSame($redirects[$index]['from'], $redirect->getFrom());
@@ -189,11 +187,37 @@ class RedirectRepositoryTestCase extends TestCase
             ->setCode($code)
             ->setLocale($locale);
 
+
+        return $this->saveRedirect($redirect);
+    }
+
+    protected function saveRedirect(Redirect &$redirect)
+    {
         try {
             return $this->repository->save($redirect);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed creating redirect (%s)', $exception->getMessage()));
+            return null;
         }
-        return null;
+    }
+
+    protected function findAllRedirects()
+    {
+        try {
+            return $this->repository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
+            return null;
+        }
+    }
+
+    protected function findRedirectByPath(string $path, string $locale = 'da')
+    {
+        try {
+            return $this->repository->findRedirectByPath($path, $locale);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
+            return null;
+        }
     }
 }

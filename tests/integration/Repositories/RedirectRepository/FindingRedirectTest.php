@@ -11,12 +11,7 @@ class FindingRedirectTest extends RedirectRepositoryTestCase
     {
         $redirect = $this->createRedirect('/path/to/old/article', '/path/to/new/article');
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath('/path/to/old/article', 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath('/path/to/old/article');
         $this->assertInstanceOf(Redirect::class, $foundRedirect);
         $this->assertSameRedirects($redirect, $foundRedirect);
     }
@@ -31,12 +26,7 @@ class FindingRedirectTest extends RedirectRepositoryTestCase
     {
         $redirect = $this->createRedirect($from, '/destination');
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath($path);
         $this->assertInstanceOf(
             Redirect::class,
             $foundRedirect,

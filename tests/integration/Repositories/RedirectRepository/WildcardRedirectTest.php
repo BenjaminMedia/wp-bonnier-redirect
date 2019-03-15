@@ -19,12 +19,8 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
 
         $this->assertTrue($redirect->isWildcard(), 'The created redirect wasn\'t a wildcard redirect!');
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath($path);
+
         $this->assertInstanceOf(
             Redirect::class,
             $foundRedirect,
@@ -39,21 +35,12 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
         $wildcard = $this->createRedirect('/from/wildcard/*', '/destination');
         $notWildcard = $this->createRedirect('/from/wildcard/exact', '/destination');
 
-        try {
-            $createdRedirects = $this->repository->findAll()->take(-2);
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed creating redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $createdRedirects = $this->findAllRedirects()->take(-2);
+
         $this->assertSameRedirects($wildcard, $createdRedirects->first());
         $this->assertSameRedirects($notWildcard, $createdRedirects->last());
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/', 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath('from/wildcard/exact/');
         $this->assertInstanceOf(Redirect::class, $foundRedirect);
         $this->assertSameRedirects($notWildcard, $foundRedirect);
     }
@@ -63,21 +50,11 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
         $wildcard = $this->createRedirect('/from/wildcard/*', '/destination');
         $notWildcard = $this->createRedirect('/from/wildcard/exact', '/destination');
 
-        try {
-            $createdRedirects = $this->repository->findAll()->take(-2);
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed creating redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $createdRedirects = $this->findAllRedirects()->take(-2);
         $this->assertSameRedirects($wildcard, $createdRedirects->first());
         $this->assertSameRedirects($notWildcard, $createdRedirects->last());
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath('from/wildcard/exact/path/', 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath('from/wildcard/exact/path/');
         $this->assertInstanceOf(Redirect::class, $foundRedirect);
         $this->assertSameRedirects($wildcard, $foundRedirect);
     }
@@ -86,13 +63,7 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
     {
         $redirect = $this->createRedirect('/from/*', '/destination', true);
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath('/from/this/slug?c=d&a=b', 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
-
+        $foundRedirect = $this->findRedirectByPath('/from/this/slug?c=d&a=b');
         $this->assertInstanceOf(Redirect::class, $foundRedirect);
         $this->assertSame($redirect->getID(), $foundRedirect->getID());
         $this->assertSame('/from/*', $foundRedirect->getFrom());
@@ -103,13 +74,7 @@ class WildcardRedirectTest extends RedirectRepositoryTestCase
     {
         $redirect = $this->createRedirect('/from/*', '/destination');
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath('/from/this/slug?c=d&a=b', 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
-
+        $foundRedirect = $this->findRedirectByPath('/from/this/slug?c=d&a=b');
         $this->assertInstanceOf(Redirect::class, $foundRedirect);
         $this->assertSameRedirects($redirect, $foundRedirect);
     }

@@ -26,11 +26,7 @@ class ValidationTest extends ControllerTestCase
         $this->assertArrayHasKey('redirect_from', $errors);
         $this->assertSame('The \'from\'-value cannot be empty!', $errors['redirect_from']);
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 
     public function testCannotCreateRedirectWithEmptyTo()
@@ -52,11 +48,7 @@ class ValidationTest extends ControllerTestCase
         $this->assertArrayHasKey('redirect_to', $errors);
         $this->assertSame('The \'to\'-value cannot be empty!', $errors['redirect_to']);
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 
     /**
@@ -84,11 +76,7 @@ class ValidationTest extends ControllerTestCase
         $this->assertArrayHasKey('redirect_from', $errors);
         $this->assertSame($error, $errors['redirect_from']);
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 
     /**
@@ -117,11 +105,7 @@ class ValidationTest extends ControllerTestCase
 
         $this->assertNoticeIs($crudController->getNotices(), 'error', 'From and to urls seems identical!');
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
     }
 
     public function destructiveRedirectsProvider()

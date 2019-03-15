@@ -22,12 +22,7 @@ class SlugChangeTest extends ObserverTestCase
 
         $this->assertSame('/reptiles', $this->getTagSlug($tag));
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $redirect = $redirects->first();
         $this->assertRedirect(

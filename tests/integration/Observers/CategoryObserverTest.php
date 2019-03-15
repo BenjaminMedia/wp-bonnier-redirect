@@ -34,7 +34,7 @@ class CategoryObserverTest extends ObserverTestCase
     {
         $category = $this->factory()->category->create_and_get();
 
-        $logs = $this->logRepository->findAll();
+        $logs = $this->findAllLogs();
         $this->assertCount(1, $logs);
         $this->assertSame('category', $logs->first()->getType());
         $this->assertSame($category->term_id, $logs->first()->getWpID());
@@ -43,7 +43,7 @@ class CategoryObserverTest extends ObserverTestCase
             'slug' => 'updated-category',
         ]);
 
-        $logs = $this->logRepository->findAll();
+        $logs = $this->findAllLogs();
         $this->assertCount(2, $logs);
         /** @var Log $log */
         $log = $logs->last();

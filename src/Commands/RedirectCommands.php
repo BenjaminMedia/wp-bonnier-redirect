@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Commands;
 
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
@@ -33,7 +34,10 @@ class RedirectCommands extends \WP_CLI_Command
         }
         if ($results->isNotEmpty()) {
             /** @var Bar $progress */
-            $progress = make_progress_bar(sprintf('Normalizing %s redirects', $results->count()), $results->count());
+            $progress = make_progress_bar(
+                sprintf('Normalizing %s redirects', number_format($results->count())),
+                $results->count()
+            );
             $results->each(function (array $redirect) use ($database, $progress) {
                 $redirectID = $redirect['id'];
                 unset($redirect['id']);
@@ -49,7 +53,13 @@ class RedirectCommands extends \WP_CLI_Command
                     $redirect['paramless_from_hash'] = hash('md5', parse_url($redirect['from'], PHP_URL_PATH));
                     $redirect['to'] = UrlHelper::normalizeUrl($redirect['to']);
                     $redirect['to_hash'] = hash('md5', $redirect['to']);
-                    $database->update($redirectID, $redirect);
+                    try {
+                        $database->update($redirectID, $redirect);
+                    } catch (DuplicateEntryException $exception) {
+                        $database->delete($redirectID);
+                    } catch (\Exception $exception) {
+                        \WP_CLI::warning(sprintf('Failed updating redirect \'%s\'', $redirectID));
+                    }
                 }
                 $progress->tick();
             });
@@ -73,14 +83,19 @@ class RedirectCommands extends \WP_CLI_Command
             \WP_CLI::error(sprintf('Failed instantiating RedirectRepository (%s)', $exception->getMessage()));
             return;
         }
+        \WP_CLI::line('Retrieving redirects...');
         try {
             $redirects = $repository->findAll();
         } catch (\Exception $exception) {
             \WP_CLI::error(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
             return;
         }
+        $redirectCount = $redirects->count();
         /** @var Bar $progress */
-        $progress = make_progress_bar(sprintf('Unchaining %s redirects', $redirects->count()), $redirects->count());
+        $progress = make_progress_bar(
+            sprintf('Unchaining %s redirects', number_format($redirectCount)),
+            $redirectCount
+        );
         $redirects->each(function (Redirect $redirect) use ($repository, $progress) {
             try {
                 $repository->save($redirect);

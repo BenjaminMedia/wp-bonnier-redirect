@@ -14,23 +14,14 @@ class CategoryChangeTest extends ObserverTestCase
             'post_category' => [$category->term_id],
         ]);
 
-        try {
-            $this->assertNull($this->redirectRepository->findAll());
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-        }
+        $this->assertNull($this->findAllRedirects());
 
         $newCategory = $this->getCategory();
         $this->updatePost($post->ID, [
             'post_category' => [$newCategory->term_id],
         ]);
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
@@ -66,12 +57,7 @@ class CategoryChangeTest extends ObserverTestCase
             ]);
             $newSlug = sprintf('/%s/%s', $category->slug, $post->post_name);
 
-            try {
-                $redirects = $this->redirectRepository->findAll();
-            } catch (\Exception $exception) {
-                $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-                return;
-            }
+            $redirects = $this->findAllRedirects();
             $this->assertCount($index + 1, $redirects);
             $redirects->each(function (Redirect $redirect, int $index) use ($post, $newSlug, $slugs) {
                 $this->assertRedirect(
@@ -112,12 +98,7 @@ class CategoryChangeTest extends ObserverTestCase
 
         $this->assertSame('/fossils/t-rex-is-awesome', $this->getPostSlug($post));
 
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,

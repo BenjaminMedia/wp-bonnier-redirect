@@ -64,23 +64,12 @@ class ControllerTestCase extends TestCase
             ->setLocale($locale)
             ->setCode($code);
 
-        try {
-            return $this->redirectRepository->save($redirect);
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
-        }
-
-        return null;
+        return $this->save($redirect);
     }
 
     protected function assertRedirectCreated(Redirect $redirect, int $count = 1)
     {
-        try {
-            $redirects = $this->redirectRepository->findAll();
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
-            return;
-        }
+        $redirects = $this->findAllRedirects();
         $this->assertCount($count, $redirects);
         $this->assertSameRedirects($redirect, $redirects->last());
     }
@@ -109,6 +98,26 @@ class ControllerTestCase extends TestCase
         foreach ($expected as $index => $notice) {
             $this->assertArrayHasKey($notice['type'], $actual[$index]);
             $this->assertContains($notice['message'], $actual[$index][$notice['type']]);
+        }
+    }
+
+    protected function save(Redirect &$redirect)
+    {
+        try {
+            return $this->redirectRepository->save($redirect);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed saving redirect (%s)', $exception->getMessage()));
+            return null;
+        }
+    }
+
+    protected function findAllRedirects()
+    {
+        try {
+            return $this->redirectRepository->findAll();
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
+            return null;
         }
     }
 }

@@ -18,12 +18,7 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
     {
         $redirect = $this->createRedirect($from, $destination);
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath($path);
         $this->assertInstanceOf(
             Redirect::class,
             $foundRedirect,
@@ -49,12 +44,7 @@ class QueryParamsRedirectTest extends RedirectRepositoryTestCase
     ) {
         $redirect = $this->createRedirect($from, $destination, true);
 
-        try {
-            $foundRedirect = $this->repository->findRedirectByPath($path, 'da');
-        } catch (\Exception $exception) {
-            $this->fail(sprintf('Failed finding redirect (%s)', $exception->getMessage()));
-            return;
-        }
+        $foundRedirect = $this->findRedirectByPath($path);
         $this->assertInstanceOf(
             Redirect::class,
             $foundRedirect,
