@@ -108,7 +108,7 @@ $redirect = $this->getRedirect();
                     </select>
                 </td>
             </tr>
-            <tr>
+            <tr <?php echo $this->getError('redirect_locale') ? "class='error'": null; ?>>
                 <th scope="row">
                     <label for="redirect_locale">Locale</label>
                 </th>
@@ -117,6 +117,9 @@ $redirect = $this->getRedirect();
                         <?php
                         $languages = LocaleHelper::getLanguages();
                         if (count($languages) > 1) {
+                            ?>
+                            <option value="">-- Choose Language --</option>
+                            <?php
                             foreach ($languages as $language) {
                                 $selected = null;
                                 if ($language === $redirect->getLocale()) {
@@ -138,7 +141,13 @@ $redirect = $this->getRedirect();
                         ?>
                     </select>
                     <p class="description">
-                        Specify the language for which the redirect shall work.
+                        <?php
+                        if ($redirectToError = $this->getError('redirect_locale')) {
+                            echo '<strong>' . $redirectToError . '</strong>';
+                        } else {
+                            echo 'Specify the language for which the redirect shall work.';
+                        }
+                        ?>
                     </p>
                 </td>
             </tr>

@@ -78,6 +78,28 @@ class ValidationTest extends ControllerTestCase
         $this->assertSameRedirects($redirect, $redirectsAfter->first());
     }
 
+    public function testCannotCreateRedirectWithoutSpecifyingLocale()
+    {
+        $redirect = $this->createRedirect(
+            '/from/this/slug',
+            '/to/this/slug'
+        );
+
+        $request = $this->createPostRequest([
+            'redirect_id' => $redirect->getId(),
+            'redirect_from' => '/from/this/slug',
+            'redirect_to' => '/to/this/slug',
+            'redirect_locale' => '',
+            'redirect_code' => 301,
+        ]);
+
+        $crudController = new CrudController($this->redirectRepository, $request);
+        $crudController->handlePost();
+
+        $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
+        $this->assertArrayHasKey('redirect_locale', $crudController->getValidationErrors());
+    }
+
     public function sameFromToProvider()
     {
         return [

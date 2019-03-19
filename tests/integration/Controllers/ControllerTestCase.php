@@ -16,6 +16,9 @@ class ControllerTestCase extends TestCase
     public function setUp()
     {
         parent::setUp();
+        // Set the locale of WordPress to be danish
+        global $locale;
+        $locale = 'da_DK';
         try {
             $this->redirectRepository = new RedirectRepository(new DB());
         } catch (\Exception $exception) {

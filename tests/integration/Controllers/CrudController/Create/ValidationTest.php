@@ -108,6 +108,22 @@ class ValidationTest extends ControllerTestCase
         $this->assertNull($this->findAllRedirects());
     }
 
+    public function testCannotCreateRedirectWithoutSpecifyingLocale()
+    {
+        $request = $this->createPostRequest([
+            'redirect_from' => '/from/this/slug',
+            'redirect_to' => '/to/this/slug',
+            'redirect_locale' => '',
+            'redirect_code' => 301,
+        ]);
+
+        $crudController = new CrudController($this->redirectRepository, $request);
+        $crudController->handlePost();
+
+        $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
+        $this->assertArrayHasKey('redirect_locale', $crudController->getValidationErrors());
+    }
+
     public function destructiveRedirectsProvider()
     {
         return [
