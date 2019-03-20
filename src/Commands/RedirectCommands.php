@@ -44,7 +44,7 @@ class RedirectCommands extends \WP_CLI_Command
                 $redirectID = $redirect['id'];
                 unset($redirect['id']);
                 $redirect = $this->normalizeRedirect($redirect);
-                if ($this->invalidRedirect($redirect)) {
+                if ($this->isRedirectInvalid($redirect)) {
                     $database->delete($redirectID);
                 } else {
                     try {
@@ -103,7 +103,7 @@ class RedirectCommands extends \WP_CLI_Command
         $progress->finish();
     }
 
-    private function invalidRedirect(array $redirect)
+    private function isRedirectInvalid(array $redirect)
     {
         return ($redirect['from'] === '' ||
             $redirect['from'] === '/' ||
