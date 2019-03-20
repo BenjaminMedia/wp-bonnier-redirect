@@ -291,7 +291,9 @@ class Redirect implements Arrayable
         if ($toHash = Arr::get($data, 'to_hash')) {
             $this->toHash = $toHash;
         }
-        $this->setLocale(Arr::get($data, 'locale'));
+        if ($locale = Arr::get($data, 'locale')) {
+            $this->setLocale($locale);
+        }
         $this->setType(Arr::get($data, 'type', ''));
         $this->setWpID(intval(Arr::get($data, 'wp_id', 0)));
         $this->setCode(intval(Arr::get($data, 'code')));

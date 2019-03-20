@@ -33,7 +33,6 @@ class CrudController
             }
         } else {
             $this->redirect = new Redirect();
-            $this->redirect->setLocale(LocaleHelper::getLanguage());
         }
     }
 
@@ -148,6 +147,7 @@ class CrudController
         ]);
         if (!$this->validateRequest()) {
             $this->addNotice('Invalid data was submitted - fix fields marked with red.');
+            $this->redirect = $redirect;
             return;
         }
         $this->redirect = $redirect;
@@ -219,6 +219,11 @@ class CrudController
         }
         if (empty($this->request->request->get('redirect_to'))) {
             $this->validationErrors['redirect_to'] = 'The \'to\'-value cannot be empty!';
+            $validRequest = false;
+        }
+
+        if (!in_array($this->request->request->get('redirect_locale'), LocaleHelper::getLanguages())) {
+            $this->validationErrors['redirect_locale'] = 'You have to specify a language for the redirect';
             $validRequest = false;
         }
 

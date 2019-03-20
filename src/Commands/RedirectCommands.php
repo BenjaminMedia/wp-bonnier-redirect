@@ -5,6 +5,8 @@ namespace Bonnier\WP\Redirect\Commands;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
+use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -44,7 +46,7 @@ class RedirectCommands extends \WP_CLI_Command
                 if ($redirect['from'] === '' ||
                     $redirect['from'] === '/' ||
                     $redirect['to'] === '' ||
-                    $redirect['locale'] === ''
+                    !in_array($redirect['locale'], LocaleHelper::getLanguages())
                 ) {
                     $database->delete($redirectID);
                 } else {
@@ -99,6 +101,8 @@ class RedirectCommands extends \WP_CLI_Command
         $redirects->each(function (Redirect $redirect) use ($repository, $progress) {
             try {
                 $repository->save($redirect);
+            } catch (IdenticalFromToException $exception) {
+                $repository->delete($redirect);
             } catch (\Exception $exception) {
                 \WP_CLI::warning(sprintf('Failed updating %s (%s)', $redirect->getID(), $exception->getMessage()));
             }
