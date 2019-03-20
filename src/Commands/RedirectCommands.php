@@ -43,18 +43,10 @@ class RedirectCommands extends \WP_CLI_Command
             $results->each(function (array $redirect) use ($database, $progress) {
                 $redirectID = $redirect['id'];
                 unset($redirect['id']);
-                if ($redirect['from'] === '' ||
-                    $redirect['from'] === '/' ||
-                    $redirect['to'] === '' ||
-                    !in_array($redirect['locale'], LocaleHelper::getLanguages())
-                ) {
+                $redirect = $this->normalizeRedirect($redirect);
+                if ($this->isRedirectInvalid($redirect)) {
                     $database->delete($redirectID);
                 } else {
-                    $redirect['from'] = UrlHelper::normalizePath($redirect['from']);
-                    $redirect['from_hash'] = hash('md5', $redirect['from']);
-                    $redirect['paramless_from_hash'] = hash('md5', parse_url($redirect['from'], PHP_URL_PATH));
-                    $redirect['to'] = UrlHelper::normalizeUrl($redirect['to']);
-                    $redirect['to_hash'] = hash('md5', $redirect['to']);
                     try {
                         $database->update($redirectID, $redirect);
                     } catch (DuplicateEntryException $exception) {
@@ -109,5 +101,24 @@ class RedirectCommands extends \WP_CLI_Command
             $progress->tick();
         });
         $progress->finish();
+    }
+
+    private function isRedirectInvalid(array $redirect)
+    {
+        return ($redirect['from'] === '' ||
+            $redirect['from'] === '/' ||
+            $redirect['to'] === '' ||
+            !in_array($redirect['locale'], LocaleHelper::getLanguages())
+        );
+    }
+
+    private function normalizeRedirect(array $redirect)
+    {
+        $redirect['from'] = UrlHelper::normalizePath($redirect['from']);
+        $redirect['from_hash'] = hash('md5', $redirect['from']);
+        $redirect['paramless_from_hash'] = hash('md5', parse_url($redirect['from'], PHP_URL_PATH));
+        $redirect['to'] = UrlHelper::normalizeUrl($redirect['to']);
+        $redirect['to_hash'] = hash('md5', $redirect['to']);
+        return $redirect;
     }
 }
