@@ -46,6 +46,10 @@ class LogCommands extends \WP_CLI_Command
                 'post_type' => $postType,
                 'posts_per_page' => -1
             ]));
+            if ($posts->isEmpty()) {
+                \WP_CLI::line(sprintf('No posts with post type \'%s\' found...', $postType));
+                return;
+            }
             $this->registerPosts($posts);
         });
 
