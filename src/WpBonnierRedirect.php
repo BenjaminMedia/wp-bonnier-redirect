@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect;
 use Bonnier\WP\Redirect\Commands\Commands;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Controllers\ListController;
+use Bonnier\WP\Redirect\Controllers\ToolController;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Observers\Observers;
@@ -136,6 +137,7 @@ class WpBonnierRedirect
     {
         $listController = new ListController($this->redirectRepository, $this->request);
         $crudController = new CrudController($this->redirectRepository, $this->request);
+        $toolController = new ToolController($this->redirectRepository, $this->request);
 
         add_menu_page(
             'Bonnier Redirects',
@@ -161,10 +163,29 @@ class WpBonnierRedirect
             'add-redirect',
             [$crudController, 'displayAddRedirectPage']
         );
+        $toolPageHook = add_submenu_page(
+            'bonnier-redirects',
+            'Tools',
+            'Tools',
+            'manage_options',
+            'redirect-tools',
+            [$toolController, 'displayToolPage']
+        );
 
         add_action(sprintf('load-%s', $listPageHook), [$listController, 'loadRedirectsTable']);
         add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'handlePost']);
         add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'registerScripts']);
+        add_action(sprintf('load-%s', $toolPageHook), [$toolController, 'handlePost']);
+        add_action(sprintf('load-%s', $toolPageHook), [$toolController, 'registerScripts']);
+    }
+
+    public function assetPath(string $file, bool $create = false)
+    {
+        if (!$create && !file_exists(sprintf('%s/%s', rtrim($this->assetsDir, '/'), ltrim($file, '/')))) {
+            throw new \RuntimeException(sprintf('The asset file \'%s\' does not exist!', $file));
+        }
+
+        return sprintf('%s/%s', rtrim($this->assetsDir, '/'), ltrim($file, '/'));
     }
 
     public function assetURI(string $file)
