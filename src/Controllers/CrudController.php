@@ -10,23 +10,14 @@ use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
 use Symfony\Component\HttpFoundation\Request;
 
-class CrudController
+class CrudController extends BaseController
 {
-    /** @var RedirectRepository */
-    private $redirectRepository;
-    /** @var Request */
-    private $request;
-
     /** @var Redirect */
     private $redirect;
 
-    private $notices = [];
-    private $validationErrors = [];
-
     public function __construct(RedirectRepository $redirectRepository, Request $request)
     {
-        $this->redirectRepository = $redirectRepository;
-        $this->request = $request;
+        parent::__construct($redirectRepository, $request);
         if ($redirectID = $this->request->query->get('redirect_id')) {
             if ($redirect = $this->redirectRepository->getRedirectById($redirectID)) {
                 $this->redirect = $redirect;
@@ -74,36 +65,11 @@ class CrudController
     }
 
     /**
-     * @return array
-     */
-    public function getNotices(): array
-    {
-        return $this->notices;
-    }
-
-    /**
      * @return Redirect
      */
     public function getRedirect(): Redirect
     {
         return $this->redirect;
-    }
-
-    /**
-     * @return array
-     */
-    public function getValidationErrors(): array
-    {
-        return $this->validationErrors;
-    }
-
-    /**
-     * @param string $field
-     * @return string|null
-     */
-    public function getError(string $field): ?string
-    {
-        return $this->validationErrors[$field] ?? null;
     }
 
     private function updateRedirect()
@@ -228,14 +194,5 @@ class CrudController
         }
 
         return $validRequest;
-    }
-
-    /**
-     * @param string $message
-     * @param string $type
-     */
-    private function addNotice(string $message, string $type = 'error')
-    {
-        $this->notices[] = [$type => $message];
     }
 }

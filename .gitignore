@@ -2,3 +2,5 @@ vendor
 wordpress
 wp-content
 .env
+assets/files/*
+!assets/files/import-example.csv
