@@ -82,7 +82,7 @@ class ToolController extends BaseController
                 $filename = sprintf('files/imported-redirects-%s.csv', strtotime('now'));
                 $output = Writer::createFromPath(WpBonnierRedirect::instance()->assetPath($filename, true), 'w+');
                 try {
-                    $output->insertOne(['From', 'To', 'Locale', 'Code', 'Status']);
+                    $output->insertOne(['ID', 'From', 'To', 'Locale', 'Code', 'Status']);
                 } catch (CannotInsertRecord $exception) {
                     $this->addNotice('Could not create output log file!');
                     return;
@@ -116,6 +116,7 @@ class ToolController extends BaseController
                     }
                     try {
                         $output->insertOne([
+                            $redirect->getID(),
                             $source,
                             $destination,
                             $locale,
