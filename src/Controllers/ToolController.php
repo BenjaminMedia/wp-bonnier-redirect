@@ -39,10 +39,17 @@ class ToolController extends BaseController
     public function handlePost()
     {
         if ($this->request->isMethod(Request::METHOD_POST)) {
-            if ($this->request->request->get('export')) {
-                $this->exportRedirects();
-            } elseif ($this->request->request->get('import')) {
-                $this->importRedirects();
+            if (current_user_can('manage_options')) {
+                if ($this->request->request->get('export')) {
+                    $this->exportRedirects();
+                } elseif ($this->request->request->get('import')) {
+                    $this->importRedirects();
+                }
+            } else {
+                wp_die('Unauthorized', 'Error', [
+                    'response' => 403,
+                    'back_link' => admin_url('admin.php'),
+                ]);
             }
         }
     }
