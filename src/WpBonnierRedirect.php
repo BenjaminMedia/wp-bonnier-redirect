@@ -142,7 +142,7 @@ class WpBonnierRedirect
         add_menu_page(
             'Bonnier Redirects',
             'Bonnier Redirects',
-            'manage_options',
+            'manage_categories', // Editor role
             'bonnier-redirects',
             [$listController, 'displayRedirectsTable'],
             'dashicons-external'
@@ -151,7 +151,7 @@ class WpBonnierRedirect
             'bonnier-redirects',
             'All Redirects',
             'All Redirects',
-            'manage_options',
+            'manage_categories', // Editor role
             'bonnier-redirects',
             [$listController, 'displayRedirectsTable']
         );
@@ -159,7 +159,7 @@ class WpBonnierRedirect
             'bonnier-redirects',
             'Add New',
             'Add New',
-            'manage_options',
+            'manage_categories', // Editor role
             'add-redirect',
             [$crudController, 'displayAddRedirectPage']
         );
@@ -167,7 +167,7 @@ class WpBonnierRedirect
             'bonnier-redirects',
             'Tools',
             'Tools',
-            'manage_options',
+            'manage_options', // Admin role
             'redirect-tools',
             [$toolController, 'displayToolPage']
         );
