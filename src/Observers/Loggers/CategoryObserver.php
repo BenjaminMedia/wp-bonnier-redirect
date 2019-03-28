@@ -18,10 +18,9 @@ class CategoryObserver extends AbstractObserver
     {
         if ($subject->getType() === CategorySubject::UPDATE && $category = $subject->getCategory()) {
             $log = new Log();
-            $log->setSlug(UrlHelper::normalizePath(get_category_link($category->term_id)))
+            $log->setSlug(get_category_link($category->term_id))
                 ->setType($category->taxonomy)
-                ->setWpID($category->term_id)
-                ->setCreatedAt(new \DateTime());
+                ->setWpID($category->term_id);
 
             $this->logRepository->save($log);
         }

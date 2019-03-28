@@ -18,10 +18,9 @@ class TagObserver extends AbstractObserver
     {
         $tag = $subject->getTag();
         $log = new Log();
-        $log->setSlug(UrlHelper::normalizePath(get_tag_link($tag)))
+        $log->setSlug(get_tag_link($tag))
             ->setType($tag->taxonomy)
-            ->setWpID($tag->term_id)
-            ->setCreatedAt(new \DateTime());
+            ->setWpID($tag->term_id);
 
         $this->logRepository->save($log);
     }

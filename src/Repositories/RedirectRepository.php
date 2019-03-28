@@ -71,23 +71,13 @@ class RedirectRepository extends BaseRepository
      */
     public function findExactRedirectByPath(string $path, string $locale = null): ?Redirect
     {
-        if (is_null($locale)) {
-            $locale = LocaleHelper::getLanguage();
-        }
-
-        $normalizedPath = UrlHelper::normalizePath($path);
-
         $query = $this->database->query()->select('*')
-            ->where(['from_hash', hash('md5', $normalizedPath)])
-            ->andWhere(['locale', $locale]);
+            ->where(['from_hash', hash('md5', UrlHelper::normalizePath($path))])
+            ->andWhere(['locale', $locale ?: LocaleHelper::getLanguage()]);
         $results = $this->database->getResults($query);
 
-        if ($results) {
-            $redirect = new Redirect();
-            return $redirect->fromArray($results[0]);
-        }
 
-        return null;
+        return $results ? Redirect::createFromArray($results[0]) : null;
     }
 
     /**
@@ -98,14 +88,14 @@ class RedirectRepository extends BaseRepository
      */
     public function findRedirectByIgnoringQueryParams(string $path, string $locale = null): ?Redirect
     {
-        if (is_null($locale)) {
-            $locale = LocaleHelper::getLanguage();
-        }
-
+        // If the given path has query params,
+        // pass it through `findRedirectByPath` again
+        // otherwise return null.
         if (parse_url($path, PHP_URL_QUERY)) {
-            if ($redirect = $this->findRedirectByPath(parse_url($path, PHP_URL_PATH), $locale)) {
-                return $redirect;
-            }
+            return $this->findRedirectByPath(
+                parse_url($path, PHP_URL_PATH),
+                $locale ?: LocaleHelper::getLanguage()
+            );
         }
 
         return null;
@@ -351,8 +341,7 @@ class RedirectRepository extends BaseRepository
     private function mapRedirects(array $redirects): Collection
     {
         return collect($redirects)->map(function (array $data) {
-            $redirect = new Redirect();
-            return $redirect->fromArray($data);
+            return Redirect::createFromArray($data);
         });
     }
 

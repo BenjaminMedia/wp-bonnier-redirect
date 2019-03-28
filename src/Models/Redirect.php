@@ -45,6 +45,11 @@ class Redirect implements Arrayable
         $this->wildcard = false;
     }
 
+    public static function createFromArray(array $data): Redirect
+    {
+        return (new self)->fromArray($data);
+    }
+
     /**
      * @return int
      */

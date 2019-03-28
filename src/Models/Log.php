@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Models;
 
+use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
 
@@ -59,7 +60,7 @@ class Log implements Arrayable
      */
     public function setSlug(?string $slug): Log
     {
-        $this->slug = $slug;
+        $this->slug = UrlHelper::normalizePath($slug);
         return $this;
     }
 

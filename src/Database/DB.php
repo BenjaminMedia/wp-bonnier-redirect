@@ -16,8 +16,6 @@ class DB
     {
         global $wpdb;
         $this->wpdb = $wpdb;
-        $this->wpdb->show_errors(false);
-        $this->wpdb->suppress_errors(true);
     }
 
     /**
@@ -56,7 +54,7 @@ class DB
      */
     public function getResults(Query $query): array
     {
-        return $this->wpdb->get_results($query->getQuery(), ARRAY_A);
+        return $this->wpdb->get_results($query->getSQL(), ARRAY_A);
     }
 
     /**
@@ -66,7 +64,7 @@ class DB
      */
     public function getVar(Query $query)
     {
-        return $this->wpdb->get_var($query->getQuery());
+        return $this->wpdb->get_var($query->getSQL());
     }
 
     /**
@@ -77,8 +75,7 @@ class DB
     */
     public function insert(array $data)
     {
-        $this->wpdb->show_errors(false);
-        $this->wpdb->suppress_errors(true);
+        $this->disableErrorOutput();
         if (!$this->wpdb->insert($this->table, $data, $this->getDataFormat($data))) {
             $error = $this->wpdb->last_error;
             if (Str::startsWith($error, 'Duplicate entry ')) {
@@ -102,8 +99,7 @@ class DB
      */
     public function insertOrUpdate(array $data)
     {
-        $this->wpdb->show_errors(false);
-        $this->wpdb->suppress_errors(true);
+        $this->disableErrorOutput();
         try {
             return $this->insert($data);
         } catch (DuplicateEntryException $exception) {
@@ -124,6 +120,7 @@ class DB
      */
     public function update(int $rowId, array $data)
     {
+        $this->disableErrorOutput();
         if ($this->wpdb->update(
             $this->table,
             $data,
@@ -156,6 +153,7 @@ class DB
      */
     public function delete(int $rowID)
     {
+        $this->disableErrorOutput();
         if ($this->wpdb->delete($this->table, ['id' => $rowID], ['%d']) === false) {
             throw new \Exception(
                 sprintf(
@@ -177,6 +175,7 @@ class DB
      */
     public function deleteMultiple(array $rowIDs)
     {
+        $this->disableErrorOutput();
         $placeholder = implode(',', array_fill(0, count($rowIDs), '%d'));
         $result = $this->wpdb->query(
             $this->wpdb->prepare(
@@ -208,5 +207,11 @@ class DB
             }
         }
         return $format;
+    }
+
+    private function disableErrorOutput()
+    {
+        $this->wpdb->show_errors(false);
+        $this->wpdb->suppress_errors(true);
     }
 }

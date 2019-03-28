@@ -16,7 +16,7 @@ class QueryTest extends Unit
             $this->fail(sprintf('Failed creating query (%s)', $exception->getMessage()));
         }
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -33,7 +33,7 @@ class QueryTest extends Unit
             $this->fail(sprintf('Failed creating query (%s)', $exception->getMessage()));
         }
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -50,7 +50,7 @@ class QueryTest extends Unit
             $this->fail(sprintf('Failed creating query (%s)', $exception->getMessage()));
         }
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -67,7 +67,7 @@ class QueryTest extends Unit
             $this->fail(sprintf('Failed creating query (%s)', $exception->getMessage()));
         }
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -85,7 +85,7 @@ class QueryTest extends Unit
         }
         $query->where(['column_a', 'string']);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -103,7 +103,7 @@ class QueryTest extends Unit
         }
         $query->where(['column_a', '%string%', 'LIKE']);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -124,7 +124,7 @@ class QueryTest extends Unit
         }
         $query->where(['column_a', 42], Query::FORMAT_INT);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -143,7 +143,7 @@ class QueryTest extends Unit
         $query->where(['column_a', 'test a'])
             ->orWhere(['column_b', 'test b']);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -164,7 +164,7 @@ class QueryTest extends Unit
         }
         $query->orderBy('column_a');
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -182,7 +182,7 @@ class QueryTest extends Unit
         }
         $query->orderBy('column_a', Query::ORDER_DESC);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -200,7 +200,7 @@ class QueryTest extends Unit
         }
         $query->orderBy('column_a', 'TEST');
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -218,7 +218,7 @@ class QueryTest extends Unit
         }
         $query->limit(10);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -237,7 +237,7 @@ class QueryTest extends Unit
         $query->limit(10)
             ->offset(20);
         try {
-            $queryString = $query->getQuery();
+            $queryString = $query->getSQL();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting query string (%s)', $exception->getMessage()));
             return;
@@ -250,7 +250,7 @@ class QueryTest extends Unit
         try {
             $query = new Query('table');
             $query->where(['column_a', 'test']);
-            $query->getQuery();
+            $query->getSQL();
         } catch (\Exception $exception) {
             $this->assertSame('A selection needs to be specified!', $exception->getMessage());
             return;
