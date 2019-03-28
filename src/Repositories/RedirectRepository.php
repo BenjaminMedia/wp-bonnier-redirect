@@ -52,8 +52,10 @@ class RedirectRepository extends BaseRepository
             return $this->handleQueryParams($redirect, $path);
         }
 
-        if ($redirect = $this->findRedirectByIgnoringQueryParams($path, $locale)) {
-            return $this->handleQueryParams($redirect, $path);
+        if (parse_url($path, PHP_URL_QUERY)) {
+            if ($redirect = $this->findExactRedirectByPath(parse_url($path, PHP_URL_PATH), $locale)) {
+                return $this->handleQueryParams($redirect, $path);
+            }
         }
 
         if ($redirect = $this->findWildcardRedirectsByPath($path, $locale)) {
@@ -78,27 +80,6 @@ class RedirectRepository extends BaseRepository
 
 
         return $results ? Redirect::createFromArray($results[0]) : null;
-    }
-
-    /**
-     * @param string $path
-     * @param string|null $locale
-     * @return Redirect|null
-     * @throws \Exception
-     */
-    public function findRedirectByIgnoringQueryParams(string $path, string $locale = null): ?Redirect
-    {
-        // If the given path has query params,
-        // pass it through `findRedirectByPath` again
-        // otherwise return null.
-        if (parse_url($path, PHP_URL_QUERY)) {
-            return $this->findRedirectByPath(
-                parse_url($path, PHP_URL_PATH),
-                $locale ?: LocaleHelper::getLanguage()
-            );
-        }
-
-        return null;
     }
 
     /**
