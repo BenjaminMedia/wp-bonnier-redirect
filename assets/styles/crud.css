@@ -1,0 +1,7 @@
+input[type='text'] {
+    width: 100%;
+}
+tr.error label,
+tr.error .description {
+    color: #dc3232;
+}

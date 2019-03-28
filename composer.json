@@ -9,60 +9,29 @@
       "homepage": "http://bonnierpublications.com"
     }
   ],
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://wpackagist.org"
-    },
-    {
-      "type":"vcs",
-      "url":"https://github.com/junaidbhura/composer-wp-pro-plugins"
-    },
-    {
-      "type": "package",
-      "package": {
-        "name": "junaidbhura/advanced-custom-fields-pro",
-        "version": "5.7.2",
-        "type": "wordpress-plugin",
-        "dist": {
-          "type": "zip",
-          "url": "https://www.advancedcustomfields.com"
-        },
-        "require": {
-          "junaidbhura/composer-wp-pro-plugins": "*"
-        }
-      }
-    },
-    {
-      "type": "package",
-      "package": {
-        "name": "junaidbhura/polylang-pro",
-        "version": "2.3.8",
-        "type": "wordpress-plugin",
-        "dist": {
-          "type": "zip",
-          "url": "https://www.polylang.pro"
-        },
-        "require": {
-          "junaidbhura/composer-wp-pro-plugins": "*"
-        }
-      }
-    }
-  ],
   "require": {
     "php": ">=7.1",
-    "illuminate/support": "^5.6",
-    "league/csv": "^9.1",
-    "bonnier/contenthub-editor": "^4.0",
-    "bonnier/wp-bonnier-cache": "^3.0",
-    "bonnier/willow-mu-plugins": "^1.1"
+    "illuminate/support": "5.7.*",
+    "symfony/http-foundation": "^4.2",
+    "league/csv": "^9.2"
   },
   "require-dev": {
-    "johnpbloch/wordpress": "^4.9"
+    "johnpbloch/wordpress": "^4.9",
+    "lucatume/wp-browser": "2.1.*"
   },
   "autoload": {
     "psr-4": {
       "Bonnier\\WP\\Redirect\\": "src"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Bonnier\\WP\\Redirect\\Tests\\": "tests"
+    }
+  },
+  "scripts": {
+    "unit": "vendor/bin/codecept run unit",
+    "integration": "vendor/bin/codecept run integration",
+    "run-tests": "composer unit; composer integration"
   }
 }
