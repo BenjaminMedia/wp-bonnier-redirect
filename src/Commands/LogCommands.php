@@ -93,9 +93,11 @@ class LogCommands extends \WP_CLI_Command
         $terms->each(function (\WP_Term $term) use ($progress) {
             if ($term->taxonomy === 'category') {
                 $this->categorySubject->setCategory($term)
+                    ->setType(CategorySubject::UPDATE)
                     ->notify();
             } else {
                 $this->tagSubject->setTag($term)
+                    ->setType(TagSubject::UPDATE)
                     ->notify();
             }
             $progress->tick();

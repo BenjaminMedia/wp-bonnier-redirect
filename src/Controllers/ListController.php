@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class ListController extends \WP_List_Table
 {
+    const DELETE_NONCE_KEY = 'delete_redirect_nonce';
     /** @var ListController */
     protected static $redirectsTable;
     /** @var array */
@@ -96,7 +97,7 @@ class ListController extends \WP_List_Table
     public function prepare_items()
     {
         // Check if a search was performed
-        $redirectSearchKey = wp_unslash(trim($this->request->query->get('s'))) ?: null;
+        $redirectSearchKey = wp_unslash(trim($this->request->get('s'))) ?: null;
 
         // Column headers
         $this->_column_headers = $this->get_column_info();
@@ -148,14 +149,14 @@ class ListController extends \WP_List_Table
         $pageUrl = admin_url('admin.php');
 
         $deleteRedirectArgs = [
-            'page' => $this->request->query->get('page'),
+            'page' => $this->request->get('page'),
             'action' => 'delete_redirect',
             'redirect_id' => absint($item['id']),
-            '_wpnonce' => wp_create_nonce('delete_redirect_nonce'),
+            '_wpnonce' => wp_create_nonce(self::DELETE_NONCE_KEY),
         ];
 
         $editRedirectArgs = [
-            'page' => 'add-redirect',
+            'page' => CrudController::PAGE,
             'action' => 'edit',
             'redirect_id' => absint($item['id']),
         ];
@@ -256,8 +257,8 @@ class ListController extends \WP_List_Table
      */
     private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20)
     {
-        $orderby = esc_sql($this->request->query->get('orderby', 'id'));
-        $order = esc_sql($this->request->query->get('order', 'DESC'));
+        $orderby = esc_sql($this->request->get('orderby', 'id'));
+        $order = esc_sql($this->request->get('order', 'DESC'));
 
         return $this->redirects->find($searchKey, $orderby, $order, $perPage, $offset);
     }
@@ -280,11 +281,11 @@ class ListController extends \WP_List_Table
 
     private function deleteRedirect()
     {
-        $nonce = wp_unslash($this->request->query->get('_wpnonce'));
-        if (!wp_verify_nonce($nonce, 'delete_redirect_nonce')) {
+        $nonce = wp_unslash($this->request->get('_wpnonce'));
+        if (!wp_verify_nonce($nonce, self::DELETE_NONCE_KEY)) {
             $this->invalidNonceRedirect();
         } else {
-            if (($redirectID = $this->request->query->get('redirect_id')) &&
+            if (($redirectID = $this->request->get('redirect_id')) &&
                 $redirect = $this->redirects->getRedirectById($redirectID)
             ) {
                 try {
@@ -304,10 +305,10 @@ class ListController extends \WP_List_Table
      */
     private function bulkDeleteRedirects()
     {
-        $nonce = wp_unslash($this->request->query->get('_wpnonce'));
+        $nonce = wp_unslash($this->request->get('_wpnonce'));
         if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural'])) {
             $this->invalidNonceRedirect();
-        } elseif ($redirects = $this->request->query->get('redirects')) {
+        } elseif ($redirects = $this->request->get('redirects')) {
             $this->redirects->deleteMultipleByIDs($redirects);
             $this->addNotice(sprintf('%s redirect(s) was deleted!', count($redirects)), 'success');
         }
@@ -319,7 +320,7 @@ class ListController extends \WP_List_Table
             'response' => 403,
             'back_link' => esc_url(
                 add_query_arg([
-                        'page' => wp_unslash($this->request->query->get('page'))
+                        'page' => wp_unslash($this->request->get('page'))
                 ], admin_url('admin.php'))
             ),
         ]);

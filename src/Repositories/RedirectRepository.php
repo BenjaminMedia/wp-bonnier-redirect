@@ -52,8 +52,10 @@ class RedirectRepository extends BaseRepository
             return $this->handleQueryParams($redirect, $path);
         }
 
-        if ($redirect = $this->findRedirectByIgnoringQueryParams($path, $locale)) {
-            return $this->handleQueryParams($redirect, $path);
+        if (parse_url($path, PHP_URL_QUERY)) {
+            if ($redirect = $this->findExactRedirectByPath(parse_url($path, PHP_URL_PATH), $locale)) {
+                return $this->handleQueryParams($redirect, $path);
+            }
         }
 
         if ($redirect = $this->findWildcardRedirectsByPath($path, $locale)) {
@@ -71,44 +73,13 @@ class RedirectRepository extends BaseRepository
      */
     public function findExactRedirectByPath(string $path, string $locale = null): ?Redirect
     {
-        if (is_null($locale)) {
-            $locale = LocaleHelper::getLanguage();
-        }
-
-        $normalizedPath = UrlHelper::normalizePath($path);
-
         $query = $this->database->query()->select('*')
-            ->where(['from_hash', hash('md5', $normalizedPath)])
-            ->andWhere(['locale', $locale]);
+            ->where(['from_hash', hash('md5', UrlHelper::normalizePath($path))])
+            ->andWhere(['locale', $locale ?: LocaleHelper::getLanguage()]);
         $results = $this->database->getResults($query);
 
-        if ($results) {
-            $redirect = new Redirect();
-            return $redirect->fromArray($results[0]);
-        }
 
-        return null;
-    }
-
-    /**
-     * @param string $path
-     * @param string|null $locale
-     * @return Redirect|null
-     * @throws \Exception
-     */
-    public function findRedirectByIgnoringQueryParams(string $path, string $locale = null): ?Redirect
-    {
-        if (is_null($locale)) {
-            $locale = LocaleHelper::getLanguage();
-        }
-
-        if (parse_url($path, PHP_URL_QUERY)) {
-            if ($redirect = $this->findRedirectByPath(parse_url($path, PHP_URL_PATH), $locale)) {
-                return $redirect;
-            }
-        }
-
-        return null;
+        return $results ? Redirect::createFromArray($results[0]) : null;
     }
 
     /**
@@ -351,8 +322,7 @@ class RedirectRepository extends BaseRepository
     private function mapRedirects(array $redirects): Collection
     {
         return collect($redirects)->map(function (array $data) {
-            $redirect = new Redirect();
-            return $redirect->fromArray($data);
+            return Redirect::createFromArray($data);
         });
     }
 

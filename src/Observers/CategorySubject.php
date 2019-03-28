@@ -59,6 +59,18 @@ class CategorySubject extends AbstractSubject
     }
 
     /**
+     * @param string $type
+     * @return CategorySubject
+     */
+    public function setType(string $type): CategorySubject
+    {
+        if (in_array($type, [self::UPDATE, self::DELETE])) {
+            $this->type = $type;
+        }
+        return $this;
+    }
+
+    /**
      * @param int $termID
      */
     public function updateCategory(int $termID)

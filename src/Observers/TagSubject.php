@@ -44,6 +44,18 @@ class TagSubject extends AbstractSubject
     }
 
     /**
+     * @param string $type
+     * @return TagSubject
+     */
+    public function setType(string $type): TagSubject
+    {
+        if (in_array($type, [self::UPDATE, self::DELETE])) {
+            $this->type = $type;
+        }
+        return $this;
+    }
+
+    /**
      * @param int $termID
      */
     public function updateTag(int $termID)

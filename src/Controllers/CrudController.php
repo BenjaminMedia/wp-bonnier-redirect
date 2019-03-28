@@ -12,13 +12,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 class CrudController extends BaseController
 {
+    const PAGE = 'add-redirect';
     /** @var Redirect */
     private $redirect;
 
     public function __construct(RedirectRepository $redirectRepository, Request $request)
     {
         parent::__construct($redirectRepository, $request);
-        if ($redirectID = $this->request->query->get('redirect_id')) {
+        if ($redirectID = $this->request->get('redirect_id')) {
             if ($redirect = $this->redirectRepository->getRedirectById($redirectID)) {
                 $this->redirect = $redirect;
             }
@@ -35,7 +36,7 @@ class CrudController extends BaseController
     public function handlePost()
     {
         if ($this->request->isMethod(Request::METHOD_POST)) {
-            if ($this->request->request->get('redirect_id')) {
+            if ($this->request->get('redirect_id')) {
                 $this->updateRedirect();
             } else {
                 $this->createRedirect();
@@ -78,23 +79,14 @@ class CrudController extends BaseController
             $this->addNotice('Invalid data was submitted - fix fields marked with red.');
             return;
         }
-        if (($redirectID = $this->request->request->get('redirect_id')) &&
+        if (($redirectID = $this->request->get('redirect_id')) &&
             $redirect = $this->redirectRepository->getRedirectById($redirectID)
         ) {
-            $redirectFrom = $this->request->request->get('redirect_from');
-            $redirectTo = $this->request->request->get('redirect_to');
-            $redirectLocale = $this->request->request->get('redirect_locale');
-            $redirectCode = $this->request->request->get('redirect_code');
-            $redirectKeepQuery = boolval($this->request->request->get('redirect_keep_query'));
-            if ($redirect->getFrom() !== $redirectFrom) {
-                $redirect->setFrom($redirectFrom);
-            }
-            if ($redirect->getTo() !== $redirectTo) {
-                $redirect->setTo($redirectTo);
-            }
-            $redirect->setLocale($redirectLocale);
-            $redirect->setCode($redirectCode);
-            $redirect->setKeepQuery($redirectKeepQuery);
+            $redirect->setFrom($this->request->get('redirect_from'));
+            $redirect->setTo($this->request->get('redirect_to'));
+            $redirect->setLocale($this->request->get('redirect_locale'));
+            $redirect->setCode($this->request->get('redirect_code'));
+            $redirect->setKeepQuery(boolval($this->request->get('redirect_keep_query')));
             $this->redirect = $redirect;
             $this->saveRedirect($redirect);
         }
@@ -104,19 +96,20 @@ class CrudController extends BaseController
     {
         $redirect = new Redirect();
         $redirect->fromArray([
-            'from' => $this->request->request->get('redirect_from'),
-            'to' => $this->request->request->get('redirect_to'),
-            'locale' => $this->request->request->get('redirect_locale'),
+            'from' => $this->request->get('redirect_from'),
+            'to' => $this->request->get('redirect_to'),
+            'locale' => $this->request->get('redirect_locale'),
             'type' => 'manual',
-            'code' => $this->request->request->get('redirect_code'),
-            'keep_query' => $this->request->request->get('redirect_keep_query') ? 1 : 0,
+            'code' => $this->request->get('redirect_code'),
+            'keep_query' => $this->request->get('redirect_keep_query') ? 1 : 0,
         ]);
+
+        $this->redirect = $redirect;
+
         if (!$this->validateRequest()) {
             $this->addNotice('Invalid data was submitted - fix fields marked with red.');
-            $this->redirect = $redirect;
             return;
         }
-        $this->redirect = $redirect;
         $this->saveRedirect($redirect);
     }
 
@@ -129,7 +122,7 @@ class CrudController extends BaseController
             $toHash = $redirect->getToHash();
             $redirect = $this->redirectRepository->save($redirect);
             $editRedirectLink = esc_url(add_query_arg([
-                'page' => 'add-redirect',
+                'page' => self::PAGE,
                 'action' => 'edit',
                 'redirect_id' => $redirect->getID(),
             ], admin_url('admin.php')));
@@ -141,7 +134,7 @@ class CrudController extends BaseController
                 $redirects->each(function (Redirect $existingRedirect) use ($redirect) {
                     if ($existingRedirect->getLocale() === $redirect->getLocale()) {
                         $editRedirectLink = esc_url(add_query_arg([
-                            'page' => 'add-redirect',
+                            'page' => self::PAGE,
                             'action' => 'edit',
                             'redirect_id' => $existingRedirect->getID(),
                         ], admin_url('admin.php')));
@@ -172,7 +165,7 @@ class CrudController extends BaseController
     private function validateRequest(): bool
     {
         $validRequest = true;
-        $redirectFrom = $this->request->request->get('redirect_from');
+        $redirectFrom = $this->request->get('redirect_from');
         if (empty($redirectFrom)) {
             $this->validationErrors['redirect_from'] = 'The \'from\'-value cannot be empty!';
             $validRequest = false;
@@ -183,12 +176,12 @@ class CrudController extends BaseController
             $this->validationErrors['redirect_from'] = 'You cannot create a redirect from the frontpage!';
             $validRequest = false;
         }
-        if (empty($this->request->request->get('redirect_to'))) {
+        if (empty($this->request->get('redirect_to'))) {
             $this->validationErrors['redirect_to'] = 'The \'to\'-value cannot be empty!';
             $validRequest = false;
         }
 
-        if (!in_array($this->request->request->get('redirect_locale'), LocaleHelper::getLanguages())) {
+        if (!in_array($this->request->get('redirect_locale'), LocaleHelper::getLanguages())) {
             $this->validationErrors['redirect_locale'] = 'You have to specify a language for the redirect';
             $validRequest = false;
         }

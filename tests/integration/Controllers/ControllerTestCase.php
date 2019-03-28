@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Tests\integration\Controllers;
 
+use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -43,7 +44,7 @@ class ControllerTestCase extends TestCase
 
     protected function createPostRequest(array $args = []): Request
     {
-        return Request::create('/wp-admin/admin.php?page=add-redirect', 'POST', $args);
+        return Request::create('/wp-admin/admin.php?page=' . CrudController::PAGE, 'POST', $args);
     }
 
     protected function createGetRequest(array $args = []): Request

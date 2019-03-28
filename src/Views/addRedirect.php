@@ -1,5 +1,6 @@
 <?php
 
+use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,7 +15,7 @@ $redirect = $this->getRedirect();
         <h1 class="wp-heading-inline">Edit Redirect</h1>
         <a
             class="page-title-action"
-            href="<?php echo esc_url(add_query_arg(['page' => 'add-redirect'], admin_url('admin.php'))); ?>"
+            href="<?php echo esc_url(add_query_arg(['page' => CrudController::PAGE], admin_url('admin.php'))); ?>"
         >Add New</a>
         <?php
     } else {
@@ -52,6 +53,7 @@ $redirect = $this->getRedirect();
                         name="redirect_from"
                         type="text"
                         placeholder="/old/page/slug"
+                        autocomplete="off"
                         value="<?php echo $redirect->getFrom(); ?>" />
                     <p class="description">
                         <?php
@@ -76,6 +78,7 @@ $redirect = $this->getRedirect();
                         name="redirect_to"
                         type="text"
                         placeholder="/new/page/slug"
+                        autocomplete="off"
                         value="<?php echo $redirect->getTo(); ?>" />
                     <p class="description">
                         <?php

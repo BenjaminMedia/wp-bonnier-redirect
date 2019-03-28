@@ -157,7 +157,7 @@ class Query
      * @return string
      * @throws \Exception
      */
-    public function getQuery(): string
+    public function getSQL(): string
     {
         if (!$this->selection) {
             throw new \Exception('A selection needs to be specified!');

@@ -40,9 +40,9 @@ class ToolController extends BaseController
     {
         if ($this->request->isMethod(Request::METHOD_POST)) {
             if (current_user_can('manage_options')) {
-                if ($this->request->request->get('export')) {
+                if ($this->request->get('export')) {
                     $this->exportRedirects();
-                } elseif ($this->request->request->get('import')) {
+                } elseif ($this->request->get('import')) {
                     $this->importRedirects();
                 }
             } else {
