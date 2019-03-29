@@ -22,8 +22,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301,
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeIs(
             $crudController->getNotices(),
@@ -68,8 +67,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeIs($crudController->getNotices(), 'error', 'From and to urls seems identical!');
 
@@ -93,8 +91,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301,
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
         $this->assertArrayHasKey('redirect_locale', $crudController->getValidationErrors());

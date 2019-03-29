@@ -31,6 +31,16 @@ class LogRepository extends BaseRepository
         return null;
     }
 
+    public function findBySlug(string $slug): ?Collection
+    {
+        $query = $this->database->query()->select('*')
+            ->where(['slug', $slug]);
+        if ($logs = $this->database->getResults($query)) {
+            return $this->mapLogs($logs);
+        }
+        return null;
+    }
+
     /**
      * @return Collection|null
      * @throws \Exception

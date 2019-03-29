@@ -5,6 +5,7 @@ namespace Bonnier\WP\Redirect\Tests\integration\Controllers;
 use Bonnier\WP\Redirect\Controllers\CrudController;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Models\Redirect;
+use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\Tests\integration\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,6 +14,8 @@ class ControllerTestCase extends TestCase
 {
     /** @var RedirectRepository */
     protected $redirectRepository;
+    /** @var LogRepository */
+    protected $logRepository;
 
     public function setUp()
     {
@@ -24,6 +27,12 @@ class ControllerTestCase extends TestCase
             $this->redirectRepository = new RedirectRepository(new DB());
         } catch (\Exception $exception) {
             $this->fail('Failed setting up RedirectRepository for tests');
+        }
+
+        try {
+            $this->logRepository = new LogRepository(new DB());
+        } catch (\Exception $exception) {
+            $this->fail('Failed setting up LogRepository for tests');
         }
     }
 
@@ -123,5 +132,12 @@ class ControllerTestCase extends TestCase
             $this->fail(sprintf('Failed finding redirects (%s)', $exception->getMessage()));
             return null;
         }
+    }
+
+    protected function getCrudController(Request $request)
+    {
+        $crudController = new CrudController($this->logRepository, $this->redirectRepository, $request);
+        $crudController->handlePost();
+        return $crudController;
     }
 }

@@ -3,10 +3,20 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Controllers\CrudController\Create;
 
 use Bonnier\WP\Redirect\Controllers\CrudController;
+use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Observers\Observers;
+use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Tests\integration\Controllers\ControllerTestCase;
 
 class ValidationTest extends ControllerTestCase
 {
+    public function setUp()
+    {
+        parent::setUp();
+
+        Observers::bootstrap($this->logRepository, $this->redirectRepository);
+    }
+
     public function testCannotCreateRedirectWithEmptyFrom()
     {
         $request = $this->createPostRequest([
@@ -16,8 +26,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
 
@@ -38,8 +47,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
 
@@ -66,8 +74,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
 
@@ -100,8 +107,7 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeIs($crudController->getNotices(), 'error', 'From and to urls seems identical!');
 
@@ -117,11 +123,73 @@ class ValidationTest extends ControllerTestCase
             'redirect_code' => 301,
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
         $this->assertArrayHasKey('redirect_locale', $crudController->getValidationErrors());
+    }
+
+    /**
+     * @dataProvider wpPostProvider
+     * @param string $postType
+     */
+    public function testCannotCreateRedirectOnLiveWPPost(string $postType)
+    {
+        $post = $this->factory()->post->create_and_get(['post_type' => $postType, 'post_status' => 'publish']);
+
+        $path = get_permalink($post);
+
+        $request = $this->createPostRequest([
+            'redirect_from' => $path,
+            'redirect_to' => '/new/destination',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301
+        ]);
+
+        $crudController = $this->getCrudController($request);
+
+        $validationErrors = $crudController->getValidationErrors();
+
+        $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
+        $this->assertArrayHasKey('redirect_from', $validationErrors);
+        $this->assertSame(
+            'A post or term with this slug is published!',
+            $validationErrors['redirect_from']
+        );
+
+        $this->assertTrue(1 == '1');
+    }
+
+    /**
+     * @dataProvider wpTermProvider
+     *
+     * @param string $taxonomy
+     */
+    public function testCannotCreateRedirectOnLiveWPTerm(string $taxonomy)
+    {
+        $term = $this->factory()->term->create_and_get(['taxonomy' => $taxonomy]);
+
+        $path = get_term_link($term->term_id, $taxonomy);
+
+        $request = $this->createPostRequest([
+            'redirect_from' => $path,
+            'redirect_to' => '/new/destination',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301,
+        ]);
+
+        $crudController = $this->getCrudController($request);
+
+        $validationErrors = $crudController->getValidationErrors();
+
+        $this->assertNoticeWasInvalidInputMessage($crudController->getNotices());
+        $this->assertArrayHasKey('redirect_from', $validationErrors);
+        $this->assertSame(
+            'A post or term with this slug is published!',
+            $validationErrors['redirect_from']
+        );
+
+        $this->assertTrue(1 == '1');
     }
 
     public function destructiveRedirectsProvider()
@@ -140,6 +208,23 @@ class ValidationTest extends ControllerTestCase
             'Same, but to has domain' => ['/from/slug', home_url('/from/slug')],
             'Same, but slashes are different' => ['from/slug/', '/from/slug'],
             'Same, but query are ordered different' => ['/from/slug?c=d&a=b', 'from/slug/?a=b&c=d'],
+        ];
+    }
+
+    public function wpPostProvider()
+    {
+        return collect(get_post_types(['public' => true]))
+            ->reject('attachment')
+            ->mapWithKeys(function (string $postType) {
+                return [$postType => [$postType]];
+            })->toArray();
+    }
+
+    public function wpTermProvider()
+    {
+        return [
+            'Tag' => ['post_tag'],
+            'Category' => ['category']
         ];
     }
 }

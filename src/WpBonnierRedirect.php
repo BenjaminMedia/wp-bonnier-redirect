@@ -136,7 +136,7 @@ class WpBonnierRedirect
     public function loadAdminMenus()
     {
         $listController = new ListController($this->redirectRepository, $this->request);
-        $crudController = new CrudController($this->redirectRepository, $this->request);
+        $crudController = new CrudController($this->logRepository, $this->redirectRepository, $this->request);
         $toolController = new ToolController($this->redirectRepository, $this->request);
 
         add_menu_page(
