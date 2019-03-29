@@ -26,8 +26,7 @@ class NormalizationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -61,8 +60,7 @@ class NormalizationTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 

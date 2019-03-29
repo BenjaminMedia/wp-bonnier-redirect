@@ -15,8 +15,7 @@ class CreateTest extends ControllerTestCase
             'redirect_locale' => 'da',
             'redirect_code' => 301,
         ]);
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -35,8 +34,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $this->getCrudController($request);
 
         $redirects = $this->findAllRedirects();
         $this->assertManualRedirect($redirects->first(), '/example/from/slug', '/example/to/slug');
@@ -48,8 +46,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $newRequest);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($newRequest);
 
         $this->assertNoticeIs(
             $crudController->getNotices(),
@@ -79,8 +76,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -114,8 +110,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -144,8 +139,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -170,8 +164,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301,
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -197,8 +190,7 @@ class CreateTest extends ControllerTestCase
             'redirect_keep_query' => '1'
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
 
@@ -227,8 +219,7 @@ class CreateTest extends ControllerTestCase
             'redirect_code' => 301,
         ]);
 
-        $crudController = new CrudController($this->redirectRepository, $request);
-        $crudController->handlePost();
+        $crudController = $this->getCrudController($request);
 
         $notices = $crudController->getNotices();
         $expectedNotices = [

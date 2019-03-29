@@ -26,8 +26,7 @@ class RedirectTest extends TestCase
 
     public function testPrefersHashesFromDB()
     {
-        $redirect = new Redirect();
-        $redirect->fromArray([
+        $redirect = Redirect::createFromArray([
             'id' => 1,
             'from' => '/from/a/slug',
             'from_hash' => 'dbmd5fromhash',
@@ -45,8 +44,7 @@ class RedirectTest extends TestCase
 
     public function testGeneratesOwnHashesWhenMissing()
     {
-        $redirect = new Redirect();
-        $redirect->fromArray([
+        $redirect = Redirect::createFromArray([
             'id' => 1,
             'from' => '/from/a/slug',
             'to' => '/to/a/slug',
@@ -68,8 +66,7 @@ class RedirectTest extends TestCase
         $fromWithoutParams = '/path/from/slug';
         $fromWithParams = $fromWithoutParams . '?with=params';
 
-        $redirect = new Redirect();
-        $redirect->fromArray([
+        $redirect = Redirect::createFromArray([
             'id' => 1,
             'from' => $fromWithParams,
             'to' => '/path/to/slug',

@@ -5,7 +5,10 @@ namespace Bonnier\WP\Redirect\Controllers;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
+use Bonnier\WP\Redirect\Helpers\UrlHelper;
+use Bonnier\WP\Redirect\Models\Log;
 use Bonnier\WP\Redirect\Models\Redirect;
+use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,10 +18,13 @@ class CrudController extends BaseController
     const PAGE = 'add-redirect';
     /** @var Redirect */
     private $redirect;
+    /** @var LogRepository */
+    private $logRepository;
 
-    public function __construct(RedirectRepository $redirectRepository, Request $request)
+    public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository, Request $request)
     {
         parent::__construct($redirectRepository, $request);
+        $this->logRepository = $logRepository;
         if ($redirectID = $this->request->get('redirect_id')) {
             if ($redirect = $this->redirectRepository->getRedirectById($redirectID)) {
                 $this->redirect = $redirect;
@@ -94,8 +100,7 @@ class CrudController extends BaseController
 
     private function createRedirect()
     {
-        $redirect = new Redirect();
-        $redirect->fromArray([
+        $this->redirect = Redirect::createFromArray([
             'from' => $this->request->get('redirect_from'),
             'to' => $this->request->get('redirect_to'),
             'locale' => $this->request->get('redirect_locale'),
@@ -104,13 +109,12 @@ class CrudController extends BaseController
             'keep_query' => $this->request->get('redirect_keep_query') ? 1 : 0,
         ]);
 
-        $this->redirect = $redirect;
-
         if (!$this->validateRequest()) {
             $this->addNotice('Invalid data was submitted - fix fields marked with red.');
             return;
         }
-        $this->saveRedirect($redirect);
+
+        $this->saveRedirect($this->redirect);
     }
 
     /**
@@ -175,6 +179,9 @@ class CrudController extends BaseController
         } elseif ($redirectFrom === '/') {
             $this->validationErrors['redirect_from'] = 'You cannot create a redirect from the frontpage!';
             $validRequest = false;
+        } elseif ($this->slugIsLive($redirectFrom)) {
+            $this->validationErrors['redirect_from'] = 'A post or term with this slug is published!';
+            $validRequest = false;
         }
         if (empty($this->request->get('redirect_to'))) {
             $this->validationErrors['redirect_to'] = 'The \'to\'-value cannot be empty!';
@@ -187,5 +194,29 @@ class CrudController extends BaseController
         }
 
         return $validRequest;
+    }
+
+    private function slugIsLive(string $url)
+    {
+        $slug = UrlHelper::normalizePath($url);
+        $logs = $this->logRepository->findBySlug($slug);
+        if ($logs && $logs->isNotEmpty()) {
+            /** @var Log $log */
+            $log = $logs->last();
+            $postTypes = collect(get_post_types(['public' => true]))
+                ->reject('attachment')->toArray();
+            if (in_array($log->getType(), $postTypes)) {
+                if (($post = get_post($log->getWpID())) && $post instanceof \WP_Post) {
+                    return $post->post_status === 'publish' &&
+                        UrlHelper::normalizePath(get_permalink($post)) === $slug;
+                }
+            } else {
+                if (($term = get_term($log->getWpID(), $log->getType())) && $term instanceof \WP_Term) {
+                    return UrlHelper::normalizePath(get_term_link($term->term_id, $term->taxonomy)) === $slug;
+                }
+            }
+        }
+
+        return false;
     }
 }
