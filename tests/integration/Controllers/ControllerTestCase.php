@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Controllers;
 
 use Bonnier\WP\Redirect\Controllers\CrudController;
+use Bonnier\WP\Redirect\Controllers\ToolController;
 use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
@@ -36,6 +37,12 @@ class ControllerTestCase extends TestCase
         }
     }
 
+    public function tearDown()
+    {
+        wp_set_current_user(0);
+        parent::tearDown();
+    }
+
     protected function assertManualRedirect(
         Redirect $redirect,
         string $fromUrl,
@@ -51,9 +58,9 @@ class ControllerTestCase extends TestCase
         $this->assertSame(0, $redirect->getWpID());
     }
 
-    protected function createPostRequest(array $args = []): Request
+    protected function createPostRequest(array $args = [], $files = []): Request
     {
-        return Request::create('/wp-admin/admin.php?page=' . CrudController::PAGE, 'POST', $args);
+        return Request::create('/wp-admin/admin.php?page=' . CrudController::PAGE, 'POST', $args, [], $files);
     }
 
     protected function createGetRequest(array $args = []): Request
@@ -139,5 +146,18 @@ class ControllerTestCase extends TestCase
         $crudController = new CrudController($this->logRepository, $this->redirectRepository, $request);
         $crudController->handlePost();
         return $crudController;
+    }
+
+    protected function getToolController(Request $request)
+    {
+        $toolController = new ToolController($this->redirectRepository, $request);
+        $toolController->handlePost();
+        return $toolController;
+    }
+
+    protected function actAsAdmin()
+    {
+        $userID = $this->factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($userID);
     }
 }

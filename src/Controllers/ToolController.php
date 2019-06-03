@@ -4,6 +4,7 @@ namespace Bonnier\WP\Redirect\Controllers;
 
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\WpBonnierRedirect;
 use Illuminate\Support\Arr;
@@ -44,6 +45,8 @@ class ToolController extends BaseController
                     $this->exportRedirects();
                 } elseif ($this->request->get('import')) {
                     $this->importRedirects();
+                } elseif ($this->request->get('404')) {
+                    $this->redirect404();
                 }
             } else {
                 wp_die('Unauthorized', 'Error', [
@@ -83,69 +86,67 @@ class ToolController extends BaseController
 
     private function importRedirects()
     {
-        if ($file = $this->getUploadedCSV('import-file')) {
-            if ($input = $this->loadCSV($file)) {
-                $records = $input->getRecords();
-                $filename = sprintf('files/imported-redirects-%s.csv', strtotime('now'));
-                $output = Writer::createFromPath(WpBonnierRedirect::instance()->assetPath($filename, true), 'w+');
-                try {
-                    $output->insertOne(['ID', 'From', 'To', 'Locale', 'Code', 'Status']);
-                } catch (CannotInsertRecord $exception) {
-                    $this->addNotice('Could not create output log file!');
-                    return;
-                }
-                foreach ($records as $record) {
-                    $source = Arr::get($record, 'from');
-                    $destination = Arr::get($record, 'to');
-                    $locale = Arr::get($record, 'locale');
-                    $code = intval(Arr::get($record, 'code'));
-                    $status = 'Inserted';
-                    $redirect = new Redirect();
-                    try {
-                        $redirect->setFrom($source)
-                            ->setTo($destination)
-                            ->setLocale($locale)
-                            ->setCode($code)
-                            ->setType('csv-import');
-                        $this->redirectRepository->save($redirect);
-                    } catch (\InvalidArgumentException $exception) {
-                        if (Str::startsWith($exception->getMessage(), 'The locale')) {
-                            $status = 'Ignored - Invalid Locale';
-                        } elseif (Str::startsWith($exception->getMessage(), 'Code ')) {
-                            $status = 'Ignored - Invalid Code';
-                        }
-                    } catch (IdenticalFromToException $exception) {
-                        $status = 'Ignored - Identical from and to';
-                    } catch (DuplicateEntryException $exception) {
-                        $status = 'Ignored - Already exists';
-                    } catch (\Exception $exception) {
-                        $status = 'Ignored - ' . $exception->getMessage();
-                    }
-                    try {
-                        $output->insertOne([
-                            $redirect->getID(),
-                            $source,
-                            $destination,
-                            $locale,
-                            $code,
-                            $status
-                        ]);
-                    } catch (CannotInsertRecord $exception) {
-                    }
-                }
-                $this->addNotice(
-                    sprintf(
-                        'Redirects saved! <a href="%s" target="_blank">Download results here.</a>',
-                        WpBonnierRedirect::instance()->assetURI($filename)
-                    ),
-                    'success'
-                );
-            } else {
-                $this->addNotice('CSV seems to be formatted incorrectly.');
-            }
-        } else {
+        $file = $this->getUploadedCSV('import-file');
+        if (!$file) {
             $this->addNotice('Unable to process uploaded file.');
+            return;
         }
+        $input = $this->loadCSV($file);
+        if (!$input) {
+            $this->addNotice('CSV seems to be formatted incorrectly.');
+            return;
+        }
+        $output = $this->getOutputFile('imported-redirects');
+        if (!$output) {
+            return;
+        }
+        $records = $input->getRecords();
+        foreach ($records as $record) {
+            $source = Arr::get($record, 'from');
+            $destination = Arr::get($record, 'to');
+            $locale = Arr::get($record, 'locale');
+            $code = intval(Arr::get($record, 'code'));
+            $this->saveRedirect($output, $source, $destination, $locale, 'csv-import', $code);
+        }
+        $this->addNotice(
+            sprintf(
+                'Redirects saved! <a href="%s" target="_blank">Download results here.</a>',
+                $this->getWriterURL($output)
+            ),
+            'success'
+        );
+    }
+
+    private function redirect404()
+    {
+        $file = $this->getUploadedCSV('404-file');
+        if (!$file) {
+            $this->addNotice('Unable to process uploaded file.');
+            return;
+        }
+        $input = $this->loadCSV($file, false);
+        if (!$input) {
+            $this->addNotice('CSV seems to be formatted incorrectly.');
+            return;
+        }
+        $output = $this->getOutputFile('404-redirects');
+        if (!$output) {
+            return;
+        }
+        $records = $input->getRecords();
+        foreach ($records as $record) {
+            $url = Arr::get($record, 0);
+            $destination = $this->getDestination($url);
+            $locale = LocaleHelper::getUrlLocale($url) ?? '';
+            $this->saveRedirect($output, $url, $destination, $locale, 'csv-404-redirect');
+        }
+        $this->addNotice(
+            sprintf(
+                'Redirects saved! <a href="%s" target="_blank">Download results here.</a>',
+                $this->getWriterURL($output)
+            ),
+            'success'
+        );
     }
 
     private function getUploadedCSV(string $key): ?UploadedFile
@@ -159,21 +160,137 @@ class ToolController extends BaseController
         return null;
     }
 
-    private function loadCSV(UploadedFile $file): ?Reader
+    private function loadCSV(UploadedFile $file, bool $header = true): ?Reader
     {
         $csv = Reader::createFromPath($file->getPathname());
-        $csv->setHeaderOffset(0);
-        if ($csv->getHeader() === 'from;to;locale;code') {
-            try {
-                $csv->setDelimiter(';');
-            } catch (Exception $exception) {
-                return null;
+        if ($header) {
+            $csv->setHeaderOffset(0);
+            if ($csv->getHeader() === 'from;to;locale;code') {
+                try {
+                    $csv->setDelimiter(';');
+                } catch (Exception $exception) {
+                    return null;
+                }
+            }
+            if ($csv->getHeader() === ['from', 'to', 'locale', 'code']) {
+                return $csv;
+            }
+            return null;
+        }
+        return $csv;
+    }
+
+    private function getDestination(string $url): string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        $parts = preg_split('#/#', $path, -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($parts)) {
+            return '/';
+        }
+        $reversed = array_reverse($parts);
+        foreach ($reversed as $slug) {
+            if ($permalink = $this->getPermalink($slug)) {
+                return rtrim(parse_url($permalink, PHP_URL_PATH), '/');
             }
         }
-        if ($csv->getHeader() === ['from', 'to', 'locale', 'code']) {
-            return $csv;
+        return '/';
+    }
+
+    private function getPermalink(string $slug): ?string
+    {
+        $postTypes = $postTypes = collect(get_post_types(['public' => true]))->reject('attachment');
+        $posts = get_posts([
+            'name' => $slug,
+            'post_status' => 'publish',
+            'post_type' => $postTypes->toArray()
+        ]);
+        if (!empty($posts)) {
+            return get_permalink($posts[0]);
+        }
+
+        if ($category = get_category_by_slug($slug)) {
+            return get_category_link($category);
+        }
+
+        if ($tag = get_term_by('slug', $slug, 'post_tag')) {
+            return get_tag_link($tag);
         }
 
         return null;
+    }
+
+    private function getOutputFile(string $name): ?Writer
+    {
+        $uploadDir = wp_get_upload_dir();
+        if (empty($uploadDir['path'])) {
+            $this->addNotice('Could not store result CSV.');
+            return null;
+        }
+        $filename = sprintf(
+            '%s-%s.csv',
+            $name,
+            strtotime('now')
+        );
+        $filepath = sprintf('%s/%s', rtrim($uploadDir['path'], '/'), $filename);
+        $output = Writer::createFromPath($filepath, 'w+');
+        try {
+            $output->insertOne(['ID', 'From', 'To', 'Locale', 'Code', 'Status']);
+        } catch (CannotInsertRecord $exception) {
+            $this->addNotice('Could not create output log file!');
+            return null;
+        }
+        return $output;
+    }
+
+    private function saveRedirect(
+        Writer $output,
+        string $source,
+        string $destination,
+        string $locale,
+        string $type,
+        int $code = 301
+    ) {
+        $status = 'Inserted';
+        $redirect = new Redirect();
+        try {
+            $redirect->setFrom($source)
+                ->setTo($destination)
+                ->setLocale($locale)
+                ->setCode($code)
+                ->setType($type);
+            $this->redirectRepository->save($redirect);
+        } catch (\InvalidArgumentException $exception) {
+            if (Str::startsWith($exception->getMessage(), 'The locale')) {
+                $status = 'Ignored - Invalid Locale';
+            } elseif (Str::startsWith($exception->getMessage(), 'Code ')) {
+                $status = 'Ignored - Invalid Code';
+            }
+        } catch (IdenticalFromToException $exception) {
+            $status = 'Ignored - Identical from and to';
+        } catch (DuplicateEntryException $exception) {
+            $status = 'Ignored - Already exists';
+        } catch (\Exception $exception) {
+            $status = 'Ignored - ' . $exception->getMessage();
+        }
+        try {
+            $output->insertOne([
+                $redirect->getID(),
+                $source,
+                $destination,
+                $locale,
+                301,
+                $status
+            ]);
+        } catch (CannotInsertRecord $exception) {
+        }
+    }
+
+    private function getWriterURL(Writer $writer): ?string
+    {
+        $uploadDir = wp_get_upload_dir();
+        if (!isset($uploadDir['path'], $uploadDir['url'])) {
+            return null;
+        }
+        return str_replace($uploadDir['path'], $uploadDir['url'], $writer->getPathname());
     }
 }
