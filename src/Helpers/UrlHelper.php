@@ -18,7 +18,7 @@ class UrlHelper
         $path = parse_url($decoded, PHP_URL_PATH);
         $beginsWithSlash = Str::start($path, '/');
         $endsWithoutSlash = rtrim($beginsWithSlash, '/');
-        return strtolower($endsWithoutSlash);
+        return mb_strtolower($endsWithoutSlash);
     }
 
     /**
@@ -40,7 +40,7 @@ class UrlHelper
             foreach ($queryParams as $key => $value) {
                 $params .= sprintf('%s=%s&', $key, $value);
             }
-            $params = substr($params, 0, -1);
+            $params = mb_substr($params, 0, -1);
             $path = sprintf('%s%s', $path, $params);
         }
 
@@ -48,7 +48,7 @@ class UrlHelper
             $path = rtrim(rtrim($path, '*'), '/');
         }
 
-        if (substr($path, 0, 1) === '?') {
+        if (mb_substr($path, 0, 1) === '?') {
             $path = Str::start($path, '/');
         }
 
@@ -66,15 +66,15 @@ class UrlHelper
             $url = 'http://' . $url;
         }
         $parsedUrl = parse_url(self::decode($url));
-        $scheme = isset($parsedUrl['scheme']) ? strtolower($parsedUrl['scheme']) . '://' : '';
-        $host = strtolower($parsedUrl['host'] ?? '');
+        $scheme = isset($parsedUrl['scheme']) ? mb_strtolower($parsedUrl['scheme']) . '://' : '';
+        $host = mb_strtolower($parsedUrl['host'] ?? '');
         $normalizedUrl = rtrim($scheme . $host . self::normalizePath($url, $disallowWildcard), '/');
         foreach (LocaleHelper::getLocalizedUrls() as $domain) {
             if (Str::startsWith($normalizedUrl, $domain)) {
                 return Str::after($normalizedUrl, $domain) ?: '/';
             }
         }
-        if (substr($normalizedUrl, 0, 1) === '?') {
+        if (mb_substr($normalizedUrl, 0, 1) === '?') {
             $normalizedUrl = Str::start($normalizedUrl, '/');
         }
         return $normalizedUrl ?: '/';
