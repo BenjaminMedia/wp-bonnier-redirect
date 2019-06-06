@@ -1,0 +1,3 @@
+from,to,locale,code
+/category/article,/category,da,301
+/category/specific/article,https://example.com,da,302

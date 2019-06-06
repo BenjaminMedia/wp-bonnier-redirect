@@ -2,6 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Helpers;
 
+use Illuminate\Support\Str;
+
 class LocaleHelper
 {
     /**
@@ -26,6 +28,21 @@ class LocaleHelper
             return pll_get_term_language($termID) ?: self::getDefaultLanguage();
         }
         return self::getDefaultLanguage();
+    }
+
+    public static function getUrlLocale(string $url): ?string
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            return null;
+        }
+        foreach (self::getLocalizedUrls() as $locale => $localizedUrl) {
+            if (Str::contains($localizedUrl, $host)) {
+                return $locale;
+            }
+        }
+
+        return null;
     }
 
     /**

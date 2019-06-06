@@ -96,6 +96,11 @@ class TestCase extends WPTestCase
         $this->assertSame($expectedRedirect->getParamlessFromHash(), $actualRedirect->getParamlessFromHash());
     }
 
+    protected function getData(string $filename): string
+    {
+        return sprintf('%s/_data/%s', rtrim(dirname(__DIR__), '/'), ltrim($filename, '/'));
+    }
+
     private function trimUrl(string $url)
     {
         return rtrim(parse_url($url, PHP_URL_PATH), '/');
