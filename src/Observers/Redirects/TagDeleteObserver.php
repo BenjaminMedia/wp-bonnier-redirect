@@ -30,14 +30,14 @@ class TagDeleteObserver extends AbstractObserver
     {
         if ($subject->getType() === TagSubject::DELETE && $tag = $subject->getTag()) {
             $logs = $this->logRepository->findByWpIDAndType($tag->term_id, $tag->taxonomy);
-            $logs->each(function (Log $log) use ($tag) {
+            $logs->each(function (Log $log) use ($tag, $subject) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo('/')
                     ->setWpID($tag->term_id)
                     ->setType('tag-deleted')
                     ->setCode(Response::HTTP_MOVED_PERMANENTLY)
-                    ->setLocale(LocaleHelper::getTermLocale($tag->term_id));
+                    ->setLocale($subject->getLocale() ?: LocaleHelper::getTermLocale($tag->term_id));
                 $this->redirectRepository->save($redirect, true);
             });
         }

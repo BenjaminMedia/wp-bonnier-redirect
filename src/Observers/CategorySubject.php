@@ -2,6 +2,8 @@
 
 namespace Bonnier\WP\Redirect\Observers;
 
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
+
 class CategorySubject extends AbstractSubject
 {
     const UPDATE = 'update';
@@ -13,6 +15,9 @@ class CategorySubject extends AbstractSubject
     /** @var string */
     private $type;
 
+    /** @var string */
+    private $locale;
+
     private $affectedPosts = [];
 
     public function __construct()
@@ -20,6 +25,7 @@ class CategorySubject extends AbstractSubject
         parent::__construct();
         add_action('create_category', [$this, 'updateCategory']);
         add_action('edited_category', [$this, 'updateCategory']);
+        add_action('pre_delete_term', [$this, 'preDeleteCategory'], 0, 2);
         add_action('delete_category', [$this, 'deletedCategory'], 10, 4);
     }
 
@@ -70,6 +76,11 @@ class CategorySubject extends AbstractSubject
         return $this;
     }
 
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
     /**
      * @param int $termID
      */
@@ -79,6 +90,13 @@ class CategorySubject extends AbstractSubject
             $this->category = $category;
             $this->type = self::UPDATE;
             $this->notify();
+        }
+    }
+
+    public function preDeleteCategory(int $termID, string $taxonomy)
+    {
+        if ($taxonomy === 'category') {
+            $this->locale = LocaleHelper::getTermLocale($termID);
         }
     }
 
