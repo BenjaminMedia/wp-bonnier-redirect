@@ -42,8 +42,12 @@ class CategorySlugChangeObserver extends AbstractObserver
 
         $slug = $latest->getSlug();
 
-        $logs->each(function (Log $log) use ($slug, $category) {
+        // Check for slug changes
+        $noSlugChanges = true;
+
+        $logs->each(function (Log $log) use (&$noSlugChanges, $slug, $category) {
             if ($log->getSlug() !== $slug) {
+                $noSlugChanges = false;
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo($slug)
@@ -54,6 +58,13 @@ class CategorySlugChangeObserver extends AbstractObserver
                 $this->redirectRepository->save($redirect, true);
             }
         });
+
+        // There's no slug changes, so we do not need to waste
+        // resources on trying to update all child categories
+        // and posts, since we know, their slug won't be changed.
+        if ($noSlugChanges) {
+            return;
+        }
 
         if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
             foreach ($categories as $cat) {
