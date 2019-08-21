@@ -6,6 +6,8 @@ use Illuminate\Support\Str;
 
 class LocaleHelper
 {
+    private static $languageList;
+
     /**
      * @param int $postID
      * @return bool|string
@@ -52,6 +54,8 @@ class LocaleHelper
     {
         if (function_exists('pll_languages_list')) {
             return pll_languages_list();
+        } elseif(self::$languageList) {
+            return self::$languageList;
         }
 
         return [self::getDefaultLanguage()];
@@ -79,6 +83,15 @@ class LocaleHelper
         }
 
         return [self::getDefaultLanguage() => home_url()];
+    }
+
+    /**
+     * This method is purely for testing, since we cannot partially mock this helper class
+     *
+     * @param array $languageList
+     */
+    public static function setLanguageList(array $languageList) {
+        self::$languageList = $languageList;
     }
 
     /**
