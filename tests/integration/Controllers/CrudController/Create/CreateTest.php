@@ -3,6 +3,8 @@
 namespace Bonnier\WP\Redirect\Tests\integration\Controllers\CrudController\Create;
 
 use Bonnier\WP\Redirect\Controllers\CrudController;
+use Bonnier\WP\Redirect\Helpers\LocaleHelper;
+use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Tests\integration\Controllers\ControllerTestCase;
 
 class CreateTest extends ControllerTestCase
@@ -238,5 +240,56 @@ class CreateTest extends ControllerTestCase
             '/final/destination',
             'manual'
         );
+    }
+
+    /**
+     * @dataProvider wpPostProvider
+     *
+     * @param $postType
+     */
+    public function testCanCreateRedirectEvenThoughLiveUrlIsOnAnotherLocale($postType)
+    {
+        LocaleHelper::setLanguageList(['da', 'fi']);
+
+        /** @var \WP_Post $post */
+        $post = $this->factory()->post->create_and_get(['post_type' => $postType, 'post_status' => 'publish']);
+
+        $path = get_permalink($post);
+
+        $this->assertNotEquals('fi', LocaleHelper::getPostLocale($post->ID));
+
+        $request = $this->createPostRequest([
+            'redirect_from' => $path,
+            'redirect_to' => '/new/destination',
+            'redirect_locale' => 'fi',
+            'redirect_code' => 301
+        ]);
+
+        $crudController = $this->getCrudController($request);
+
+        $notices = $crudController->getNotices();
+        $expectedNotices = [
+            ['type' => 'success', 'message' => 'The redirect was saved!'],
+        ];
+        $this->assertNotices($expectedNotices, $notices);
+
+        $redirects = $this->findAllRedirects();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->last(),
+            UrlHelper::normalizePath($path),
+            '/new/destination',
+            'manual'
+        );
+    }
+
+    public function wpPostProvider()
+    {
+        return collect(get_post_types(['public' => true]))
+            ->reject('attachment')
+            ->mapWithKeys(function (string $postType) {
+                return [$postType => [$postType]];
+            })->toArray();
     }
 }

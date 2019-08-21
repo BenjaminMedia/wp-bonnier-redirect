@@ -170,6 +170,7 @@ class CrudController extends BaseController
     {
         $validRequest = true;
         $redirectFrom = $this->request->get('redirect_from');
+        $locale = $this->request->get('redirect_locale');
         if (empty($redirectFrom)) {
             $this->validationErrors['redirect_from'] = 'The \'from\'-value cannot be empty!';
             $validRequest = false;
@@ -179,7 +180,7 @@ class CrudController extends BaseController
         } elseif ($redirectFrom === '/') {
             $this->validationErrors['redirect_from'] = 'You cannot create a redirect from the frontpage!';
             $validRequest = false;
-        } elseif ($this->slugIsLive($redirectFrom)) {
+        } elseif ($this->slugIsLive($redirectFrom, $locale)) {
             $this->validationErrors['redirect_from'] = 'A post or term with this slug is published!';
             $validRequest = false;
         }
@@ -188,7 +189,7 @@ class CrudController extends BaseController
             $validRequest = false;
         }
 
-        if (!in_array($this->request->get('redirect_locale'), LocaleHelper::getLanguages())) {
+        if (!in_array($locale, LocaleHelper::getLanguages())) {
             $this->validationErrors['redirect_locale'] = 'You have to specify a language for the redirect';
             $validRequest = false;
         }
@@ -196,7 +197,7 @@ class CrudController extends BaseController
         return $validRequest;
     }
 
-    private function slugIsLive(string $url)
+    private function slugIsLive(string $url, string $locale)
     {
         $slug = UrlHelper::normalizePath($url);
         $logs = $this->logRepository->findBySlug($slug);
@@ -207,12 +208,12 @@ class CrudController extends BaseController
                 ->reject('attachment')->toArray();
             if (in_array($log->getType(), $postTypes)) {
                 if (($post = get_post($log->getWpID())) && $post instanceof \WP_Post) {
-                    return $post->post_status === 'publish' &&
+                    return LocaleHelper::getPostLocale($post->ID) === $locale && $post->post_status === 'publish' &&
                         UrlHelper::normalizePath(get_permalink($post)) === $slug;
                 }
             } else {
                 if (($term = get_term($log->getWpID(), $log->getType())) && $term instanceof \WP_Term) {
-                    return UrlHelper::normalizePath(get_term_link($term->term_id, $term->taxonomy)) === $slug;
+                    return LocaleHelper::getTermLocale($term->term_id) === $locale && UrlHelper::normalizePath(get_term_link($term->term_id, $term->taxonomy)) === $slug;
                 }
             }
         }
