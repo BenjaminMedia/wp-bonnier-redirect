@@ -26,6 +26,11 @@ class ListController extends \WP_List_Table
     /** @var Request */
     private $request;
 
+    /** @var array */
+    private $redirectTypes = [];
+    /** @var array */
+    private $redirectLocales = [];
+
     public function __construct(RedirectRepository $redirects, Request $request)
     {
         parent::__construct([
@@ -111,8 +116,20 @@ class ListController extends \WP_List_Table
 
         $offset = ($tablePage - 1) * $redirectsPerPage;
 
+        $filters = [];
+        $redirectType = wp_unslash(trim($this->request->get('redirect_type')));
+        $redirectLocale = wp_unslash(trim($this->request->get('redirect_locale')));
+        if ($redirectType) {
+            $filters['type'] = $redirectType;
+        }
+        if ($redirectLocale) {
+            $filters['locale'] = $redirectLocale;
+        }
+
         // Fetch table data
-        $this->items = $this->fetchTableData($redirectSearchKey, $offset, $redirectsPerPage);
+        $this->items = $this->fetchTableData($redirectSearchKey, $offset, $redirectsPerPage, $filters);
+        $this->redirectTypes = $this->fetchRedirectTypes($filters);
+        $this->redirectLocales = $this->fetchRedirectLocales($filters);
 
         try {
             // Set pagination arguments
@@ -252,15 +269,36 @@ class ListController extends \WP_List_Table
      * @param string|null $searchKey
      * @param int $offset
      * @param int $perPage
+     * @param array $filters
      * @return array
      * @throws \Exception
      */
-    private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20)
+    private function fetchTableData(?string $searchKey = null, int $offset = 0, int $perPage = 20, array $filters = [])
     {
         $orderby = esc_sql($this->request->get('orderby', 'id'));
         $order = esc_sql($this->request->get('order', 'DESC'));
 
-        return $this->redirects->find($searchKey, $orderby, $order, $perPage, $offset);
+        return $this->redirects->find($searchKey, $orderby, $order, $perPage, $offset, $filters);
+    }
+
+    private function fetchRedirectTypes(array $filters = []): array
+    {
+        $query = $this->redirects->query()->select('type, COUNT(type) AS amount');
+        if (isset($filters['locale'])) {
+            $query->where(['locale', $filters['locale']]);
+        }
+        $query->groupBy('type');
+        return $this->redirects->results($query) ?: [];
+    }
+
+    private function fetchRedirectLocales(array $filters = []): array
+    {
+        $query = $this->redirects->query()->select('locale, COUNT(locale) AS amount');
+        if (isset($filters['type'])) {
+            $query->where(['type', $filters['type']]);
+        }
+        $query->groupBy('locale');
+        return $this->redirects->results($query) ?: [];
     }
 
     /**

@@ -25,6 +25,18 @@ class RedirectRepository extends BaseRepository
         parent::__construct($database);
     }
 
+    public function query(): Query {
+        return $this->database->query();
+    }
+
+    public function results(Query $query): ?array {
+        try {
+            return $this->database->getResults($query);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     /**
      * @param int $redirectID
      * @return Redirect|null
@@ -152,6 +164,7 @@ class RedirectRepository extends BaseRepository
      * @param string|null $order
      * @param int|null $perPage
      * @param int|null $offset
+     * @param array|null $filters
      * @return array
      * @throws \Exception
      */
@@ -160,12 +173,25 @@ class RedirectRepository extends BaseRepository
         ?string $orderBy = null,
         ?string $order = null,
         ?int $perPage = null,
-        ?int $offset = null
+        ?int $offset = null,
+        ?array $filters = []
     ) {
         $query = $this->database->query()->select('*');
+        $andWhere = false;
         if ($searchQuery) {
             $query->where(['from', '%' . $searchQuery . '%', 'LIKE'])
                 ->orWhere(['to', '%' . $searchQuery . '%', 'LIKE']);
+            $andWhere = true;
+        }
+        if (!empty($filters)) {
+            foreach ($filters as $column => $value) {
+                if ($andWhere) {
+                    $query->andWhere([$column, $value, '=']);
+                } else {
+                    $query->where([$column, $value, '=']);
+                    $andWhere = true;
+                }
+            }
         }
         if ($orderBy) {
             $query->orderBy($orderBy, $order);
