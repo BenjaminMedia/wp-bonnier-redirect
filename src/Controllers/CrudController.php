@@ -208,16 +208,18 @@ class CrudController extends BaseController
                 ->reject('attachment')->toArray();
             if (in_array($log->getType(), $postTypes)) {
                 if (($post = get_post($log->getWpID())) && $post instanceof \WP_Post) {
-                    return LocaleHelper::getPostLocale($post->ID) === $locale && $post->post_status === 'publish' &&
+                    $isLive = LocaleHelper::getPostLocale($post->ID) === $locale && $post->post_status === 'publish' &&
                         UrlHelper::normalizePath(get_permalink($post)) === $slug;
+                    return apply_filters(WpBonnierRedirect::FILTER_SLUG_IS_LIVE, $isLive, $url, $locale, $post);
                 }
             } else {
                 if (($term = get_term($log->getWpID(), $log->getType())) && $term instanceof \WP_Term) {
-                    return LocaleHelper::getTermLocale($term->term_id) === $locale && UrlHelper::normalizePath(get_term_link($term->term_id, $term->taxonomy)) === $slug;
+                    $isLive = LocaleHelper::getTermLocale($term->term_id) === $locale && UrlHelper::normalizePath(get_term_link($term->term_id, $term->taxonomy)) === $slug;
+                    return apply_filters(WpBonnierRedirect::FILTER_SLUG_IS_LIVE, $isLive, $url, $locale, $term);
                 }
             }
         }
 
-        return false;
+        return apply_filters(WpBonnierRedirect::FILTER_SLUG_IS_LIVE, false, $url, $locale, null);
     }
 }
