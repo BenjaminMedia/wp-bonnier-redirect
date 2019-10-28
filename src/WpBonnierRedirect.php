@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class WpBonnierRedirect
 {
+    const FILTER_SLUG_IS_LIVE = 'redirect/slug-is-live';
     /**
      * @var WpBonnierRedirect Instance of this class.
      */
@@ -94,6 +95,10 @@ class WpBonnierRedirect
         Observers::bootstrap($this->logRepository, $this->redirectRepository);
 
         Commands::register();
+
+        add_filter(self::FILTER_SLUG_IS_LIVE, function (bool $isLive) {
+            return $isLive;
+        });
 
         // Load admin menu
         add_action('admin_menu', [$this, 'loadAdminMenus']);

@@ -7,6 +7,7 @@ use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Observers\Observers;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Tests\integration\Controllers\ControllerTestCase;
+use Bonnier\WP\Redirect\WpBonnierRedirect;
 
 class ValidationTest extends ControllerTestCase
 {
@@ -156,8 +157,6 @@ class ValidationTest extends ControllerTestCase
             'A post or term with this slug is published!',
             $validationErrors['redirect_from']
         );
-
-        $this->assertTrue(1 == '1');
     }
 
     /**
@@ -188,8 +187,37 @@ class ValidationTest extends ControllerTestCase
             'A post or term with this slug is published!',
             $validationErrors['redirect_from']
         );
+    }
 
-        $this->assertTrue(1 == '1');
+    /**
+     * @dataProvider wpPostProvider
+     * @param string $postType
+     */
+    public function testCanCreateRedirectOnLiveWPPostWithFilter($postType)
+    {
+        $post = $this->factory()->post->create_and_get(['post_type' => $postType, 'post_status' => 'publish']);
+
+        $path = get_permalink($post);
+
+        add_filter(WpBonnierRedirect::FILTER_SLUG_IS_LIVE, function (bool $isLive) {
+            return false;
+        }, 10);
+
+        $request = $this->createPostRequest([
+            'redirect_from' => $path,
+            'redirect_to' => '/new/destination',
+            'redirect_locale' => 'da',
+            'redirect_code' => 301
+        ]);
+
+        $crudController = $this->getCrudController($request);
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+
+        $redirects = $this->findAllRedirects();
+
+        $this->assertCount(1, $redirects);
+        $this->assertManualRedirect($redirects->first(), rtrim(parse_url($path, PHP_URL_PATH), '/'), '/new/destination');
     }
 
     public function destructiveRedirectsProvider()
