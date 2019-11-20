@@ -166,7 +166,7 @@ class StatusChangeTest extends ObserverTestCase
             'from' => $lastRedirect->getFrom(),
             'to' => $lastRedirect->getTo(),
             'code' => $lastRedirect->getCode(),
-            'locale' => 'da',
+            'locale' => 'nb',
             'wp_id' => 100,
             'type' => 'post-draft'
         ]);
