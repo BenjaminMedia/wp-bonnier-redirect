@@ -37,6 +37,14 @@ class RedirectRepository extends BaseRepository
         }
     }
 
+    public function getRedirects(Query $query): ?Collection
+    {
+        if ($results = $this->results($query)) {
+            return $this->mapRedirects($results);
+        }
+        return null;
+    }
+
     /**
      * @param int $redirectID
      * @return Redirect|null
@@ -157,7 +165,6 @@ class RedirectRepository extends BaseRepository
 
         return null;
     }
-
     /**
      * @param string|null $searchQuery
      * @param string|null $orderBy

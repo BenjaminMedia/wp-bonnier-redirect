@@ -42,6 +42,11 @@ class CategorySlugChangeObserver extends AbstractObserver
 
         $slug = $latest->getSlug();
 
+        if ($logs->isNotEmpty() && $slug === $logs->last()->getSlug()) {
+            // No changes happened to Category Slug
+            return;
+        }
+
         // Check for slug changes
         $noSlugChanges = true;
 

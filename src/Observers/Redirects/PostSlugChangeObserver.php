@@ -31,6 +31,7 @@ class PostSlugChangeObserver extends AbstractObserver
     {
         $post = $subject->getPost();
         $logs = $this->logRepository->findByWpIDAndType($post->ID, $post->post_type);
+        $locale = LocaleHelper::getPostLocale($subject->getPost()->ID);
         if (is_null($logs)) {
             return;
         }
@@ -49,11 +50,16 @@ class PostSlugChangeObserver extends AbstractObserver
             $type = 'post-slug-change';
         }
 
-        if ($redirects = $this->redirectRepository->findAllBy('from', $slug)) {
+        // Avoid touching redirects in other languages
+        $query = $this->redirectRepository->query()->select('*')
+            ->where(['from_hash', hash('md5', $slug)])
+            ->andWhere(['locale', $locale]);
+
+        if ($redirects = $this->redirectRepository->getRedirects($query)) {
             $this->redirectRepository->deleteMultiple($redirects);
         }
 
-        $logs->each(function (Log $log) use ($slug, $subject, $type) {
+        $logs->each(function (Log $log) use ($slug, $subject, $type, $locale) {
             if ($log->getSlug() !== $slug) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
@@ -61,7 +67,7 @@ class PostSlugChangeObserver extends AbstractObserver
                     ->setWpID($subject->getPost()->ID)
                     ->setType($type)
                     ->setCode(Response::HTTP_MOVED_PERMANENTLY)
-                    ->setLocale(LocaleHelper::getPostLocale($subject->getPost()->ID));
+                    ->setLocale($locale);
                 $this->redirectRepository->save($redirect, true);
             }
         });

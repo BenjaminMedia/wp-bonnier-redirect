@@ -1,6 +1,7 @@
 vendor
 wordpress
 wp-content
+*_deleted_duplicates.csv
 .env
 assets/files/*
 !assets/files/import-example.csv
