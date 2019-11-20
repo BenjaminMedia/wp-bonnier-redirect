@@ -35,6 +35,11 @@ class TagSlugChangeObserver extends AbstractObserver
 
             $slug = $latest->getSlug();
 
+            if ($logs->isNotEmpty() && $slug === $logs->last()->getSlug()) {
+                // No changes happened to Tag Slug
+                return;
+            }
+
             $logs->each(function (Log $log) use ($tag, $slug) {
                 if ($log->getSlug() !== $slug) {
                     $redirect = new Redirect();

@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\Redirect\Tests\integration\Observers\Post;
 
+use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Tests\integration\Observers\ObserverTestCase;
 
 class StatusChangeTest extends ObserverTestCase
@@ -148,14 +149,28 @@ class StatusChangeTest extends ObserverTestCase
         ]);
 
         $redirects = $this->findAllRedirects();
+        /* @var \Bonnier\WP\Redirect\Models\Redirect $lastRedirect */
+        $lastRedirect = $redirects->last();
+
         $this->assertCount(1, $redirects);
         $this->assertRedirect(
             $post->ID,
-            $redirects->last(),
+            $lastRedirect,
             '/dinosaur/carnivorous/t-rex',
             '/dinosaur/carnivorous',
             'post-draft'
         );
+
+        // Create a duplicate redirect but in another language to ensure it is not deleted on republish
+        $duplicatedRedirect = Redirect::createFromArray([
+            'from' => $lastRedirect->getFrom(),
+            'to' => $lastRedirect->getTo(),
+            'code' => $lastRedirect->getCode(),
+            'locale' => 'da',
+            'wp_id' => 100,
+            'type' => 'post-draft'
+        ]);
+        $this->redirectRepository->save($duplicatedRedirect);
 
         $this->updatePost($post->ID, [
             'post_status' => 'publish'
@@ -163,7 +178,16 @@ class StatusChangeTest extends ObserverTestCase
 
         $this->assertSame('/dinosaur/carnivorous/t-rex', $this->getPostSlug($post));
 
-        $this->assertNull($this->findAllRedirects());
+        $remaningRedirects =  $this->findAllRedirects();
+
+        $this->assertCount(1, $remaningRedirects);
+        $this->assertRedirect(
+            100,
+            $duplicatedRedirect,
+            '/dinosaur/carnivorous/t-rex',
+            '/dinosaur/carnivorous',
+            'post-draft'
+        );
     }
 
     public function testCanDeletePostAndCreateNewPostWithSameSlug()
