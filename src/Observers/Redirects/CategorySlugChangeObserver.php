@@ -8,6 +8,9 @@ use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\AbstractObserver;
 use Bonnier\WP\Redirect\Observers\CategorySubject;
 use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
+use Bonnier\WP\Redirect\Observers\Loggers\CategoryObserver;
+use Bonnier\WP\Redirect\Observers\Loggers\PostObserver;
+use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +19,17 @@ class CategorySlugChangeObserver extends AbstractObserver
 {
     /** @var RedirectRepository */
     private $redirectRepository;
+    private $postObserver;
+    private $postLogObserver;
+    private $categoryObserver;
 
     public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository)
     {
         parent::__construct($logRepository);
         $this->redirectRepository = $redirectRepository;
+        $this->postObserver = new PostSlugChangeObserver($logRepository, $redirectRepository);
+        $this->postLogObserver = new PostObserver($logRepository);
+        $this->categoryObserver = new CategoryObserver($logRepository);
     }
 
     /**
@@ -73,7 +82,10 @@ class CategorySlugChangeObserver extends AbstractObserver
 
         if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
             foreach ($categories as $cat) {
-                do_action('edited_category', $cat->term_id, $cat->term_taxonomy_id);
+                $subject = new CategorySubject();
+                $subject->setCategory($cat)->setType(CategorySubject::UPDATE);
+                $this->categoryObserver->update($subject);
+                $this->update($subject);
             }
         }
 
@@ -85,7 +97,10 @@ class CategorySlugChangeObserver extends AbstractObserver
                 'posts_per_page' => -1
             ])) {
                 foreach ($posts as $post) {
-                    do_action('save_post', $post->ID, $post, true);
+                    $subject = new PostSubject();
+                    $subject->setPost($post);
+                    $this->postLogObserver->update($subject);
+                    $this->postObserver->update($subject);
                 }
             }
         });
