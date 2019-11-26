@@ -18,6 +18,7 @@ class ListController extends \WP_List_Table
     const DELETE_NONCE_KEY = 'delete_redirect_nonce';
     /** @var ListController */
     protected static $redirectsTable;
+
     /** @var array */
     private $notices = [];
 
@@ -87,6 +88,7 @@ class ListController extends \WP_List_Table
             'redirect_locale' => 'Locale',
             'redirect_type' => 'Type',
             'redirect_code' => 'Response Code',
+            'redirect_user' => 'User',
             'id' => 'ID',
         ];
     }
@@ -154,7 +156,10 @@ class ListController extends \WP_List_Table
         if (Str::startsWith($column_name, 'redirect_')) {
             $column_name = Str::after($column_name, 'redirect_');
         }
-        return $item[$column_name];
+        if (isset($item[$column_name])) {
+            return $item[$column_name];
+        }
+        return null;
     }
 
     /**
@@ -201,6 +206,16 @@ class ListController extends \WP_List_Table
             $item['from'],
             $this->row_actions($actions)
         );
+    }
+
+    public function column_redirect_user($item)
+    {
+        if ($userID = $item['user']) {
+            $user = get_user_by('id', $userID);
+            return $user->display_name;
+        }
+
+        return 'N/A';
     }
 
     /**
@@ -262,6 +277,7 @@ class ListController extends \WP_List_Table
             'redirect_locale' => 'locale',
             'redirect_type' => 'type',
             'redirect_code' => 'code',
+            'redirect_user' => 'user'
         ];
     }
 

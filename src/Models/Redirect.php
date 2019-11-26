@@ -34,6 +34,8 @@ class Redirect implements Arrayable
     private $keepQuery;
     /** @var boolean */
     private $wildcard;
+    /** @var \WP_User|null */
+    private $user;
 
     public function __construct()
     {
@@ -43,6 +45,9 @@ class Redirect implements Arrayable
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
         $this->keepQuery = false;
         $this->wildcard = false;
+        if ($user = wp_get_current_user()) {
+            $this->setUser($user);
+        }
     }
 
     public static function createFromArray(array $data): Redirect
@@ -259,6 +264,16 @@ class Redirect implements Arrayable
         return $this->wildcard;
     }
 
+    public function getUser(): ?\WP_User
+    {
+        return $this->user;
+    }
+
+    public function setUser(\WP_User $user)
+    {
+        $this->user = $user;
+    }
+
     /**
      * @return array
      */
@@ -277,6 +292,7 @@ class Redirect implements Arrayable
             'paramless_from_hash' => $this->getParamlessFromHash(),
             'keep_query' => $this->keepsQuery() ? 1 : 0,
             'is_wildcard' => $this->isWildcard() ? 1 : 0,
+            'user' => $this->getUser() ? $this->getUser()->ID : null
         ];
     }
 
@@ -306,7 +322,11 @@ class Redirect implements Arrayable
             $this->paramlessFromHash = $paramlessFromHash;
         }
         $this->setKeepQuery(boolval(Arr::get($data, 'keep_query')));
-
+        if ($userID = Arr::get($data, 'user')) {
+            if ($user = get_user_by('id', $userID)) {
+                $this->setUser($user);
+            }
+        }
         return $this;
     }
 

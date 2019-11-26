@@ -242,6 +242,9 @@ class RedirectRepository extends BaseRepository
         if ($redirect->getFrom() === $redirect->getTo()) {
             throw new IdenticalFromToException('A redirect with the same from and to, cannot be created!');
         }
+        if ($user = wp_get_current_user()) {
+            $redirect->setUser($user);
+        }
         $data = $redirect->toArray();
         unset($data['id']);
 
@@ -367,6 +370,9 @@ class RedirectRepository extends BaseRepository
         if ($redirect->getFrom() === $redirect->getTo()) {
             $this->delete($redirect);
         } else {
+            if ($user = wp_get_current_user()) {
+                $redirect->setUser($user);
+            }
             $data = $redirect->toArray();
             unset($data['id']);
             $this->database->update($redirect->getID(), $data);
