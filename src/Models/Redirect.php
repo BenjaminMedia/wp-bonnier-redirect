@@ -269,7 +269,9 @@ class Redirect implements Arrayable
 
     public function setUser(\WP_User $user)
     {
-        $this->user = $user;
+        if ($user->ID) {
+            $this->user = $user;
+        }
     }
 
     /**
