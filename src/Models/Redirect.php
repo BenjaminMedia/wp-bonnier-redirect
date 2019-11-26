@@ -45,9 +45,7 @@ class Redirect implements Arrayable
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
         $this->keepQuery = false;
         $this->wildcard = false;
-        if ($user = wp_get_current_user()) {
-            $this->setUser($user);
-        }
+        $this->user = null;
     }
 
     public static function createFromArray(array $data): Redirect
