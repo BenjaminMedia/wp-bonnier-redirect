@@ -65,6 +65,15 @@ class WpBonnierRedirect
     /** @var Request */
     private $request;
 
+    /** @var ListController */
+    private $listController;
+
+    /** @var CrudController */
+    private $crudController;
+
+    /** @var ToolController */
+    private $toolController;
+
     /**
      * Do not load this more than once.
      */
@@ -140,16 +149,12 @@ class WpBonnierRedirect
 
     public function loadAdminMenus()
     {
-        $listController = new ListController($this->redirectRepository, $this->request);
-        $crudController = new CrudController($this->logRepository, $this->redirectRepository, $this->request);
-        $toolController = new ToolController($this->redirectRepository, $this->request);
-
-        add_menu_page(
+        $topLevelListPageHook = add_menu_page(
             'Bonnier Redirects',
             'Bonnier Redirects',
             'manage_categories', // Editor role
             'bonnier-redirects',
-            [$listController, 'displayRedirectsTable'],
+            [$this, 'displayRedirectsTable'],
             'dashicons-external'
         );
         $listPageHook = add_submenu_page(
@@ -158,7 +163,7 @@ class WpBonnierRedirect
             'All Redirects',
             'manage_categories', // Editor role
             'bonnier-redirects',
-            [$listController, 'displayRedirectsTable']
+            [$this, 'displayRedirectsTable']
         );
         $crudPageHook = add_submenu_page(
             'bonnier-redirects',
@@ -166,7 +171,7 @@ class WpBonnierRedirect
             'Add New',
             'manage_categories', // Editor role
             'add-redirect',
-            [$crudController, 'displayAddRedirectPage']
+            [$this, 'displayAddRedirectPage']
         );
         $toolPageHook = add_submenu_page(
             'bonnier-redirects',
@@ -174,14 +179,48 @@ class WpBonnierRedirect
             'Tools',
             'manage_options', // Admin role
             'redirect-tools',
-            [$toolController, 'displayToolPage']
+            [$this, 'displayToolPage']
         );
 
-        add_action(sprintf('load-%s', $listPageHook), [$listController, 'loadRedirectsTable']);
-        add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'handlePost']);
-        add_action(sprintf('load-%s', $crudPageHook), [$crudController, 'registerScripts']);
-        add_action(sprintf('load-%s', $toolPageHook), [$toolController, 'handlePost']);
-        add_action(sprintf('load-%s', $toolPageHook), [$toolController, 'registerScripts']);
+        add_action(sprintf('load-%s', $topLevelListPageHook), [$this, 'loadRedirectsTable']);
+        add_action(sprintf('load-%s', $listPageHook), [$this, 'loadRedirectsTable']);
+        add_action(sprintf('load-%s', $crudPageHook), [$this, 'loadCrudController']);
+        add_action(sprintf('load-%s', $toolPageHook), [$this, 'loadToolController']);
+    }
+
+    public function displayRedirectsTable()
+    {
+        $this->listController->displayRedirectsTable();
+    }
+
+    public function displayAddRedirectPage()
+    {
+        $this->crudController->displayAddRedirectPage();
+    }
+
+    public function displayToolPage()
+    {
+        $this->toolController->displayToolPage();
+    }
+
+    public function loadRedirectsTable()
+    {
+        $this->listController = new ListController($this->redirectRepository, $this->request);
+        $this->listController->loadRedirectsTable();
+    }
+
+    public function loadCrudController()
+    {
+        $this->crudController = new CrudController($this->logRepository, $this->redirectRepository, $this->request);
+        $this->crudController->handlePost();
+        $this->crudController->registerScripts();
+    }
+
+    public function loadToolController()
+    {
+        $this->toolController = new ToolController($this->redirectRepository, $this->request);
+        $this->toolController->handlePost();
+        $this->toolController->registerScripts();
     }
 
     public function assetPath(string $file, bool $create = false)

@@ -179,6 +179,7 @@ $redirect = $this->getRedirect();
         </table>
         <p class="submit">
             <input type="submit" class="button button-primary button-large" value="Save redirect" />
+            <a href="<?php echo esc_url(add_query_arg(['page' => 'bonnier-redirects'], admin_url('admin.php'))); ?>" class="button button-cancel button-large">Cancel</a>
         </p>
     </form>
 </div>

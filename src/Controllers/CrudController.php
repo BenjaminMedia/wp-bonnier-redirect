@@ -124,6 +124,7 @@ class CrudController extends BaseController
     {
         try {
             $toHash = $redirect->getToHash();
+            $redirect->setType('manual');
             $redirect = $this->redirectRepository->save($redirect);
             $editRedirectLink = esc_url(add_query_arg([
                 'page' => self::PAGE,
