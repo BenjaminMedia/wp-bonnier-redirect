@@ -1,7 +1,7 @@
-?php
+<?php
 /**
  * Plugin Name: WP Bonnier Redirect
- * Version: 4.8.1
+ * Version: 4.8.2
  * Plugin URI: https://github.com/BenjaminMedia/wp-bonnier-redirect
  * Description: This plugin creates redirects with support for Polylang
  * Author: Bonnier Publications
