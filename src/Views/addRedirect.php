@@ -129,7 +129,7 @@ $redirect = $this->getRedirect();
                                 if ($language === $redirect->getLocale()) {
                                     $selected = 'selected';
                                     $isSelected = true;
-                                } elseif (!$isSelected && $this->localeQuery === $language) {
+                                } elseif (!$isSelected && $this->languageQuery === $language) {
                                     // We should only set the locale from the URL Query
                                     // if we have not set it from a redirect we are editing.
                                     $selected = 'selected';

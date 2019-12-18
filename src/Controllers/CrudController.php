@@ -23,7 +23,7 @@ class CrudController extends BaseController
     /** @var string */
     private $fromQuery;
     /** @var string */
-    private $localeQuery;
+    private $languageQuery;
 
     public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository, Request $request)
     {
@@ -37,7 +37,7 @@ class CrudController extends BaseController
             $this->redirect = new Redirect();
         }
         $this->fromQuery = urldecode($this->request->get('from'));
-        $this->localeQuery = urldecode($this->request->get('locale'));
+        $this->languageQuery = urldecode($this->request->get('langauge'));
     }
 
     public function displayAddRedirectPage()
