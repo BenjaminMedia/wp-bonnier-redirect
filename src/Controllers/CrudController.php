@@ -37,7 +37,7 @@ class CrudController extends BaseController
             $this->redirect = new Redirect();
         }
         $this->fromQuery = urldecode($this->request->get('from'));
-        $this->languageQuery = urldecode($this->request->get('langauge'));
+        $this->languageQuery = urldecode($this->request->get('language'));
     }
 
     public function displayAddRedirectPage()
