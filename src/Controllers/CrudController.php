@@ -20,6 +20,10 @@ class CrudController extends BaseController
     private $redirect;
     /** @var LogRepository */
     private $logRepository;
+    /** @var string */
+    private $fromQuery;
+    /** @var string */
+    private $localeQuery;
 
     public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository, Request $request)
     {
@@ -32,6 +36,8 @@ class CrudController extends BaseController
         } else {
             $this->redirect = new Redirect();
         }
+        $this->fromQuery = urldecode($this->request->get('from'));
+        $this->localeQuery = urldecode($this->request->get('locale'));
     }
 
     public function displayAddRedirectPage()

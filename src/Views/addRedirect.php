@@ -54,7 +54,7 @@ $redirect = $this->getRedirect();
                         type="text"
                         placeholder="/old/page/slug"
                         autocomplete="off"
-                        value="<?php echo $redirect->getFrom(); ?>" />
+                        value="<?php echo $redirect->getFrom() ?? $this->fromQuery; ?>" />
                     <p class="description">
                         <?php
                         if ($redirectFromError = $this->getError('redirect_from')) {
@@ -123,9 +123,15 @@ $redirect = $this->getRedirect();
                             ?>
                             <option value="">-- Choose Language --</option>
                             <?php
+                            $isSelected = false;
                             foreach ($languages as $language) {
                                 $selected = null;
                                 if ($language === $redirect->getLocale()) {
+                                    $selected = 'selected';
+                                    $isSelected = true;
+                                } elseif (!$isSelected && $this->localeQuery === $language) {
+                                    // We should only set the locale from the URL Query
+                                    // if we have not set it from a redirect we are editing.
                                     $selected = 'selected';
                                 }
                                 ?>
