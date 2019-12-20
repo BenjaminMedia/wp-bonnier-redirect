@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class WpBonnierRedirect
 {
+    const ACTION_REDIRECT_SAVED = 'redirect/redirect-saved';
     const FILTER_SLUG_IS_LIVE = 'redirect/slug-is-live';
     /**
      * @var WpBonnierRedirect Instance of this class.
