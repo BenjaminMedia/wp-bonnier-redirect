@@ -10,6 +10,7 @@ use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
+use Bonnier\WP\Redirect\WpBonnierRedirect;
 use Illuminate\Support\Collection;
 
 class RedirectRepository extends BaseRepository
@@ -260,6 +261,8 @@ class RedirectRepository extends BaseRepository
 
         $this->removeReverseRedirects($redirect);
         $this->removeChainsByRedirect($redirect);
+
+        do_action(WpBonnierRedirect::ACTION_REDIRECT_SAVED, $redirect);
 
         return $redirect;
     }

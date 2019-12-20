@@ -16,7 +16,7 @@ and
 ### Filters
 This plugin exposes the following filters:
 
-`redirect/slug-is-live | WPBonnierRedirect::FILTER_SLUG_IS_LIVE`:
+`redirect/slug-is-live | Bonnier\WP\Redirect\WPBonnierRedirect::FILTER_SLUG_IS_LIVE`:
 
 Perform your own validation on whether a url is live or not.
 
@@ -32,4 +32,20 @@ Perform your own validation on whether a url is live or not.
 add_filter('redirect/slug-is-live', function (bool $isLive, string $url, string $locale, $object) {
     return $isLive;
 }, 10, 4);
+```
+
+### Actions
+This plugin exposes the following actions:
+
+`redirect/redirect-saved | Bonnier\WP\Redirect\WPBonnierRedirect::ACTION_REDIRECT_SAVED`:
+
+Register an action, when a new redirect is saved.
+
+```php
+/**
+ * @param Redirect $redirect The newly created redirect
+ */
+add_filter('redirect/redirect-saved', function (Redirect $redirect) {
+    // Do stuff with the newly created Redirect
+}, 10);
 ```
