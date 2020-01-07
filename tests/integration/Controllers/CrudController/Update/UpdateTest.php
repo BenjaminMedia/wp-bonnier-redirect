@@ -264,7 +264,7 @@ class UpdateTest extends ControllerTestCase
     {
         $redirect = $this->createRedirect('/from/slug', '/to/slug', 'manual', 0, 'da', 301, true);
         $this->assertRedirectCreated($redirect);
-        $this->assertTrue($redirect->isNotFound());
+        $this->assertTrue($redirect->getNotFound());
 
         $request = $this->createPostRequest([
             'redirect_id' => $redirect->getID(),
@@ -289,6 +289,6 @@ class UpdateTest extends ControllerTestCase
             'manual',
             301
         );
-        $this->assertFalse($redirects->first()->isNotFound());
+        $this->assertNull($redirects->first()->getNotFound());
     }
 }

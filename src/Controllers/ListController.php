@@ -90,6 +90,8 @@ class ListController extends \WP_List_Table
             'redirect_code' => 'Response Code',
             'redirect_user' => 'User',
             'redirect_notfound' => 'Not Found',
+            'redirect_created_at' => 'Created',
+            'redirect_updated_at' => 'Updated',
             'id' => 'ID',
         ];
     }
@@ -209,6 +211,24 @@ class ListController extends \WP_List_Table
         );
     }
 
+    public function column_redirect_notfound($item)
+    {
+        if (is_null($item['notfound'])) {
+            return 'Not checked';
+        }
+        return $item['notfound'] ? 'Error' : 'Valid';
+    }
+
+    public function column_redirect_created_at($item)
+    {
+        return (new \DateTime($item['created_at']))->format('H:i d-m-Y');
+    }
+
+    public function column_redirect_updated_at($item)
+    {
+        return (new \DateTime($item['updated_at']))->format('H:i d-m-Y');
+    }
+
     public function column_redirect_user($item)
     {
         if ($userID = $item['user']) {
@@ -280,6 +300,8 @@ class ListController extends \WP_List_Table
             'redirect_code' => 'code',
             'redirect_user' => 'user',
             'redirect_notfound' => 'notfound',
+            'redirect_created_at' => 'created_at',
+            'redirect_updated_at' => 'updated_at',
         ];
     }
 

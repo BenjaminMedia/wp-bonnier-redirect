@@ -6,6 +6,7 @@ class Query
 {
     const FORMAT_INT = 0;
     const FORMAT_STRING = 1;
+    const FORMAT_NULL = 2;
 
     const ORDER_ASC = 'ASC';
     const ORDER_DESC = 'DESC';
@@ -55,13 +56,17 @@ class Query
     {
         if (count($clause) === 3) {
             $this->query .= " WHERE `$clause[0]` $clause[2] ";
+        } elseif (is_null($clause[1])) {
+            $this->query .= " WHERE `$clause[0]` ";
         } else {
             $this->query .= " WHERE `$clause[0]` = ";
         }
         if ($format === self::FORMAT_INT) {
             $this->query .= $clause[1];
-        } else {
+        } elseif ($format === self::FORMAT_STRING) {
             $this->query .= "'$clause[1]'";
+        } else {
+            $this->query .= "IS NULL";
         }
         return $this;
     }

@@ -3,6 +3,7 @@
 namespace Bonnier\WP\Redirect\Commands;
 
 use Bonnier\WP\Redirect\Database\DB;
+use Bonnier\WP\Redirect\Database\Query;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -23,20 +24,39 @@ class NotFoundCommands extends \WP_CLI_Command
         $repo = new RedirectRepository(new DB());
         $client = new Client();
         $domains = LocaleHelper::getLocalizedUrls();
-        $redirects = $repo->findAllBy('notfound', 0);
+        $lastMonth = new \DateTime('- 1 month');
+        $query = $repo->query()
+            ->select('*')
+            ->where(['notfound', null], Query::FORMAT_NULL)
+            ->orWhere(['updated_at', $lastMonth->format('Y-m-d H:i:s'), '<'])
+            ->limit(5000);
+        $redirects = $repo->getRedirects($query);
+        if (!$redirects) {
+            \WP_CLI::line('No redirects to inspect!');
+        }
         $redirectCount = $redirects->count();
         $progress = make_progress_bar(sprintf('Inspecting %s redirects', number_format($redirectCount)), $redirectCount);
         $redirects->each(function (Redirect $redirect) use ($progress, $domains, $client, $repo) {
+            $url = null;
             $domain = $domains[$redirect->getLocale()] ?? null;
-            if ($domain) {
+            if (substr($redirect->getTo(), 0, 1) !== '/') {
+                $url = $redirect->getTo();
+            } else if ($domain) {
+                $url = sprintf('%s/%s', rtrim($domain, '/'), ltrim($redirect->getTo(), '/'));
+            }
+            if ($url) {
                 try {
-                    $client->head(sprintf('%s/%s', rtrim($domain, '/'), ltrim($redirect->getTo(), '/')));
+                    $client->head($url);
+                    $redirect->setNotFound(false);
+                    $repo->save($redirect);
                 } catch (RequestException $exception) {
-                    if ($exception->getResponse()->getStatusCode() > 399) {
+                    if ($exception->getResponse() && $exception->getResponse()->getStatusCode() > 399) {
                         $redirect->setNotFound();
                         $repo->save($redirect);
                     }
+
                 }
+                usleep(500 * 1000); // 500ms
             }
             $progress->tick();
         });

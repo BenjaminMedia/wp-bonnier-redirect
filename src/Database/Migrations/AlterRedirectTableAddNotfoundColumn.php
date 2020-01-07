@@ -20,7 +20,9 @@ class AlterRedirectTableAddNotfoundColumn implements Migration
 
         $sql = "
         ALTER TABLE `$table`
-        ADD `notfound` tinyint(1) DEFAULT 0;
+        ADD `notfound` tinyint(1) DEFAULT NULL,
+        ADD `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+        ADD `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
         ";
         $wpdb->query($sql);
     }
