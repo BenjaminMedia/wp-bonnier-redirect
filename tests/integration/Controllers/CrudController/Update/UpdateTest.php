@@ -259,4 +259,36 @@ class UpdateTest extends ControllerTestCase
         );
         $this->assertTrue($redirects->first()->keepsQuery());
     }
+
+    public function testUpdatingRedirectWithNotFoundSetToTrueResetsToFalse()
+    {
+        $redirect = $this->createRedirect('/from/slug', '/to/slug', 'manual', 0, 'da', 301, true);
+        $this->assertRedirectCreated($redirect);
+        $this->assertTrue($redirect->isNotFound());
+
+        $request = $this->createPostRequest([
+            'redirect_id' => $redirect->getID(),
+            'redirect_from' => $redirect->getFrom(),
+            'redirect_to' => '/to/new/slug',
+            'redirect_locale' => $redirect->getLocale(),
+            'redirect_code' => $redirect->getCode(),
+            'redirect_keep_query' => $redirect->keepsQuery() ? '1' : '0'
+        ]);
+
+        $crudController = $this->getCrudController($request);
+
+        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+
+        $redirects = $this->findAllRedirects();
+        $this->assertCount(1, $redirects);
+        $this->assertRedirect(
+            0,
+            $redirects->first(),
+            '/from/slug',
+            '/to/new/slug',
+            'manual',
+            301
+        );
+        $this->assertFalse($redirects->first()->isNotFound());
+    }
 }

@@ -89,6 +89,7 @@ class ListController extends \WP_List_Table
             'redirect_type' => 'Type',
             'redirect_code' => 'Response Code',
             'redirect_user' => 'User',
+            'redirect_notfound' => 'Not Found',
             'id' => 'ID',
         ];
     }
@@ -277,7 +278,8 @@ class ListController extends \WP_List_Table
             'redirect_locale' => 'locale',
             'redirect_type' => 'type',
             'redirect_code' => 'code',
-            'redirect_user' => 'user'
+            'redirect_user' => 'user',
+            'redirect_notfound' => 'notfound',
         ];
     }
 

@@ -99,6 +99,7 @@ class CrudController extends BaseController
             $redirect->setLocale($this->request->get('redirect_locale'));
             $redirect->setCode($this->request->get('redirect_code'));
             $redirect->setKeepQuery(boolval($this->request->get('redirect_keep_query')));
+            $redirect->setNotFound(false);
             $this->redirect = $redirect;
             $this->saveRedirect($redirect);
         }

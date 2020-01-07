@@ -20,6 +20,7 @@ class Migrate
             AlterRedirectTableAddWildcardColumn::class,
             AlterRedirectLogTableAddIdTypeIndex::class,
             AlterRedirectTableAddUser::class,
+            AlterRedirectTableAddNotfoundColumn::class,
         ]);
 
         if ($dbVersion >= count($migrations)) {

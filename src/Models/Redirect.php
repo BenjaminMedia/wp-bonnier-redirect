@@ -34,6 +34,8 @@ class Redirect implements Arrayable
     private $keepQuery;
     /** @var boolean */
     private $wildcard;
+    /** @var boolean */
+    private $notfound;
     /** @var \WP_User|null */
     private $user;
 
@@ -45,6 +47,7 @@ class Redirect implements Arrayable
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
         $this->keepQuery = false;
         $this->wildcard = false;
+        $this->notfound = false;
         $this->user = null;
     }
 
@@ -262,6 +265,18 @@ class Redirect implements Arrayable
         return $this->wildcard;
     }
 
+    public function isNotFound(): bool
+    {
+        return $this->notfound;
+    }
+
+    public function setNotFound(bool $notFound = true): Redirect
+    {
+        $this->notfound = $notFound;
+
+        return $this;
+    }
+
     public function getUser(): ?\WP_User
     {
         return $this->user;
@@ -292,6 +307,7 @@ class Redirect implements Arrayable
             'paramless_from_hash' => $this->getParamlessFromHash(),
             'keep_query' => $this->keepsQuery() ? 1 : 0,
             'is_wildcard' => $this->isWildcard() ? 1 : 0,
+            'notfound' => $this->isNotFound() ? 1 : 0,
             'user' => $this->getUser() ? $this->getUser()->ID : null
         ];
     }
@@ -322,6 +338,7 @@ class Redirect implements Arrayable
             $this->paramlessFromHash = $paramlessFromHash;
         }
         $this->setKeepQuery(boolval(Arr::get($data, 'keep_query')));
+        $this->setNotFound(boolval(Arr::get($data, 'notfound')));
         if ($userID = Arr::get($data, 'user')) {
             if ($user = get_user_by('id', $userID)) {
                 $this->setUser($user);
