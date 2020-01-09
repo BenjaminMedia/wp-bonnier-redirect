@@ -7,6 +7,7 @@ class Commands
     private static $commands = [
         'logs' => LogCommands::class,
         'redirects' => RedirectCommands::class,
+        'notfound' => NotFoundCommands::class
     ];
 
     public static function register()

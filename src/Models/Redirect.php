@@ -34,8 +34,14 @@ class Redirect implements Arrayable
     private $keepQuery;
     /** @var boolean */
     private $wildcard;
+    /** @var boolean|null */
+    private $notfound;
     /** @var \WP_User|null */
     private $user;
+    /** @var \DateTime */
+    private $createdAt;
+    /** @var \DateTime */
+    private $updatedAt;
 
     public function __construct()
     {
@@ -45,7 +51,10 @@ class Redirect implements Arrayable
         $this->code = Response::HTTP_MOVED_PERMANENTLY;
         $this->keepQuery = false;
         $this->wildcard = false;
+        $this->notfound = null;
         $this->user = null;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     public static function createFromArray(array $data): Redirect
@@ -262,6 +271,18 @@ class Redirect implements Arrayable
         return $this->wildcard;
     }
 
+    public function getNotFound(): ?bool
+    {
+        return $this->notfound;
+    }
+
+    public function setNotFound($notFound = true): Redirect
+    {
+        $this->notfound = $notFound;
+
+        return $this;
+    }
+
     public function getUser(): ?\WP_User
     {
         return $this->user;
@@ -272,6 +293,30 @@ class Redirect implements Arrayable
         if ($user->ID) {
             $this->user = $user;
         }
+    }
+
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTime $createdAt): Redirect
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): \DateTime
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt($updatedAt): Redirect
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
     }
 
     /**
@@ -292,7 +337,10 @@ class Redirect implements Arrayable
             'paramless_from_hash' => $this->getParamlessFromHash(),
             'keep_query' => $this->keepsQuery() ? 1 : 0,
             'is_wildcard' => $this->isWildcard() ? 1 : 0,
-            'user' => $this->getUser() ? $this->getUser()->ID : null
+            'notfound' => is_null($this->getNotFound()) ? null : ($this->getNotFound() ? 1 : 0),
+            'user' => $this->getUser() ? $this->getUser()->ID : null,
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
         ];
     }
 
@@ -322,10 +370,19 @@ class Redirect implements Arrayable
             $this->paramlessFromHash = $paramlessFromHash;
         }
         $this->setKeepQuery(boolval(Arr::get($data, 'keep_query')));
+        if (!is_null($notFound = Arr::get($data, 'notfound'))) {
+            $this->setNotFound(boolval($notFound));
+        }
         if ($userID = Arr::get($data, 'user')) {
             if ($user = get_user_by('id', $userID)) {
                 $this->setUser($user);
             }
+        }
+        if ($createdAt = Arr::get($data, 'created_at')) {
+            $this->setCreatedAt(new \DateTime($createdAt));
+        }
+        if ($updatedAt = Arr::get($data, 'updated_at')) {
+            $this->setUpdatedAt(new \DateTime($updatedAt));
         }
         return $this;
     }

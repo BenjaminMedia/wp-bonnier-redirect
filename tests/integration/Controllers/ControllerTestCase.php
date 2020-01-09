@@ -74,7 +74,8 @@ class ControllerTestCase extends TestCase
         string $type = 'manual',
         int $wpID = 0,
         string $locale = 'da',
-        int $code = 301
+        int $code = 301,
+        bool $notFound = false
     ): ?Redirect {
         $redirect = new Redirect();
         $redirect->setFrom($fromSlug)
@@ -82,7 +83,8 @@ class ControllerTestCase extends TestCase
             ->setType($type)
             ->setWpID($wpID)
             ->setLocale($locale)
-            ->setCode($code);
+            ->setCode($code)
+            ->setNotFound($notFound);
 
         return $this->save($redirect);
     }

@@ -246,6 +246,7 @@ class RedirectRepository extends BaseRepository
         if ($user = wp_get_current_user()) {
             $redirect->setUser($user);
         }
+        $redirect->setUpdatedAt(new \DateTime());
         $data = $redirect->toArray();
         unset($data['id']);
 
