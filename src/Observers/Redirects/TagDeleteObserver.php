@@ -29,11 +29,15 @@ class TagDeleteObserver extends AbstractObserver
     public function update(SubjectInterface $subject)
     {
         if ($subject->getType() === TagSubject::DELETE && $tag = $subject->getTag()) {
+            $destination = '/';
+            if ($category = get_category_by_slug($tag->slug)) {
+                $destination = rtrim(parse_url(get_category_link($category), PHP_URL_PATH), '/');
+            }
             $logs = $this->logRepository->findByWpIDAndType($tag->term_id, $tag->taxonomy);
-            $logs->each(function (Log $log) use ($tag, $subject) {
+            $logs->each(function (Log $log) use ($destination, $tag, $subject) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
-                    ->setTo('/')
+                    ->setTo($destination === $log->getSlug() ? '/' : $destination)
                     ->setWpID($tag->term_id)
                     ->setType('tag-deleted')
                     ->setCode(Response::HTTP_MOVED_PERMANENTLY)
