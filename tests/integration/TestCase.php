@@ -75,11 +75,11 @@ class TestCase extends WPTestCase
         string $type,
         int $status = 301
     ) {
-        $this->assertSame($fromSlug, $redirect->getFrom());
-        $this->assertSame($toSlug, $redirect->getTo());
-        $this->assertSame($status, $redirect->getCode());
-        $this->assertSame($wpID, $redirect->getWpID());
-        $this->assertSame($type, $redirect->getType());
+        $this->assertSame($fromSlug, $redirect->getFrom(), 'Expected \'from\'-slug does not match actual \'from\'-slug');
+        $this->assertSame($toSlug, $redirect->getTo(), 'Expected \'to\'-slug does not match actual \'to\'-slug');
+        $this->assertSame($status, $redirect->getCode(), 'Expected redirect code does not match actual redirect code');
+        $this->assertSame($wpID, $redirect->getWpID(), 'Expected WP ID does not match actual WP ID');
+        $this->assertSame($type, $redirect->getType(), 'Expected redirect type does not match actual redirect type');
     }
 
     protected function assertSameRedirects(Redirect $expectedRedirect, Redirect $actualRedirect)
