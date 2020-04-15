@@ -87,6 +87,7 @@ class ToolController extends BaseController
     private function importRedirects()
     {
         $file = $this->getUploadedCSV('import-file');
+        $shouldOverwrite = $this->request->request->getBoolean('import-overwrite');
         if (!$file) {
             $this->addNotice('Unable to process uploaded file.');
             return;
@@ -106,7 +107,15 @@ class ToolController extends BaseController
             $destination = Arr::get($record, 'to');
             $locale = Arr::get($record, 'locale');
             $code = intval(Arr::get($record, 'code'));
-            $this->saveRedirect($output, $source, $destination, $locale, 'csv-import', $code);
+            $this->saveRedirect(
+                $output,
+                $source,
+                $destination,
+                $locale,
+                'csv-import',
+                $code,
+                $shouldOverwrite
+            );
         }
         $this->addNotice(
             sprintf(
@@ -248,7 +257,8 @@ class ToolController extends BaseController
         string $destination,
         string $locale,
         string $type,
-        int $code = 301
+        int $code = 301,
+        bool $update = false
     ) {
         $status = 'Inserted';
         $redirect = new Redirect();
@@ -258,7 +268,7 @@ class ToolController extends BaseController
                 ->setLocale($locale)
                 ->setCode($code)
                 ->setType($type);
-            $this->redirectRepository->save($redirect);
+            $this->redirectRepository->save($redirect, $update);
         } catch (\InvalidArgumentException $exception) {
             if (Str::startsWith($exception->getMessage(), 'The locale')) {
                 $status = 'Ignored - Invalid Locale';

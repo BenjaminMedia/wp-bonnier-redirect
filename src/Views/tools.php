@@ -41,6 +41,17 @@ $exampleCSV = \Bonnier\WP\Redirect\WpBonnierRedirect::instance()->assetURI('file
             <a href="<?php echo $exampleCSV; ?>" target="_blank">Download example here.</a>
         </p>
         <input type="file" name="import-file" id="import-file" />
+        <p>
+            <label for="import-overwrite">
+                <input id="import-overwrite" name="import-overwrite" type="checkbox" value="1" />
+                Should overwrite
+            </label>
+        </p>
+        <p class="description">
+            Check this box, if the imported redirects should overwrite existing redirects.
+            <br />
+            <strong>This will only do a match on the 'from'-field</strong>
+        </p>
         <p class="submit">
             <button
                 type="submit"
