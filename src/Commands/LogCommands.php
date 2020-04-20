@@ -42,15 +42,20 @@ class LogCommands extends \WP_CLI_Command
         \WP_CLI::line(sprintf('Found %s post types', $postTypes->count()));
         $postTypes->each(function (string $postType) {
             \WP_CLI::line(sprintf('Fetching posts with post type \'%s\'...', $postType));
-            $posts = collect(get_posts([
+            $args = [
                 'post_type' => $postType,
-                'posts_per_page' => -1
-            ]));
-            if ($posts->isEmpty()) {
-                \WP_CLI::line(sprintf('No posts with post type \'%s\' found...', $postType));
-                return;
+                'posts_per_page' => 100,
+                'paged' => 1,
+                'order' => 'ASC',
+                'orderby' => 'ID'
+            ];
+            $posts = query_posts($args);
+            while ($posts) {
+                $this->registerPosts(collect($posts), $args['paged']);
+
+                $args['paged']++;
+                $posts = query_posts($args);
             }
-            $this->registerPosts($posts);
         });
 
         collect(['category', 'post_tag'])->each(function (string $taxonomy) {
@@ -65,12 +70,17 @@ class LogCommands extends \WP_CLI_Command
         \WP_CLI::success('Seeded the log table!');
     }
 
-    private function registerPosts(Collection $posts)
+    private function registerPosts(Collection $posts, $page)
     {
         $count = $posts->count();
         /** @var Bar $progress */
         $progress = make_progress_bar(
-            sprintf('Handling %s posts of type \'%s\'', number_format($count), $posts->first()->post_type),
+            sprintf(
+                'Handling %s posts on page %s of type \'%s\'',
+                number_format($count),
+                $page,
+                $posts->first()->post_type
+            ),
             $count
         );
         $posts->each(function (\WP_Post $post) use ($progress) {
