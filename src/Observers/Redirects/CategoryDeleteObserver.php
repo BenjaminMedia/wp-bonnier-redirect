@@ -42,7 +42,7 @@ class CategoryDeleteObserver extends AbstractObserver
             $slug = rtrim(parse_url(get_category_link($parentID), PHP_URL_PATH), '/');
         }
         $logs = $this->logRepository->findByWpIDAndType($category->term_id, $category->taxonomy);
-        $logs->each(function (Log $log) use ($slug, $category, $subject) {
+        !$logs ?: $logs->each(function (Log $log) use ($slug, $category, $subject) {
             if ($log->getSlug() !== $slug) {
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
@@ -56,10 +56,12 @@ class CategoryDeleteObserver extends AbstractObserver
         });
 
         if ($posts = $subject->getAffectedPosts()) {
-            $postCategory = $parentID ?: intval(get_option('default_category'));
+            $postCategory = $parentID ?: (int) get_option('default_category');
             foreach ($posts as $postID) {
                 wp_set_post_categories($postID, $postCategory);
-                do_action('save_post', $postID, get_post($postID), true);
+                if (get_post($postID)){
+                    do_action('save_post', $postID, get_post($postID), true);
+                }
             }
         }
     }
