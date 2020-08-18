@@ -42,18 +42,20 @@ class CategoryDeleteObserver extends AbstractObserver
             $slug = rtrim(parse_url(get_category_link($parentID), PHP_URL_PATH), '/');
         }
         $logs = $this->logRepository->findByWpIDAndType($category->term_id, $category->taxonomy);
-        !$logs ?: $logs->each(function (Log $log) use ($slug, $category, $subject) {
-            if ($log->getSlug() !== $slug) {
-                $redirect = new Redirect();
-                $redirect->setFrom($log->getSlug())
-                    ->setTo($slug)
-                    ->setWpID($category->term_id)
-                    ->setType('category-deleted')
-                    ->setCode(Response::HTTP_MOVED_PERMANENTLY)
-                    ->setLocale($subject->getLocale() ?: LocaleHelper::getTermLocale($category->term_id));
-                $this->redirectRepository->save($redirect, true);
-            }
-        });
+        if (isset($logs)){
+            $logs->each(function (Log $log) use ($slug, $category, $subject) {
+                if ($log->getSlug() !== $slug) {
+                    $redirect = new Redirect();
+                    $redirect->setFrom($log->getSlug())
+                             ->setTo($slug)
+                             ->setWpID($category->term_id)
+                             ->setType('category-deleted')
+                             ->setCode(Response::HTTP_MOVED_PERMANENTLY)
+                             ->setLocale($subject->getLocale() ?: LocaleHelper::getTermLocale($category->term_id));
+                    $this->redirectRepository->save($redirect, true);
+                }
+            });
+        }
 
         if ($posts = $subject->getAffectedPosts()) {
             $postCategory = $parentID ?: (int) get_option('default_category');
