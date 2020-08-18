@@ -42,7 +42,7 @@ class CategoryDeleteObserver extends AbstractObserver
             $slug = rtrim(parse_url(get_category_link($parentID), PHP_URL_PATH), '/');
         }
         $logs = $this->logRepository->findByWpIDAndType($category->term_id, $category->taxonomy);
-        if (isset($logs)){
+        if (!empty($logs)){
             $logs->each(function (Log $log) use ($slug, $category, $subject) {
                 if ($log->getSlug() !== $slug) {
                     $redirect = new Redirect();
