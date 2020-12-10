@@ -66,8 +66,12 @@ class RedirectRepository extends BaseRepository
      * @return Redirect|null
      * @throws \Exception
      */
-    public function findRedirectByPath(string $path, string $locale = null): ?Redirect
+    public function findRedirectByPath($path, string $locale = null): ?Redirect
     {
+        if ($path === null){
+            return null;
+        }
+
         if ($redirect = $this->findExactRedirectByPath($path, $locale)) {
             return $this->handleQueryParams($redirect, $path);
         }
@@ -91,8 +95,12 @@ class RedirectRepository extends BaseRepository
      * @return Redirect|null
      * @throws \Exception
      */
-    public function findExactRedirectByPath(string $path, string $locale = null): ?Redirect
+    public function findExactRedirectByPath($path, string $locale = null): ?Redirect
     {
+        if ($path === null ){
+            return null;
+        }
+
         $query = $this->database->query()->select('*')
             ->where(['from_hash', hash('md5', UrlHelper::normalizePath($path))])
             ->andWhere(['locale', $locale ?: LocaleHelper::getLanguage()]);
@@ -108,8 +116,12 @@ class RedirectRepository extends BaseRepository
      * @return Redirect|null
      * @throws \Exception
      */
-    public function findWildcardRedirectsByPath(string $path, string $locale = null): ?Redirect
+    public function findWildcardRedirectsByPath($path, string $locale = null): ?Redirect
     {
+        if ($path === null){
+            return null;
+        }
+
         if (is_null($locale)) {
             $locale = LocaleHelper::getLanguage();
         }
