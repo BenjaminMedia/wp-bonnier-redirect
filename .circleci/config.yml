@@ -33,6 +33,8 @@ jobs:
        # not working on composer 2.0
 #      - run: sudo composer self-update
 
+      - run: sudo composer self-update --1
+
       - restore_cache:
           keys:
             - composer-v1-{{ checksum "composer.lock" }}
