@@ -29,7 +29,10 @@ jobs:
       - run:
          name: Install PHP Modules
          command: sudo -E docker-php-ext-install zip pdo mysqli pdo_mysql gd
-      - run: sudo composer self-update
+
+       # not working on composer 2.0
+#      - run: sudo composer self-update
+
       - restore_cache:
           keys:
             - composer-v1-{{ checksum "composer.lock" }}
