@@ -24,7 +24,7 @@ class NotFoundCommands extends \WP_CLI_Command
         $repo = new RedirectRepository(new DB());
         $client = new Client();
         $domains = LocaleHelper::getLocalizedUrls();
-        $lastMonth = new \DateTime('- 1 month');
+        $lastMonth = new \DateTime('- 3 month');
         $query = $repo->query()
             ->select('*')
             ->where(['notfound', null], Query::FORMAT_NULL)
