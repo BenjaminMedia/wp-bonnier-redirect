@@ -42,6 +42,9 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
 
     private static function deduplicate(\wpdb $wpdb, string $table)
     {
+        // seems like migrating code etc. does not seems like we need it and breaks migrations going forward. -mrhn
+        return ;
+        /**
         if (defined('WP_ENV') && WP_ENV === 'testing') {
             return;
         }
@@ -79,6 +82,6 @@ class AlterRedirectTableAddIgnoreQuery implements Migration
                     }
                 }
             }
-        }
+        }**/
     }
 }
