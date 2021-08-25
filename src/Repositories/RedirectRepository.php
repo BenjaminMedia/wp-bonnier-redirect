@@ -6,7 +6,9 @@ use Bonnier\WP\Redirect\Database\DB;
 use Bonnier\WP\Redirect\Database\Exceptions\DuplicateEntryException;
 use Bonnier\WP\Redirect\Database\Migrations\Migrate;
 use Bonnier\WP\Redirect\Database\Query;
+use Bonnier\WP\Redirect\Exceptions\DisallowedUrlException;
 use Bonnier\WP\Redirect\Exceptions\IdenticalFromToException;
+use Bonnier\WP\Redirect\Exceptions\NoFrontPageRedirectException;
 use Bonnier\WP\Redirect\Helpers\LocaleHelper;
 use Bonnier\WP\Redirect\Helpers\UrlHelper;
 use Bonnier\WP\Redirect\Models\Redirect;
@@ -15,6 +17,9 @@ use Illuminate\Support\Collection;
 
 class RedirectRepository extends BaseRepository
 {
+
+    const BLOCKED_SCRAPING_TERMS = ['.env', 'xrpc', '.php', '.xsd', '.xml'];
+
     /**
      * RedirectRepository constructor.
      * @param DB $database
@@ -255,6 +260,15 @@ class RedirectRepository extends BaseRepository
         if ($redirect->getFrom() === $redirect->getTo()) {
             throw new IdenticalFromToException('A redirect with the same from and to, cannot be created!');
         }
+
+        if ($redirect->getFrom() === '/') {
+            throw new NoFrontPageRedirectException('No frontpage redirects.');
+        }
+
+        if ($this->disallowedToUrl($redirect->getTo())) {
+            throw new DisallowedUrlException('Disallowed contents in to url.');
+        }
+
         if ($user = wp_get_current_user()) {
             $redirect->setUser($user);
         }
@@ -278,6 +292,17 @@ class RedirectRepository extends BaseRepository
         do_action(WpBonnierRedirect::ACTION_REDIRECT_SAVED, $redirect);
 
         return $redirect;
+    }
+
+    private function disallowedToUrl($url)
+    {
+        foreach (static::BLOCKED_SCRAPING_TERMS as $blockedTerm) {
+            if (strpos(mb_strtolower($url), $blockedTerm)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
