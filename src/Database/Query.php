@@ -101,7 +101,7 @@ class Query
     {
         if (count($clause) === 3) {
             $this->query .= " AND `$clause[0]` $clause[2] ";
-        } else {
+        }  else {
             $this->query .= " AND `$clause[0]` = ";
         }
 
@@ -110,6 +110,13 @@ class Query
         } else {
             $this->query .= "'$clause[1]'";
         }
+
+        return $this;
+    }
+
+    public function noErrors(): Query
+    {
+        $this->query .= "AND (`notfound` is null OR `notfound` = 0)";
 
         return $this;
     }
