@@ -17,11 +17,26 @@ class PostObserver extends AbstractObserver
     public function update(SubjectInterface $subject)
     {
         $post = $subject->getPost();
+
         if ($post->post_status !== 'publish') {
             return;
         }
+
+        $post = get_post($post->ID);
+        $slug = UrlHelper::normalizePath(get_permalink($post));
+
+        $logs = $this->logRepository->findByWpIDAndType($post->ID, $post->post_type);
+        if ($logs) {
+            $latest = $logs->pop();
+            $latestSlug = $latest->getSlug();
+
+            if ($latestSlug === $slug) {
+                return ;
+            }
+        }
+
         $log = new Log();
-        $log->setSlug(UrlHelper::normalizePath(get_permalink($post)))
+        $log->setSlug($slug)
             ->setType($post->post_type)
             ->setWpID($post->ID)
             ->setCreatedAt(new \DateTime());
