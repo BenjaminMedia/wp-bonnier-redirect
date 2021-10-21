@@ -16,11 +16,18 @@ class NotFoundCommands extends \WP_CLI_Command
     /**
      * Inspect redirects for 404 results
      *
+     * [--host=<host>]
+     * : Set host name for proper loading of envs
+     *
      * ## EXAMPLES
      *     wp bonnier redirect notfound inspect
      */
     public function inspect()
     {
+        if (isset($assocArgs['host'])) {
+            $_SERVER['HOST_NAME'] = $assocArgs['host'];
+        }
+
         $repo = new RedirectRepository(new DB());
         $client = new Client();
         $domains = LocaleHelper::getLocalizedUrls();
