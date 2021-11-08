@@ -7,6 +7,7 @@ use Bonnier\WP\Redirect\Models\Log;
 use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\AbstractObserver;
 use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
+use Bonnier\WP\Redirect\Observers\RedirectCleaner;
 use Bonnier\WP\Redirect\Observers\TagSubject;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
@@ -14,6 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TagSlugChangeObserver extends AbstractObserver
 {
+    use RedirectCleaner;
+
     private $redirectRepository;
 
     public function __construct(LogRepository $logRepository, RedirectRepository $redirectRepository)
@@ -42,6 +45,11 @@ class TagSlugChangeObserver extends AbstractObserver
 
             $logs->each(function (Log $log) use ($tag, $slug) {
                 if ($log->getSlug() !== $slug) {
+
+                    if (!$this->shouldRedirectToDestination($slug)) {
+                        return ;
+                    }
+
                     $redirect = new Redirect();
                     $redirect->setFrom($log->getSlug())
                         ->setTo($slug)
