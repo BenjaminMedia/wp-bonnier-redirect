@@ -11,12 +11,15 @@ use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
 use Bonnier\WP\Redirect\Observers\Loggers\CategoryObserver;
 use Bonnier\WP\Redirect\Observers\Loggers\PostObserver;
 use Bonnier\WP\Redirect\Observers\PostSubject;
+use Bonnier\WP\Redirect\Observers\RedirectCleaner;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
 
 class CategorySlugChangeObserver extends AbstractObserver
 {
+    use RedirectCleaner;
+
     /** @var RedirectRepository */
     private $redirectRepository;
     private $postObserver;
@@ -62,6 +65,11 @@ class CategorySlugChangeObserver extends AbstractObserver
         $logs->each(function (Log $log) use (&$noSlugChanges, $slug, $category) {
             if ($log->getSlug() !== $slug) {
                 $noSlugChanges = false;
+
+                if (!$this->shouldRedirectToDestination($slug)) {
+                    return ;
+                }
+
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo($slug)
