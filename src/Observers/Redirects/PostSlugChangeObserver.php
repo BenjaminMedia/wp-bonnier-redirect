@@ -8,12 +8,15 @@ use Bonnier\WP\Redirect\Models\Redirect;
 use Bonnier\WP\Redirect\Observers\AbstractObserver;
 use Bonnier\WP\Redirect\Observers\Interfaces\SubjectInterface;
 use Bonnier\WP\Redirect\Observers\PostSubject;
+use Bonnier\WP\Redirect\Observers\RedirectCleaner;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
 use Symfony\Component\HttpFoundation\Response;
 
 class PostSlugChangeObserver extends AbstractObserver
 {
+    use RedirectCleaner;
+
     /** @var RedirectRepository */
     private $redirectRepository;
 
@@ -61,6 +64,10 @@ class PostSlugChangeObserver extends AbstractObserver
 
         $logs->each(function (Log $log) use ($slug, $subject, $type, $locale) {
             if ($log->getSlug() !== $slug) {
+                if (!$this->shouldRedirectToDestination($slug)) {
+                    return ;
+                }
+
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo($slug)
