@@ -275,10 +275,6 @@ class RedirectRepository extends BaseRepository
             throw new NoFrontPageRedirectException('No frontpage redirects.');
         }
 
-        if ($this->disallowedToUrl($redirect->getTo())) {
-            throw new DisallowedUrlException('Disallowed contents in to url.');
-        }
-
         if ($user = wp_get_current_user()) {
             $redirect->setUser($user);
         }
@@ -302,17 +298,6 @@ class RedirectRepository extends BaseRepository
         do_action(WpBonnierRedirect::ACTION_REDIRECT_SAVED, $redirect);
 
         return $redirect;
-    }
-
-    private function disallowedToUrl($url)
-    {
-        foreach (static::BLOCKED_SCRAPING_TERMS as $blockedTerm) {
-            if (strpos(mb_strtolower($url), $blockedTerm)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
