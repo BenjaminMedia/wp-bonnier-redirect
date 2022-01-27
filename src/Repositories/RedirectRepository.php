@@ -288,6 +288,10 @@ class RedirectRepository extends BaseRepository
             if ($updateOnDuplicate) {
                 $redirect->setID($this->database->insertOrUpdate($data));
             } else {
+                if ($this->disallowedToUrl($redirect->getTo())) {
+                    throw new DisallowedUrlException('Disallowed contents in to url.');
+                }
+
                 $redirect->setID($this->database->insert($data));
             }
         }
@@ -298,6 +302,17 @@ class RedirectRepository extends BaseRepository
         do_action(WpBonnierRedirect::ACTION_REDIRECT_SAVED, $redirect);
 
         return $redirect;
+    }
+
+    private function disallowedToUrl($url)
+    {
+        foreach (static::BLOCKED_SCRAPING_TERMS as $blockedTerm) {
+            if (strpos(mb_strtolower($url), $blockedTerm)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
