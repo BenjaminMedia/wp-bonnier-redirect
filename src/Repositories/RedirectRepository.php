@@ -283,7 +283,11 @@ class RedirectRepository extends BaseRepository
         unset($data['id']);
 
         if ($redirectId = $redirect->getID()) {
-            $this->database->update($redirectId, $data);
+            try {
+                $this->database->update($redirectId, $data);
+            } catch (\Exception $exception) {
+                // do nothing, just continue to next redirect
+            }
         } else {
             if ($updateOnDuplicate) {
                 $redirect->setID($this->database->insertOrUpdate($data));
