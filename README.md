@@ -49,3 +49,4 @@ add_filter('redirect/redirect-saved', function (Redirect $redirect) {
     // Do stuff with the newly created Redirect
 }, 10);
 ```
+
