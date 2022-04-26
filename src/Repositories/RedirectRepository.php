@@ -271,10 +271,6 @@ class RedirectRepository extends BaseRepository
             throw new IdenticalFromToException('A redirect with the same from and to, cannot be created!');
         }
 
-        if ($redirect->getFrom() === '/') {
-            throw new NoFrontPageRedirectException('No frontpage redirects.');
-        }
-
         if ($user = wp_get_current_user()) {
             $redirect->setUser($user);
         }
