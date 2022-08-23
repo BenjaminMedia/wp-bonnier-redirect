@@ -116,10 +116,18 @@ class RedirectTest extends TestCase
         try {
             $this->redirectRepository->save($secondRedirect);
         } catch (DuplicateEntryException $exception) {
-            $this->assertEquals(
-                'Cannot create entry, due to key constraint \'from_hash_locale\'',
-                $exception->getMessage()
-            );
+            if($exception->getMessage() === "Cannot create entry, due to key constraint 'wp_bonnier_redirects.from_hash_locale'"){
+                $this->assertEquals(
+                    "Cannot create entry, due to key constraint 'wp_bonnier_redirects.from_hash_locale'",
+                    $exception->getMessage()
+                );
+            }else{
+                $this->assertEquals(
+                    'Cannot create entry, due to key constraint \'from_hash_locale\'',
+                    $exception->getMessage()
+                );
+            }
+            
             return;
         } catch (\Exception $exception) {
             $this->fail(sprintf('Saving redirect threw unexpected exception (%s)', $exception->getMessage()));
