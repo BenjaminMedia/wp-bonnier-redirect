@@ -126,7 +126,7 @@ class RedirectRepositoryTestCase extends TestCase
                 'to' => '/gallerier'
             ],
             [
-                'from' => '/opskrifter/desserter/opskrift-ristet-mandel-is-–-jordbaersauce-hertil',
+                'from' => '/opskrifter/desserter/opskrift-ristet-mandel-is---jordbaersauce-hertil',
                 'to' => '/opskrifter/desserter'
             ],
             [

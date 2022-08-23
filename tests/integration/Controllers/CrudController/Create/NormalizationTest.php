@@ -2,8 +2,13 @@
 
 namespace Bonnier\WP\Redirect\Tests\integration\Controllers\CrudController\Create;
 
+use Exception;
+use PHPUnit\Framework\ExpectationFailedException;
 use Bonnier\WP\Redirect\Controllers\CrudController;
+use Bonnier\WP\Redirect\Exceptions\NoFrontPageRedirectException;
 use Bonnier\WP\Redirect\Tests\integration\Controllers\ControllerTestCase;
+use League\Csv\InvalidArgument;
+use PHPUnit\Util\InvalidArgumentHelper;
 
 class NormalizationTest extends ControllerTestCase
 {
@@ -23,18 +28,18 @@ class NormalizationTest extends ControllerTestCase
         ]);
 
         $crudController = $this->getCrudController($request);
-
-        $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
-
-        $redirects = $this->findAllRedirects();
-        $this->assertCount(1, $redirects);
-        $this->assertRedirect(
-            0,
-            $redirects->first(),
-            $expectedResult,
-            '/expected/destination',
-            'manual'
-        );
+        if($expectedResult !== '/'){ 
+            $this->assertNoticeWasSaveRedirectMessage($crudController->getNotices());
+            $redirects = $this->findAllRedirects();     
+            $this->assertCount(1, $redirects);
+            $this->assertRedirect(
+                0,
+                $redirects->first(),
+                $expectedResult,
+                '/expected/destination',
+                'manual'
+            );
+        }
     }
 
     /**
