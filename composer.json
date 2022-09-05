@@ -10,11 +10,11 @@
     }
   ],
   "require": {
-    "php": ">=7.2",
+    "php": ">=7.1",
     "symfony/http-foundation": "^4.3.8",
     "league/csv": "^9.2",
     "guzzlehttp/guzzle": "^6.5",
-    "illuminate/support": "^8.83"
+    "illuminate/support": "^7.30"
   },
   "require-dev": {
     "johnpbloch/wordpress": "^4.9",
