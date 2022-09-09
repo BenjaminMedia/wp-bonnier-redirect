@@ -18,9 +18,9 @@ class ControllerTestCase extends TestCase
     /** @var LogRepository */
     protected $logRepository;
 
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
         // Set the locale of WordPress to be danish
         global $locale;
         $locale = 'da_DK';
@@ -37,10 +37,10 @@ class ControllerTestCase extends TestCase
         }
     }
 
-    public function tearDown()
+    public function _tearDown()
     {
         wp_set_current_user(0);
-        parent::tearDown();
+        parent::_tearDown();
     }
 
     protected function assertManualRedirect(
@@ -119,7 +119,8 @@ class ControllerTestCase extends TestCase
         $this->assertCount(count($expected), $actual);
         foreach ($expected as $index => $notice) {
             $this->assertArrayHasKey($notice['type'], $actual[$index]);
-            $this->assertContains($notice['message'], $actual[$index][$notice['type']]);
+            //$this->assertContains($notice['message'], $actual[$index][$notice['type']]);
+            $this->assertStringContainsString($notice['message'], $actual[$index][$notice['type']]);
         }
     }
 

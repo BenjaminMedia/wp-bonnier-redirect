@@ -12,9 +12,9 @@ class LogTest extends TestCase
     /** @var LogRepository */
     private $logRepository;
 
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
 
         try {
             $this->logRepository = new LogRepository(new DB());

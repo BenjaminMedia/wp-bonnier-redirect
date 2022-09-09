@@ -20,6 +20,7 @@ modules:
             domain: "%TEST_SITE_WP_DOMAIN%"
             adminEmail: "%TEST_SITE_ADMIN_EMAIL%"
             title: "Test"
+            pluginsFolder: "%WP_ROOT_FOLDER%/../.."
             plugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
             activatePlugins: ['wp-bonnier-redirect/wp-bonnier-redirect.php']
             bootstrapActions:

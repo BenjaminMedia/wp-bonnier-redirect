@@ -10,9 +10,9 @@ use Bonnier\WP\Redirect\Tests\integration\Repositories\RedirectRepositoryTestCas
 
 class SavingRedirectTest extends RedirectRepositoryTestCase
 {
-    public function setUp(bool $bootstrapRedirects = false)
+    public function _setUp(bool $bootstrapRedirects = false)
     {
-        parent::setUp($bootstrapRedirects);
+        parent::_setUp($bootstrapRedirects);
     }
 
     public function testCanSaveARedirect()

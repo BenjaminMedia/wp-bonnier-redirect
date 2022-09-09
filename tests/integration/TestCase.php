@@ -7,7 +7,7 @@ use Codeception\TestCase\WPTestCase;
 
 class TestCase extends WPTestCase
 {
-    public static function setUpBeforeClass()
+    public static function _setUpBeforeClass()
     {
         /** @var \WP_Rewrite $wp_rewrite */
         global $wp_rewrite;
@@ -15,7 +15,7 @@ class TestCase extends WPTestCase
         $wp_rewrite->add_permastruct('category', '/%category%');
         $wp_rewrite->add_permastruct('post_tag', '/%post_tag%');
         $wp_rewrite->flush_rules();
-        return parent::setUpBeforeClass();
+        return parent::_setUpBeforeClass();
     }
 
     protected function updatePost(int $postID, array $args)
