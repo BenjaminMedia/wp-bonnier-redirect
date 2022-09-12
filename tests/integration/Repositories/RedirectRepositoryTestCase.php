@@ -12,9 +12,9 @@ class RedirectRepositoryTestCase extends TestCase
     /** @var RedirectRepository */
     protected $repository;
 
-    public function setUp(bool $bootstrapRedirects = true)
+    public function _setUp(bool $bootstrapRedirects = true)
     {
-        parent::setUp();
+        parent::_setUp();
         try {
             $this->repository = new RedirectRepository(new DB());
         } catch (\Exception $exception) {

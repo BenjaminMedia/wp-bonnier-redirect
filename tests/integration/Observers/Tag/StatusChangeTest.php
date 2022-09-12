@@ -6,9 +6,9 @@ use Bonnier\WP\Redirect\Tests\integration\Observers\ObserverTestCase;
 
 class StatusChangeTest extends ObserverTestCase
 {
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
         add_filter('tag_link', function ($tagLink) {
             $parts = parse_url($tagLink);
             return sprintf(

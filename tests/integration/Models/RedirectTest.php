@@ -13,9 +13,9 @@ class RedirectTest extends TestCase
     /** @var RedirectRepository */
     private $redirectRepository;
 
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
 
         try {
             $this->redirectRepository = new RedirectRepository(new DB());

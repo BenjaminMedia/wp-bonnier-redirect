@@ -11,9 +11,9 @@ use Bonnier\WP\Redirect\WpBonnierRedirect;
 
 class ValidationTest extends ControllerTestCase
 {
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
 
         Observers::bootstrap($this->logRepository, $this->redirectRepository);
     }

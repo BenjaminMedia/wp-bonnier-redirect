@@ -16,9 +16,9 @@ class ObserverTestCase extends TestCase
     /** @var RedirectRepository */
     protected $redirectRepository;
 
-    public function setUp()
+    public function _setUp()
     {
-        parent::setUp();
+        parent::_setUp();
         try {
             $this->logRepository = new LogRepository(new DB);
         } catch (\Exception $exception) {
@@ -53,7 +53,6 @@ class ObserverTestCase extends TestCase
             return $this->redirectRepository->findAll();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed getting redirects (%s)', $exception->getMessage()));
-            return null;
         }
     }
 
@@ -63,7 +62,6 @@ class ObserverTestCase extends TestCase
             return $this->logRepository->findAll();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Failed finding logs (%s)', $exception->getMessage()));
-            return null;
         }
     }
 }

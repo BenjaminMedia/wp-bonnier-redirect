@@ -7,12 +7,12 @@ use Bonnier\WP\Redirect\Models\Redirect;
 
 class ListControllerTest extends ControllerTestCase
 {
-    public function setUp()
+    public function _setUp()
     {
         // Global variable used when constructing ListController in
         // /wp-admin/includes/class-wp-screen.php:209
         $GLOBALS['hook_suffix'] = null;
-        parent::setUp();
+        parent::_setUp();
     }
 
     public function testCanDeleteSingleRedirect()
