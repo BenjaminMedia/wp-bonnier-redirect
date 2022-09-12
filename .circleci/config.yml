@@ -8,7 +8,7 @@ jobs:
         - IVD
         - master
     docker:
-      - image: circleci/php:7.2-fpm-browsers
+      - image: circleci/php:7.4-fpm-browsers
         environment:
           - DB_USER=homestead
           - DB_PASSWORD=secret
