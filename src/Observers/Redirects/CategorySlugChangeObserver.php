@@ -150,7 +150,7 @@ class CategorySlugChangeObserver extends AbstractObserver
         }
         if(empty($childrenIds)){
             $parentTranslatedIds = [];
-            foreach(pll_languages_list() as $lang){ // ["da","nb","sv","fi"]
+            foreach(LocaleHelper::getLanguages() as $lang){ // ["da","nb","sv","fi"]
                 if(pll_get_term($parentId, $lang)){
                     $parentTranslatedIds[$lang] = pll_get_term($parentId, $lang); // all the ids for the current category ($parentId);
                 }
