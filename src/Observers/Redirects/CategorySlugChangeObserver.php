@@ -14,6 +14,7 @@ use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Observers\RedirectCleaner;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
+use ParagonIE\Sodium\Core\Curve25519\Ge\P2;
 use Symfony\Component\HttpFoundation\Response;
 
 class CategorySlugChangeObserver extends AbstractObserver
@@ -55,7 +56,6 @@ class CategorySlugChangeObserver extends AbstractObserver
         $slug = $latest->getSlug();
 
         if ($logs->isNotEmpty() && $slug === $logs->last()->getSlug()) {
-            // No changes happened to Category Slug
             return;
         }
 
@@ -88,7 +88,15 @@ class CategorySlugChangeObserver extends AbstractObserver
             return;
         }
 
-        if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
+        $categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false]);
+        if(count($categories) == 0){
+            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
+            foreach($categoryIds as $id){
+                $categories[] = get_term($id, 'category');
+            }
+        }
+
+        if ($categories) {
             foreach ($categories as $cat) {
                 $subject = new CategorySubject();
                 $subject->setCategory($cat)->setType(CategorySubject::UPDATE);
@@ -112,5 +120,64 @@ class CategorySlugChangeObserver extends AbstractObserver
                 }
             }
         });
+    }
+
+    public function getChildCategoryIds($category_id, $withAllGrandChildren = false, &$all_children = []) 
+    {
+        
+        if(! is_int($category_id)){
+            $category_id = $category_id->term_id;
+        }
+        $childrenIds = $this->getChildCategoryIdsHelper($category_id);
+        if($withAllGrandChildren){
+            foreach ($childrenIds as $child) {
+                $all_children[] = $child;
+                $this->getChildCategoryIds($child, true, $all_children);
+            }
+
+            return $all_children;
+        }
+
+        return $childrenIds;
+    }
+
+    private function getChildCategoryIdsHelper(int $parentId): array
+    {
+        $childrenObjects = get_categories(['parent' => $parentId, 'hide_empty' => false]);
+        $childrenIds = [];
+        foreach($childrenObjects as $children){
+            $childrenIds[] = $children->term_id;
+        }
+        if(empty($childrenIds)){
+            $parentTranslatedIds = [];
+            foreach(pll_languages_list() as $lang){ // ["da","nb","sv","fi"]
+                if(pll_get_term($parentId, $lang)){
+                    $parentTranslatedIds[$lang] = pll_get_term($parentId, $lang); // all the ids for the current category ($parentId);
+                }
+            }
+            $translatedChildrenIds = [];
+            foreach($parentTranslatedIds as $parentTranslatedId){
+                $translatedChildrenIds = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
+                if(!empty($translatedChildrenIds)){
+                    break;
+                }
+            }
+            foreach($parentTranslatedIds as $parentTranslatedId){
+                $translatedChildren = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
+                if(!empty($translatedChildren)){
+                    break;
+                }
+            }
+            $parentIdLanguageCode = LocaleHelper::getTermLocale($parentId);
+            $translatedChildrenIds = [];
+            foreach($translatedChildren as $translatedChildren){
+                $translatedChildrenIds[] = $translatedChildren->term_id;//[17023,16991,16983,17015]
+            }
+            foreach($translatedChildrenIds as $translatedChildrenId){
+                $childrenIds[] = pll_get_term($translatedChildrenId, $parentIdLanguageCode); //[17029,16997,16989,17021] for sv lang
+            }
+        }
+
+        return $childrenIds;
     }
 }
