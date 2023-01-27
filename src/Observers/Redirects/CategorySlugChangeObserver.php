@@ -14,7 +14,6 @@ use Bonnier\WP\Redirect\Observers\PostSubject;
 use Bonnier\WP\Redirect\Observers\RedirectCleaner;
 use Bonnier\WP\Redirect\Repositories\LogRepository;
 use Bonnier\WP\Redirect\Repositories\RedirectRepository;
-use ParagonIE\Sodium\Core\Curve25519\Ge\P2;
 use Symfony\Component\HttpFoundation\Response;
 
 class CategorySlugChangeObserver extends AbstractObserver
