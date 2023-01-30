@@ -62,6 +62,18 @@ class LocaleHelper
     }
 
     /**
+     * @return array
+     */
+    public static function getTerm($parentId, $lang): array
+    {
+        if (function_exists('pll_get_term')) {
+            return pll_get_term($parentId, $lang);
+        }
+
+        return [];
+    }
+
+    /**
      * @return string
      */
     public static function getLanguage(): string
