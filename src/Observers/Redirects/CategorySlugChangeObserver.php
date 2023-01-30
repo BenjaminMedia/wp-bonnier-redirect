@@ -161,6 +161,7 @@ class CategorySlugChangeObserver extends AbstractObserver
                     break;
                 }
             }
+            $translatedChildren = [];
             foreach($parentTranslatedIds as $parentTranslatedId){
                 $translatedChildren = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
                 if(!empty($translatedChildren)){
