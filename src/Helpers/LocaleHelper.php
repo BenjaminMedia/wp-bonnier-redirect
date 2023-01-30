@@ -70,7 +70,7 @@ class LocaleHelper
             return pll_get_term($parentId, $lang);
         }
 
-        return [$parentId];
+        return [];
     }
 
     /**
