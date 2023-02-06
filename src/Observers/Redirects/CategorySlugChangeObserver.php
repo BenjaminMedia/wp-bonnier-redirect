@@ -87,20 +87,20 @@ class CategorySlugChangeObserver extends AbstractObserver
             return;
         }
 
-        $categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false]);
-        if(count($categories) == 0){
-            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
-            foreach($categoryIds as $id){
-                $categories[] = get_term($id, 'category');
-            }
-        }
-
-        if ($categories) {
+        if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
             foreach ($categories as $cat) {
                 $subject = new CategorySubject();
                 $subject->setCategory($cat)->setType(CategorySubject::UPDATE);
                 $this->categoryObserver->update($subject);
                 $this->update($subject);
+            }
+        }
+
+        $categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false]);
+        if(count($categories) == 0){
+            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
+            foreach($categoryIds as $id){
+                $categories[] = get_term($id, 'category');
             }
         }
 
