@@ -90,10 +90,6 @@ class LogRepository extends BaseRepository
                     ($tmpLog->getType() == $log->getType()) && 
                     ($tmpLog->getWpID() == $log->getWpID())
                 ){
-                    error_log('this log is duplicated 01:');
-                    error_log($log->getSlug() . ' *** ' . $log->getWpID());
-                    error_log('this log is duplicated 02:');
-                    error_log($tmpLog->getSlug() . ' *** ' . $tmpLog->getWpID());
                     return $log;
                 }
             }
