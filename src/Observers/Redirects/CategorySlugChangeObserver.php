@@ -49,11 +49,11 @@ class CategorySlugChangeObserver extends AbstractObserver
             return;
         }
         $logs = $this->logRepository->findByWpIDAndType($category->term_id, $category->taxonomy);
-
         $latest = $logs->pop();
 
         $slug = $latest->getSlug();
 
+        // ?
         if ($logs->isNotEmpty() && $slug === $logs->last()->getSlug()) {
             return;
         }
@@ -64,11 +64,9 @@ class CategorySlugChangeObserver extends AbstractObserver
         $logs->each(function (Log $log) use (&$noSlugChanges, $slug, $category) {
             if ($log->getSlug() !== $slug) {
                 $noSlugChanges = false;
-
                 if (!$this->shouldRedirectToDestination($slug)) {
                     return ;
                 }
-
                 $redirect = new Redirect();
                 $redirect->setFrom($log->getSlug())
                     ->setTo($slug)
@@ -87,7 +85,17 @@ class CategorySlugChangeObserver extends AbstractObserver
             return;
         }
 
-        if ($categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false])) {
+        $categories = [];
+        if(count($categories) == 0){
+            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
+            // there is no need to add parent to the categoryIds because for the first time
+            // we have the parent category in $category and the rest of the times,
+            foreach($categoryIds as $id){
+                $categories[] = get_term($id, 'category');
+            }
+        }
+
+        if (count($categories) > 0) {
             foreach ($categories as $cat) {
                 $subject = new CategorySubject();
                 $subject->setCategory($cat)->setType(CategorySubject::UPDATE);
@@ -96,16 +104,8 @@ class CategorySlugChangeObserver extends AbstractObserver
             }
         }
 
-        $categories = get_categories(['parent' => $category->term_id, 'hide_empty' => false]);
-        if(count($categories) == 0){
-            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
-            foreach($categoryIds as $id){
-                $categories[] = get_term($id, 'category');
-            }
-        }
-
         $postTypes = collect(get_post_types(['public' => true]))->reject('attachment');
-        $postTypes->each(function (string $postType) use ($category) {
+        $postTypes->each(function (string $postType) use ($category) {// "post","page","contenthub_composite"
             if ($posts = get_posts([
                 'post_type' => $postType,
                 'category' => $category->term_id,
@@ -123,7 +123,6 @@ class CategorySlugChangeObserver extends AbstractObserver
 
     public function getChildCategoryIds($category_id, $withAllGrandChildren = false, &$all_children = []) 
     {
-        
         if(! is_int($category_id)){
             $category_id = $category_id->term_id;
         }
@@ -157,7 +156,7 @@ class CategorySlugChangeObserver extends AbstractObserver
             $translatedChildrenIds = [];
             foreach($parentTranslatedIds as $parentTranslatedId){
                 $translatedChildrenIds = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
-                if(!empty($translatedChildrenIds)){
+                if(count($translatedChildrenIds) != 0){
                     break;
                 }
             }
