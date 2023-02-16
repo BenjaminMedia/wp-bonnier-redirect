@@ -81,20 +81,6 @@ class LogRepository extends BaseRepository
      */
     public function save(Log &$log): ?Log
     {
-        // start don't save if it's a duplicated record
-        $logs = $this->findByWpIDAndType($log->getWpID(), $log->getType());
-        if (! is_null($logs)){
-            foreach($logs as $tmpLog){
-                if(
-                    ($tmpLog->getSlug() == $log->getSlug()) && 
-                    ($tmpLog->getType() == $log->getType()) && 
-                    ($tmpLog->getWpID() == $log->getWpID())
-                ){
-                    return $log;
-                }
-            }
-        }
-        // end don't save if it's a duplicated record
         $this->database->setTable($this->tableName);
         $data = $log->toArray();
         unset($data['id']);
