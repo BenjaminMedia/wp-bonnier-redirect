@@ -53,8 +53,8 @@ class CategorySlugChangeObserver extends AbstractObserver
 
         $slug = $latest->getSlug();
 
-        // ?
         if ($logs->isNotEmpty() && $slug === $logs->last()->getSlug()) {
+            // No changes happened to Category Slug
             return;
         }
 
@@ -64,6 +64,11 @@ class CategorySlugChangeObserver extends AbstractObserver
         $logs->each(function (Log $log) use (&$noSlugChanges, $slug, $category) {
             if ($log->getSlug() !== $slug) {
                 $noSlugChanges = false;
+                // don't make any redirect if "from" contains "___"
+                if (!$this->shouldRedirectToDestination($log->getSlug())) {
+                    return ;
+                }
+                // don't make any redirect if "to" contains "___"
                 if (!$this->shouldRedirectToDestination($slug)) {
                     return ;
                 }
@@ -85,14 +90,10 @@ class CategorySlugChangeObserver extends AbstractObserver
             return;
         }
 
+        $categoryIds = $this->getChildCategoryIds($category->term_id, true);
         $categories = [];
-        if(count($categories) == 0){
-            $categoryIds = $this->getChildCategoryIds($category->term_id, true);
-            // there is no need to add parent to the categoryIds because for the first time
-            // we have the parent category in $category and the rest of the times,
-            foreach($categoryIds as $id){
-                $categories[] = get_term($id, 'category');
-            }
+        foreach($categoryIds as $id){
+            $categories[] = get_term($id, 'category');
         }
 
         if (count($categories) > 0) {
@@ -123,10 +124,10 @@ class CategorySlugChangeObserver extends AbstractObserver
 
     public function getChildCategoryIds($category_id, $withAllGrandChildren = false, &$all_children = []) 
     {
-        if(! is_int($category_id)){
+        if(is_object($category_id)){
             $category_id = $category_id->term_id;
         }
-        $childrenIds = $this->getChildCategoryIdsHelper($category_id);
+        $childrenIds = $this->getChildCategoryIdsHelper((int) $category_id);
         if($withAllGrandChildren){
             foreach ($childrenIds as $child) {
                 $all_children[] = $child;
@@ -141,39 +142,20 @@ class CategorySlugChangeObserver extends AbstractObserver
 
     private function getChildCategoryIdsHelper(int $parentId): array
     {
-        $childrenObjects = get_categories(['parent' => $parentId, 'hide_empty' => false]);
-        $childrenIds = [];
-        foreach($childrenObjects as $children){
-            $childrenIds[] = $children->term_id;
+        if(! $parentId >= 1){
+            return [];
         }
-        if(empty($childrenIds)){
-            $parentTranslatedIds = [];
-            foreach(LocaleHelper::getLanguages() as $lang){ // ["da","nb","sv","fi"]
-                if(LocaleHelper::getTerm($parentId, $lang)){
-                    $parentTranslatedIds[$lang] = LocaleHelper::getTerm($parentId, $lang); // all the ids for the current category ($parentId);
-                }
-            }
-            $translatedChildrenIds = [];
-            foreach($parentTranslatedIds as $parentTranslatedId){
-                $translatedChildrenIds = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
-                if(count($translatedChildrenIds) != 0){
-                    break;
-                }
-            }
-            $translatedChildren = [];
-            foreach($parentTranslatedIds as $parentTranslatedId){
-                $translatedChildren = get_categories(['parent' => $parentTranslatedId, 'hide_empty' => false]);
-                if(!empty($translatedChildren)){
-                    break;
-                }
-            }
-            $parentIdLanguageCode = LocaleHelper::getTermLocale($parentId);
-            $translatedChildrenIds = [];
-            foreach($translatedChildren as $translatedChildren){
-                $translatedChildrenIds[] = $translatedChildren->term_id;//[17023,16991,16983,17015]
-            }
-            foreach($translatedChildrenIds as $translatedChildrenId){
-                $childrenIds[] = pll_get_term($translatedChildrenId, $parentIdLanguageCode); //[17029,16997,16989,17021] for sv lang
+        global $wpdb;
+        $sql = $wpdb->prepare(
+            "SELECT term_id FROM wp_term_taxonomy WHERE parent = %d AND taxonomy LIKE %s",
+            $parentId,
+            'category'
+        );
+        $rows = $wpdb->get_results($sql);
+        $childrenIds = [];
+        if(($rows) && (count($rows) > 0)) {
+            foreach($rows as $row){
+                $childrenIds[] = $row->term_id;
             }
         }
 
