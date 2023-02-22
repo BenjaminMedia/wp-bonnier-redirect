@@ -147,7 +147,7 @@ class CategorySlugChangeObserver extends AbstractObserver
         }
         global $wpdb;
         $sql = $wpdb->prepare(
-            "SELECT term_id FROM wp_term_taxonomy WHERE parent = %d AND taxonomy LIKE %s",
+            "SELECT term_id FROM wp_term_taxonomy WHERE parent = %d AND taxonomy = %s",
             $parentId,
             'category'
         );
