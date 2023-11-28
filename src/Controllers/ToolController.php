@@ -86,6 +86,8 @@ class ToolController extends BaseController
 
     private function importRedirects()
     {
+        set_time_limit(0);
+
         $file = $this->getUploadedCSV('import-file');
         $shouldOverwrite = $this->request->request->getBoolean('import-overwrite');
         if (!$file) {
