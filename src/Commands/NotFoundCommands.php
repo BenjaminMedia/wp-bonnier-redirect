@@ -27,9 +27,12 @@ class NotFoundCommands extends \WP_CLI_Command
         if (isset($assocArgs['host'])) {
             $_SERVER['HOST_NAME'] = $assocArgs['host'];
         }
-
+        \WP_CLI::line('Start inspecting ...');
         $repo = new RedirectRepository(new DB());
-        $client = new Client();
+        
+        // add timeout, some urls could hang forever!
+        // e.g. https://www.elgiganten.dk/product/computer-kontor/computertilbehor/skarmfilter/kensington-22-skarmfilter-1610-skarmforhold/164826
+        $client = new Client(['timeout'  => 3.0]);
         $domains = LocaleHelper::getLocalizedUrls();
         $lastMonth = new \DateTime('- 1 month');
         $query = $repo->query()
