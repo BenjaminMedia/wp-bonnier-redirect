@@ -22,7 +22,7 @@ class NotFoundCommands extends \WP_CLI_Command
      * ## EXAMPLES
      *     wp bonnier redirect notfound inspect
      */
-    public function inspect($type = '')
+    public function inspect()
     {
         if (isset($assocArgs['host'])) {
             $_SERVER['HOST_NAME'] = $assocArgs['host'];
@@ -50,7 +50,7 @@ class NotFoundCommands extends \WP_CLI_Command
             }
             $redirectCount = $redirects->count();
             $progress = make_progress_bar(sprintf('Inspecting %s redirects step ' . ( $i + 1 ) . ' of ' . $numberOfSteps . ':', number_format($redirectCount)), $redirectCount);
-            $redirects->each(function (Redirect $redirect) use ($progress, $domains, $client, $repo, $type) {
+            $redirects->each(function (Redirect $redirect) use ($progress, $domains, $client, $repo) {
                 $url = null;
                 $domain = $domains[$redirect->getLocale()] ?? null;
                 if (substr($redirect->getTo(), 0, 1) !== '/') {
@@ -58,7 +58,7 @@ class NotFoundCommands extends \WP_CLI_Command
                 } else if ($domain) {
                     $url = sprintf('%s/%s', rtrim($domain, '/'), ltrim($redirect->getTo(), '/'));
                 }
-                if (!$domain && $type === 'deleteInvalidDomains') {
+                if (!$domain) {
                     $repo->delete($redirect);
                 }
                 if ($url) {
@@ -83,20 +83,5 @@ class NotFoundCommands extends \WP_CLI_Command
         }
 
         $progress->finish();
-    }
-
-    /**
-     * Inspect and delete invalid redirects
-     * For example: /mobile,/,se,301 // we don't have 'se' language. the redirect should be deleted
-     *
-     * [--host=<host>]
-     * : Set host name for proper loading of envs
-     *
-     * ## EXAMPLES
-     *     wp bonnier redirect notfound deleteInvalidDomains
-     */
-    public function deleteInvalidDomains()
-    {
-        $this->inspect('deleteInvalidDomains');
     }
 }
