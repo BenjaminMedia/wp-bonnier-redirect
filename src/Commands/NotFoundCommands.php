@@ -32,44 +32,55 @@ class NotFoundCommands extends \WP_CLI_Command
         
         // add timeout, some urls could hang forever!
         // e.g. https://www.elgiganten.dk/product/computer-kontor/computertilbehor/skarmfilter/kensington-22-skarmfilter-1610-skarmforhold/164826
-        $client = new Client(['timeout'  => 3.0]);
+        $client = new Client(['timeout'  => 10]);
         $domains = LocaleHelper::getLocalizedUrls();
         $lastMonth = new \DateTime('- 1 month');
-        $query = $repo->query()
-            ->select('*')
-            ->where(['notfound', null], Query::FORMAT_NULL)
-            ->orWhere(['updated_at', $lastMonth->format('Y-m-d H:i:s'), '<'])
-            ->limit(5000);
-        $redirects = $repo->getRedirects($query);
-        if (!$redirects) {
-            \WP_CLI::line('No redirects to inspect!');
-        }
-        $redirectCount = $redirects->count();
-        $progress = make_progress_bar(sprintf('Inspecting %s redirects', number_format($redirectCount)), $redirectCount);
-        $redirects->each(function (Redirect $redirect) use ($progress, $domains, $client, $repo) {
-            $url = null;
-            $domain = $domains[$redirect->getLocale()] ?? null;
-            if (substr($redirect->getTo(), 0, 1) !== '/') {
-                $url = $redirect->getTo();
-            } else if ($domain) {
-                $url = sprintf('%s/%s', rtrim($domain, '/'), ltrim($redirect->getTo(), '/'));
+        $numberOfSteps = 40;
+        $redirectsLimit = 5000;
+        for($i = 0; $i < $numberOfSteps; $i++) {
+            $query = $repo->query()
+                ->select('*')
+                ->where(['notfound', null], Query::FORMAT_NULL)
+                ->orWhere(['updated_at', $lastMonth->format('Y-m-d H:i:s'), '<'])
+                ->limit($redirectsLimit)
+                ->offset($i * $redirectsLimit);
+            $redirects = $repo->getRedirects($query);
+            if (!$redirects) {
+                \WP_CLI::line('No redirects to inspect!');
             }
-            if ($url) {
-                try {
-                    $client->head($url);
-                    $redirect->setNotFound(false);
-                    $repo->save($redirect);
-                } catch (RequestException $exception) {
-                    if ($exception->getResponse() && $exception->getResponse()->getStatusCode() > 399) {
-                        $redirect->setNotFound();
-                        $repo->save($redirect);
-                    }
-
+            $redirectCount = $redirects->count();
+            $progress = make_progress_bar(sprintf('Inspecting %s redirects step ' . ( $i + 1 ) . ' of ' . $numberOfSteps . ':', number_format($redirectCount)), $redirectCount);
+            $redirects->each(function (Redirect $redirect) use ($progress, $domains, $client, $repo) {
+                $url = null;
+                $domain = $domains[$redirect->getLocale()] ?? null;
+                if (substr($redirect->getTo(), 0, 1) !== '/') {
+                    $url = $redirect->getTo();
+                } else if ($domain) {
+                    $url = sprintf('%s/%s', rtrim($domain, '/'), ltrim($redirect->getTo(), '/'));
                 }
-                usleep(500 * 1000); // 500ms
+                if (!$domain) {
+                    $repo->delete($redirect);
+                }
+                if ($url) {
+                    try {
+                        $client->head($url);
+                        $redirect->setNotFound(false);
+                        $repo->save($redirect);
+                    } catch (RequestException $exception) {
+                        if ($exception->getResponse() && $exception->getResponse()->getStatusCode() > 399) {
+                            $redirect->setNotFound();
+                            $repo->save($redirect);
+                        }
+                    }
+                    usleep(500 * 1000); // 500ms
+                }
+                $progress->tick();
+            });
+            
+            if($redirectCount < $redirectsLimit){
+                break;
             }
-            $progress->tick();
-        });
+        }
 
         $progress->finish();
     }
