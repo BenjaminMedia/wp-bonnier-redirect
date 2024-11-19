@@ -35,8 +35,8 @@ class NotFoundCommands extends \WP_CLI_Command
         $client = new Client(['timeout'  => 10]);
         $domains = LocaleHelper::getLocalizedUrls();
         $lastMonth = new \DateTime('- 1 month');
-        $numberOfSteps = 40;
-        $redirectsLimit = 5000;
+        $numberOfSteps = 1000;
+        $redirectsLimit = 200;
         for($i = 0; $i < $numberOfSteps; $i++) {
             $query = $repo->query()
                 ->select('*')
