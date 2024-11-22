@@ -47,6 +47,7 @@ class NotFoundCommands extends \WP_CLI_Command
             $redirects = $repo->getRedirects($query);
             if (!$redirects) {
                 \WP_CLI::line('No redirects to inspect!');
+                break;
             }
             $redirectCount = $redirects->count();
             $progress = make_progress_bar(sprintf('Inspecting %s redirects step ' . ( $i + 1 ) . ' of ' . $numberOfSteps . ':', number_format($redirectCount)), $redirectCount);
@@ -81,7 +82,9 @@ class NotFoundCommands extends \WP_CLI_Command
                 break;
             }
         }
-
-        $progress->finish();
+        
+        if(isset($progress)){
+            $progress->finish();
+        }
     }
 }
